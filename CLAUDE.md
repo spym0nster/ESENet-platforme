@@ -16,9 +16,13 @@ from later roadmap phases.
 - `web/` — the actual platform (Next.js). This is where you'll spend nearly
   all your time.
 - `esenet-2027-pitch.html` — the pitch deck, in ESENet's real brand colors/
-  fonts/logo. Useful as the reference for brand tokens (see below) — don't
-  regenerate the logo from scratch, `web/src/components/logo.tsx` already has
-  the vector version used there.
+  fonts/logo. Useful as the reference for brand tokens (see below).
+- `esenet-logo.png` — the official wordmark, transparent background, cropped
+  to content (4440×851). Its "ESE" and "Talent Fair" glyphs are near-white,
+  so it only reads on a dark ground — never place it directly on a light
+  page. Canonical copy for the web app lives at `web/public/logo.png`
+  (same file); rendered via `web/src/components/logo.tsx`. Don't regenerate
+  or redraw this logo — this PNG is the real asset, provided directly.
 - `Dossier Sponsoring.pdf`, `Note Conceptuelle.pdf`, `Affiche Programme et
   Panels ESENet 2025.pdf`, `affiche.png` — source brand/vision material.
 
