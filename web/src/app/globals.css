@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* ---- ESENet brand tokens (matches the pitch deck) ---- */
+:root {
+  --bg: #0b0e36;
+  --bg-2: #12103f;
+  --surface: #161350;
+  --surface-alt: #1e1a63;
+  --text: #f5f3fc;
+  --text-muted: #b3add9;
+  --text-faint: #7a74a8;
+  --border: rgba(245, 243, 252, 0.13);
+  --accent: #7b53fd;
+  --accent-2: #1aa6fc;
+  --accent-ink: #0b0e36;
+  --magenta: #c13584;
+  --magenta-soft: rgba(193, 53, 132, 0.16);
+  --magenta-on-soft: #f08fc0;
+  --accent-soft: rgba(123, 83, 253, 0.16);
+  --accent-on-soft: #b7a2ff;
+  --accent2-soft: rgba(26, 166, 252, 0.14);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f4fc;
+    --bg-2: #efedfa;
+    --surface: #ffffff;
+    --surface-alt: #ece9f8;
+    --text: #17143c;
+    --text-muted: #58527e;
+    --text-faint: #8b85ad;
+    --border: #ddd7f0;
+    --accent: #6a3ee0;
+    --accent-2: #08699e;
+    --accent-ink: #ffffff;
+    --magenta: #a02870;
+    --magenta-soft: #f6e1ee;
+    --magenta-on-soft: #a02870;
+    --accent-soft: #e9e1fc;
+    --accent-on-soft: #6a3ee0;
+    --accent2-soft: #dff1fc;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f5f4fc;
+  --bg-2: #efedfa;
+  --surface: #ffffff;
+  --surface-alt: #ece9f8;
+  --text: #17143c;
+  --text-muted: #58527e;
+  --text-faint: #8b85ad;
+  --border: #ddd7f0;
+  --accent: #6a3ee0;
+  --accent-2: #08699e;
+  --accent-ink: #ffffff;
+  --magenta: #a02870;
+  --magenta-soft: #f6e1ee;
+  --magenta-on-soft: #a02870;
+  --accent-soft: #e9e1fc;
+  --accent-on-soft: #6a3ee0;
+  --accent2-soft: #dff1fc;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent2-soft: var(--accent2-soft);
+  --color-magenta: var(--magenta);
+  --color-magenta-soft: var(--magenta-soft);
+  --font-display: var(--font-poppins);
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-plex-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+}
