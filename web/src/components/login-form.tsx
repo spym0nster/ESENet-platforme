@@ -2,8 +2,9 @@
 
 import { useActionState } from "react";
 import { signIn, type AuthState } from "@/app/actions/auth";
+import { Field, Input, Button } from "@/components/ui";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(
     signIn,
     null
@@ -11,42 +12,19 @@ export function LoginForm() {
 
   return (
     <form action={action} className="space-y-4">
-      <Field label="Email" name="email" type="email" required />
-      <Field label="Password" name="password" type="password" required />
-      {state?.error && <p className="text-sm text-magenta">{state.error}</p>}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-md bg-accent px-5 py-2.5 font-semibold text-white disabled:opacity-60"
-      >
+      {next && <input type="hidden" name="next" value={next} />}
+      <Field label="Email">
+        <Input name="email" type="email" required />
+      </Field>
+      <Field label="Password">
+        <Input name="password" type="password" required />
+      </Field>
+      {state && "error" in state && (
+        <p className="text-sm text-magenta">{state.error}</p>
+      )}
+      <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Signing in…" : "Log in"}
-      </button>
+      </Button>
     </form>
-  );
-}
-
-function Field({
-  label,
-  name,
-  type,
-  required,
-}: {
-  label: string;
-  name: string;
-  type: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1 block font-mono text-xs uppercase tracking-wide text-text-faint">
-        {label}
-      </span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
-      />
-    </label>
   );
 }

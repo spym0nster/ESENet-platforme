@@ -1,0 +1,91 @@
+import { notFound } from "next/navigation";
+import { requireCompanyUser } from "@/lib/auth/require-company";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { CompanyProfileForm } from "@/components/company-profile-form";
+import { ProfileMediaUpload } from "@/components/profile-media-upload";
+import { MyTitleForm } from "@/components/my-title-form";
+import { Badge, EmptyState } from "@/components/ui";
+import { fetchPosts } from "@/lib/posts";
+import { PostCard } from "@/components/post-card";
+import type { Company } from "@/types/database";
+
+export default async function CompanyProfilePage() {
+  if (!isSupabaseConfigured()) {
+    notFound();
+  }
+
+  const { supabase, user, company, companyId } = await requireCompanyUser("/company/profile");
+
+  if (!company) {
+    notFound();
+  }
+
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("title")
+    .eq("company_id", companyId)
+    .eq("profile_id", user.id)
+    .maybeSingle();
+
+  const { posts: companyPosts } = await fetchPosts(supabase, {
+    currentUserId: user.id,
+    companyId,
+  });
+
+  return (
+    <div className="mx-auto max-w-xl px-6 py-16">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
+            Company profile
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-extrabold">
+            {company.company_name}
+          </h1>
+        </div>
+        <Badge variant={company.verified ? "info" : "neutral"}>
+          {company.verified ? "Verified" : "Pending verification"}
+        </Badge>
+      </div>
+
+      <div className="mt-10 space-y-6">
+        <ProfileMediaUpload kind="avatar" currentUrl={company.logo_url} label="Logo" />
+        <ProfileMediaUpload kind="banner" currentUrl={company.banner_url} label="Banner" />
+      </div>
+
+      <div className="mt-10">
+        <CompanyProfileForm company={company as Company} />
+      </div>
+
+      <div className="mt-10">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+          Your title at this company
+        </h2>
+        <p className="mt-1 text-xs text-text-muted">
+          Shown next to your name in the feed, e.g. &ldquo;HR Manager&rdquo; or &ldquo;Project Manager&rdquo;.
+        </p>
+        <div className="mt-3">
+          <MyTitleForm currentTitle={membership?.title ?? null} />
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+          Company posts
+        </h2>
+        <div className="mt-4 space-y-5">
+          {companyPosts.length === 0 ? (
+            <EmptyState
+              title="No posts yet"
+              body="Posts published as this company (by any team member) will show up here."
+            />
+          ) : (
+            companyPosts.map((post) => (
+              <PostCard key={post.id} supabase={supabase} post={post} currentUserId={user.id} isAdmin={false} />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

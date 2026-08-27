@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { Badge, EmptyState, Input, Select } from "@/components/ui";
+import { SaveOpportunityButton } from "@/components/save-opportunity-button";
+import type { OpportunityType } from "@/types/database";
 
 const TYPE_LABEL: Record<string, string> = {
   internship: "Internship",
@@ -10,7 +13,24 @@ const TYPE_LABEL: Record<string, string> = {
   freelance: "Freelance",
 };
 
-export default async function OpportunitiesPage() {
+const TYPE_OPTIONS: OpportunityType[] = [
+  "internship",
+  "pfe",
+  "job",
+  "alternance",
+  "freelance",
+];
+
+const SORT_OPTIONS = {
+  newest: "Newest",
+  starting_soon: "Starting soonest",
+} as const;
+
+type SortKey = keyof typeof SORT_OPTIONS;
+
+export default async function OpportunitiesPage({
+  searchParams,
+}: PageProps<"/opportunities">) {
   if (!isSupabaseConfigured()) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-24 text-center">
@@ -36,12 +56,74 @@ export default async function OpportunitiesPage() {
     );
   }
 
+  const sp = await searchParams;
+  const q = firstParam(sp.q);
+  const type = firstParam(sp.type);
+  const location = firstParam(sp.location);
+  const company = firstParam(sp.company);
+  const skill = firstParam(sp.skill);
+  const sort: SortKey = sp.sort === "starting_soon" ? "starting_soon" : "newest";
+
+  const hasFilters = Boolean(q || type || location || company || skill);
+
   const supabase = await createClient();
-  const { data: opportunities, error } = await supabase
+  let query = supabase
     .from("opportunities")
-    .select("id, type, title, description, skills, location, remote, companies(company_name)")
-    .eq("status", "published")
-    .order("created_at", { ascending: false });
+    .select(
+      "id, type, title, description, skills, location, remote, start_date, companies!inner(company_name)"
+    )
+    .eq("status", "published");
+
+  if (q) {
+    const safe = q.replace(/[,()]/g, " ").trim();
+    if (safe) query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`);
+  }
+  if (type && TYPE_OPTIONS.includes(type as OpportunityType)) {
+    query = query.eq("type", type);
+  }
+  if (location) {
+    query = query.ilike("location", `%${location}%`);
+  }
+  if (company) {
+    query = query.ilike("companies.company_name", `%${company}%`);
+  }
+  if (skill) {
+    query = query.contains("skills", [skill]);
+  }
+
+  query =
+    sort === "starting_soon"
+      ? query.order("start_date", { ascending: true, nullsFirst: false })
+      : query.order("created_at", { ascending: false });
+
+  const { data: opportunities, error } = await query;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let isStudent = false;
+  const savedIds = new Set<string>();
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    isStudent = profile?.role === "student";
+
+    if (isStudent && opportunities && opportunities.length > 0) {
+      const { data: saved } = await supabase
+        .from("saved_opportunities")
+        .select("opportunity_id")
+        .eq("student_id", user.id)
+        .in(
+          "opportunity_id",
+          opportunities.map((o) => o.id)
+        );
+      for (const row of saved ?? []) savedIds.add(row.opportunity_id);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
@@ -52,6 +134,47 @@ export default async function OpportunitiesPage() {
         Internships &amp; PFE, published by real companies
       </h1>
 
+      <form className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" action="/opportunities">
+        <Input
+          name="q"
+          defaultValue={q}
+          placeholder="Keyword…"
+          className="lg:col-span-2"
+          aria-label="Keyword"
+        />
+        <Input name="company" defaultValue={company} placeholder="Company" aria-label="Company" />
+        <Input name="location" defaultValue={location} placeholder="Location" aria-label="Location" />
+        <Select name="type" defaultValue={type ?? ""} aria-label="Type">
+          <option value="">Any type</option>
+          {TYPE_OPTIONS.map((t) => (
+            <option key={t} value={t}>
+              {TYPE_LABEL[t]}
+            </option>
+          ))}
+        </Select>
+        <Input name="skill" defaultValue={skill} placeholder="Skill (e.g. SQL)" aria-label="Skill" />
+        <Select name="sort" defaultValue={sort} aria-label="Sort by">
+          {Object.entries(SORT_OPTIONS).map(([value, label]) => (
+            <option key={value} value={value}>
+              Sort: {label}
+            </option>
+          ))}
+        </Select>
+        <div className="flex items-center gap-3 lg:col-span-2">
+          <button
+            type="submit"
+            className="rounded-md bg-accent px-5 py-2.5 font-mono text-sm text-white"
+          >
+            Search
+          </button>
+          {hasFilters && (
+            <Link href="/opportunities" className="font-mono text-xs text-text-muted hover:text-text">
+              Clear filters
+            </Link>
+          )}
+        </div>
+      </form>
+
       {error && (
         <p className="mt-8 text-sm text-magenta">
           Couldn&apos;t load opportunities: {error.message}
@@ -59,41 +182,61 @@ export default async function OpportunitiesPage() {
       )}
 
       {!error && (!opportunities || opportunities.length === 0) && (
-        <p className="mt-8 text-text-muted">
-          No opportunities published yet. Once a company posts one, it shows
-          up here.
-        </p>
+        <div className="mt-8">
+          <EmptyState
+            title={hasFilters ? "No opportunities match your filters." : "No opportunities published yet."}
+            body={
+              hasFilters
+                ? "Try clearing a filter or searching a broader term."
+                : "Once a verified company posts one, it shows up here."
+            }
+            action={
+              hasFilters ? (
+                <Link href="/opportunities" className="font-mono text-sm text-accent-2">
+                  Clear filters →
+                </Link>
+              ) : undefined
+            }
+          />
+        </div>
       )}
 
       <ul className="mt-8 space-y-4">
         {opportunities?.map((o) => (
           <li key={o.id}>
-            <Link
-              href={`/opportunities/${o.id}`}
-              className="block rounded-lg border border-border bg-surface p-6 transition hover:border-accent-2/50"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded bg-accent2-soft px-2 py-0.5 font-mono text-xs uppercase tracking-wide text-accent-2">
-                  {TYPE_LABEL[o.type] ?? o.type}
-                </span>
-                {o.location && (
-                  <span className="text-xs text-text-faint">{o.location}</span>
-                )}
-                {o.remote && (
-                  <span className="text-xs text-text-faint">Remote</span>
+            <div className="rounded-lg border border-border bg-surface p-6 transition hover:border-accent-2/50">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="info">{TYPE_LABEL[o.type] ?? o.type}</Badge>
+                  {o.location && (
+                    <span className="text-xs text-text-faint">{o.location}</span>
+                  )}
+                  {o.remote && (
+                    <span className="text-xs text-text-faint">Remote</span>
+                  )}
+                </div>
+                {isStudent && (
+                  <SaveOpportunityButton
+                    opportunityId={o.id}
+                    initiallySaved={savedIds.has(o.id)}
+                  />
                 )}
               </div>
-              <h2 className="mt-2 font-display text-lg font-bold">
-                {o.title}
-              </h2>
-              <p className="mt-1 text-sm text-text-muted">
-                {(o.companies as unknown as { company_name: string } | null)
-                  ?.company_name ?? "ESEN partner company"}
-              </p>
-            </Link>
+              <Link href={`/opportunities/${o.id}`} className="mt-2 block">
+                <h2 className="font-display text-lg font-bold">{o.title}</h2>
+                <p className="mt-1 text-sm text-text-muted">
+                  {(o.companies as unknown as { company_name: string } | null)
+                    ?.company_name ?? "ESEN partner company"}
+                </p>
+              </Link>
+            </div>
           </li>
         ))}
       </ul>
     </div>
   );
+}
+
+function firstParam(v: string | string[] | undefined): string {
+  return (Array.isArray(v) ? v[0] : v)?.trim() ?? "";
 }

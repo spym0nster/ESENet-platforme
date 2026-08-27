@@ -6,7 +6,22 @@ import { signOut } from "@/app/actions/auth";
 
 export async function SiteHeader() {
   const configured = isSupabaseConfigured();
-  const user = configured ? (await (await createClient()).auth.getUser()).data.user : null;
+  const supabase = configured ? await createClient() : null;
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+
+  let isCompany = false;
+  let isAdmin = false;
+  let isStudent = false;
+  if (supabase && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    isCompany = profile?.role === "company";
+    isAdmin = profile?.role === "admin";
+    isStudent = profile?.role === "student";
+  }
 
   return (
     // Fixed dark ground on purpose: the wordmark's "ESE" / "Talent Fair"
@@ -21,6 +36,42 @@ export async function SiteHeader() {
           <Link href="/opportunities" className="hover:text-white">
             Opportunities
           </Link>
+          <Link href="/feed" className="hover:text-white">
+            Feed
+          </Link>
+          {isStudent && (
+            <>
+              <Link href="/profile" className="hover:text-white">
+                My profile
+              </Link>
+              <Link href="/applications" className="hover:text-white">
+                My applications
+              </Link>
+              <Link href="/saved" className="hover:text-white">
+                Saved
+              </Link>
+            </>
+          )}
+          {isCompany && (
+            <>
+              <Link href="/company/profile" className="hover:text-white">
+                My profile
+              </Link>
+              <Link href="/company/dashboard" className="hover:text-white">
+                My company
+              </Link>
+            </>
+          )}
+          {isAdmin && (
+            <>
+              <Link href="/admin/companies" className="hover:text-white">
+                Admin
+              </Link>
+              <Link href="/admin/reports" className="hover:text-white">
+                Reports
+              </Link>
+            </>
+          )}
           {user ? (
             <form action={signOut}>
               <button type="submit" className="hover:text-white">

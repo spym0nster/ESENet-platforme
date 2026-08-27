@@ -19,14 +19,18 @@ export type OpportunityStatus = "pending" | "published" | "closed";
 export type ApplicationStatus =
   | "applied"
   | "reviewed"
+  | "shortlisted"
+  | "interview"
   | "accepted"
-  | "rejected";
+  | "rejected"
+  | "withdrawn";
 
 export interface Profile {
   id: string;
   role: UserRole;
   full_name: string;
   avatar_url: string | null;
+  banner_url: string | null;
   created_at: string;
 }
 
@@ -46,6 +50,7 @@ export interface Company {
   company_name: string;
   website: string | null;
   logo_url: string | null;
+  banner_url: string | null;
   description: string | null;
   verified: boolean;
 }
@@ -72,4 +77,152 @@ export interface Application {
   status: ApplicationStatus;
   message: string | null;
   created_at: string;
+}
+
+export interface ApplicationStatusEvent {
+  id: string;
+  application_id: string;
+  status: ApplicationStatus;
+  changed_by: string;
+  created_at: string;
+}
+
+export interface Education {
+  id: string;
+  profile_id: string;
+  school: string;
+  degree: string | null;
+  field_of_study: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+}
+
+export interface Experience {
+  id: string;
+  profile_id: string;
+  title: string;
+  organization: string | null;
+  description: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+}
+
+export interface Project {
+  id: string;
+  profile_id: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  created_at: string;
+}
+
+export interface Certification {
+  id: string;
+  profile_id: string;
+  name: string;
+  issuer: string | null;
+  issue_date: string | null;
+  created_at: string;
+}
+
+export type CompanyMemberRole = "owner" | "member";
+
+export interface CompanyMember {
+  company_id: string;
+  profile_id: string;
+  role: CompanyMemberRole;
+  title: string | null;
+  created_at: string;
+}
+
+export interface CompanyInvite {
+  id: string;
+  company_id: string;
+  email: string;
+  invited_by: string;
+  created_at: string;
+  accepted_at: string | null;
+}
+
+export type PublishedAs = "self" | "company";
+
+export interface Post {
+  id: string;
+  author_id: string;
+  company_id: string | null;
+  published_as: PublishedAs;
+  body: string;
+  media_url: string | null;
+  link_url: string | null;
+  opportunity_id: string | null;
+  project_id: string | null;
+  created_at: string;
+  updated_at: string;
+  removed_at: string | null;
+  removed_by: string | null;
+  removal_reason: string | null;
+}
+
+export interface PostComment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  removed_at: string | null;
+  removed_by: string | null;
+}
+
+export interface PostLike {
+  post_id: string;
+  profile_id: string;
+  created_at: string;
+}
+
+export type ReportReason =
+  | "spam"
+  | "harassment"
+  | "inappropriate"
+  | "fake_information"
+  | "recruitment_abuse"
+  | "other";
+
+export type ReportStatus = "open" | "resolved" | "dismissed";
+
+export interface ContentReport {
+  id: string;
+  reporter_id: string;
+  post_id: string | null;
+  comment_id: string | null;
+  reason: ReportReason;
+  details: string | null;
+  status: ReportStatus;
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+}
+
+/** Denormalized shape used by feed/profile UI — a post plus what it needs to render. */
+export interface PostWithAuthor extends Post {
+  author: {
+    id: string;
+    full_name: string;
+    avatar_url: string | null;
+    role: UserRole;
+    headline: string | null;
+  } | null;
+  company: {
+    profile_id: string;
+    company_name: string;
+    logo_url: string | null;
+    verified: boolean;
+  } | null;
+  member_title: string | null;
+  opportunity: { id: string; title: string; type: OpportunityType } | null;
+  project: { id: string; title: string } | null;
+  like_count: number;
+  comment_count: number;
+  liked_by_me: boolean;
 }

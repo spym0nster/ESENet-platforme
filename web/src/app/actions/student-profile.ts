@@ -1,0 +1,119 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+
+export type ProfileActionState = { error: string } | { success: true } | null;
+
+const MAX_CV_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_CV_TYPES = ["application/pdf"];
+
+async function requireStudent() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { supabase, user: null, error: "You must be signed in." } as const;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "student") {
+    return { supabase, user: null, error: "Only student accounts can do this." } as const;
+  }
+
+  return { supabase, user, error: null } as const;
+}
+
+export async function updateStudentProfile(
+  _prevState: ProfileActionState,
+  formData: FormData
+): Promise<ProfileActionState> {
+  const { supabase, user, error: authError } = await requireStudent();
+  if (!user) return { error: authError };
+
+  const headline = String(formData.get("headline") ?? "").trim();
+  const bio = String(formData.get("bio") ?? "").trim();
+  const lookingFor = String(formData.get("looking_for") ?? "").trim();
+  const availability = String(formData.get("availability") ?? "").trim();
+  const linkedinUrl = String(formData.get("linkedin_url") ?? "").trim();
+  const skillsRaw = String(formData.get("skills") ?? "[]");
+
+  let skills: string[] = [];
+  try {
+    const parsed = JSON.parse(skillsRaw);
+    if (Array.isArray(parsed)) {
+      skills = parsed.map((s) => String(s).trim()).filter(Boolean).slice(0, 20);
+    }
+  } catch {
+    // ignore malformed payload, treat as empty
+  }
+
+  const { error } = await supabase
+    .from("student_details")
+    .update({
+      headline: headline || null,
+      bio: bio || null,
+      looking_for: lookingFor || null,
+      availability: availability || null,
+      linkedin_url: linkedinUrl || null,
+      skills,
+    })
+    .eq("profile_id", user.id);
+
+  if (error) {
+    console.error("updateStudentProfile failed:", error);
+    return { error: "We couldn't save your profile. Please try again." };
+  }
+
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+export async function uploadCv(
+  _prevState: ProfileActionState,
+  formData: FormData
+): Promise<ProfileActionState> {
+  const { supabase, user, error: authError } = await requireStudent();
+  if (!user) return { error: authError };
+
+  const file = formData.get("cv");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a PDF file first." };
+  }
+  if (!ALLOWED_CV_TYPES.includes(file.type)) {
+    return { error: "CVs must be a PDF file." };
+  }
+  if (file.size > MAX_CV_BYTES) {
+    return { error: "CV must be under 5MB." };
+  }
+
+  const path = `${user.id}/cv.pdf`;
+  const { error: uploadError } = await supabase.storage
+    .from("cvs")
+    .upload(path, file, { contentType: "application/pdf", upsert: true });
+
+  if (uploadError) {
+    console.error("uploadCv failed:", uploadError);
+    return { error: "We couldn't upload your CV. Please try again." };
+  }
+
+  const { error: dbError } = await supabase
+    .from("student_details")
+    .update({ cv_url: path })
+    .eq("profile_id", user.id);
+
+  if (dbError) {
+    console.error("uploadCv db update failed:", dbError);
+    return { error: "Your file uploaded, but we couldn't save it to your profile." };
+  }
+
+  revalidatePath("/profile");
+  return { success: true };
+}

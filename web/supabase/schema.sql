@@ -1,5 +1,10 @@
 -- ESENet — Phase 1 schema (Opportunities: internships + PFE)
 -- Run this once in the Supabase SQL editor for a fresh project.
+--
+-- Later changes live as additive migrations in supabase/migrations/,
+-- numbered in order (e.g. 0002_platform_phase2.sql) — run this file first
+-- on a brand-new project, then every migration file in order. Migrations
+-- never modify this file retroactively.
 
 -- ---------- enums ----------
 create type user_role as enum ('student', 'company', 'admin');

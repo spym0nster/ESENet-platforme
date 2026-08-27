@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { signUp, type AuthState } from "@/app/actions/auth";
+import { Field, Input, Button } from "@/components/ui";
 
 export function SignupForm() {
   const [state, action, pending] = useActionState<AuthState, FormData>(
@@ -26,24 +27,31 @@ export function SignupForm() {
       </div>
       <input type="hidden" name="role" value={role} />
 
-      <Field
-        label={role === "student" ? "Full name" : "Company name"}
-        name="full_name"
-        type="text"
-        required
-      />
-      <Field label="Email" name="email" type="email" required />
-      <Field label="Password" name="password" type="password" required />
+      <Field label={role === "student" ? "Full name" : "Company name"}>
+        <Input name="full_name" type="text" required />
+      </Field>
+      <Field label="Email">
+        <Input name="email" type="email" required />
+      </Field>
+      <Field label="Password">
+        <Input name="password" type="password" required />
+      </Field>
 
-      {state?.error && <p className="text-sm text-magenta">{state.error}</p>}
+      {state && "error" in state && (
+        <p className="text-sm text-magenta">{state.error}</p>
+      )}
+      {state && "info" in state && (
+        <p
+          className="rounded-md px-4 py-3 text-sm font-medium"
+          style={{ background: "var(--accent-soft)", color: "var(--accent-on-soft)" }}
+        >
+          {state.info}
+        </p>
+      )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-md bg-accent px-5 py-2.5 font-semibold text-white disabled:opacity-60"
-      >
+      <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Creating account…" : "Create account"}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -69,31 +77,5 @@ function RoleButton({
     >
       {label}
     </button>
-  );
-}
-
-function Field({
-  label,
-  name,
-  type,
-  required,
-}: {
-  label: string;
-  name: string;
-  type: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1 block font-mono text-xs uppercase tracking-wide text-text-faint">
-        {label}
-      </span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
-      />
-    </label>
   );
 }

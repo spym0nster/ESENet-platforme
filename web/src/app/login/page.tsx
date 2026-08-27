@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/login-form";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: PageProps<"/login">) {
+  const { next } = await searchParams;
   return (
     <div className="mx-auto max-w-sm px-6 py-20">
       <h1 className="font-display text-2xl font-bold">Log in</h1>
@@ -9,7 +12,7 @@ export default function LoginPage() {
         Welcome back to ESENet.
       </p>
       <div className="mt-8">
-        <LoginForm />
+        <LoginForm next={typeof next === "string" ? next : undefined} />
       </div>
       <p className="mt-6 text-sm text-text-muted">
         No account yet?{" "}

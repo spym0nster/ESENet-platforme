@@ -12,7 +12,8 @@ cp .env.local.example .env.local
 ```
 
 Fill in `.env.local` with your Supabase project's URL and anon key (Project
-Settings → API), then run `supabase/schema.sql` in the Supabase SQL editor.
+Settings → API), then run `supabase/schema.sql` in the Supabase SQL editor,
+followed by every file in `supabase/migrations/`, in numeric order.
 
 ```bash
 npm run dev
