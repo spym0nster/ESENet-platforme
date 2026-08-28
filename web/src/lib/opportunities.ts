@@ -77,3 +77,67 @@ export async function fetchRecommendedOpportunities(
     .sort((a, b) => b.matchCount - a.matchCount)
     .slice(0, limit);
 }
+
+export type SimilarOpportunity = {
+  id: string;
+  type: OpportunityType;
+  title: string;
+  company_name: string;
+};
+
+/**
+ * "More like this" for an opportunity detail page — other published
+ * opportunities that share a skill with the given one, ranked by overlap,
+ * excluding itself. Same deliberately-simple tag-overlap approach as the
+ * student recommendations; no personalisation, so it's safe to render for
+ * anonymous visitors.
+ */
+export async function fetchSimilarOpportunities(
+  supabase: SupabaseClient,
+  opts: { opportunityId: string; skills: string[]; limit?: number }
+): Promise<SimilarOpportunity[]> {
+  const skills = [...new Set(opts.skills.map((s) => s.trim()).filter(Boolean))];
+  if (skills.length === 0) return [];
+
+  const wanted = new Set(skills.map((s) => s.toLowerCase()));
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select(
+      "id, type, title, skills, application_deadline, companies!inner(company_name)"
+    )
+    .eq("status", "published")
+    .overlaps("skills", skills)
+    .neq("id", opts.opportunityId)
+    .limit(30);
+
+  if (error) {
+    console.error("fetchSimilarOpportunities failed:", error);
+    return [];
+  }
+
+  const ranked = (data ?? [])
+    .filter(
+      (o) =>
+        !o.application_deadline ||
+        (o.application_deadline as string) >= todayIso
+    )
+    .map((o) => ({
+      row: o,
+      overlap: ((o.skills as string[] | null) ?? []).filter((s) =>
+        wanted.has(s.toLowerCase())
+      ).length,
+    }))
+    .sort((a, b) => b.overlap - a.overlap)
+    .slice(0, opts.limit ?? 3);
+
+  return ranked.map(({ row }) => ({
+    id: row.id as string,
+    type: row.type as OpportunityType,
+    title: row.title as string,
+    company_name:
+      (row.companies as unknown as { company_name: string } | null)
+        ?.company_name ?? "ESEN partner company",
+  }));
+}

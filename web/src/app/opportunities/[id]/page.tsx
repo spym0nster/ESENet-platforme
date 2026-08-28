@@ -6,6 +6,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { ApplyForm } from "@/components/apply-form";
 import { SaveOpportunityButton } from "@/components/save-opportunity-button";
+import { fetchSimilarOpportunities } from "@/lib/opportunities";
 
 const TYPE_LABEL: Record<string, string> = {
   internship: "Internship",
@@ -113,6 +114,14 @@ export default async function OpportunityPage({
     Boolean(opportunity.application_deadline) &&
     opportunity.application_deadline! < todayIso;
   const applicationsClosed = opportunity.status !== "published" || deadlinePassed;
+
+  const similar =
+    opportunity.status === "published"
+      ? await fetchSimilarOpportunities(supabase, {
+          opportunityId: opportunity.id,
+          skills: opportunity.skills ?? [],
+        })
+      : [];
   const deadlineLabel = opportunity.application_deadline
     ? new Date(opportunity.application_deadline).toLocaleDateString(undefined, {
         day: "numeric",
@@ -211,6 +220,30 @@ export default async function OpportunityPage({
           </p>
         )}
       </div>
+
+      {similar.length > 0 && (
+        <div className="mt-12 border-t border-border pt-8">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+            Similar opportunities
+          </h2>
+          <ul className="mt-4 space-y-2">
+            {similar.map((o) => (
+              <li key={o.id}>
+                <Link
+                  href={`/opportunities/${o.id}`}
+                  className="flex flex-wrap items-baseline gap-x-2 rounded-md px-3 py-2 hover:bg-surface-alt"
+                >
+                  <span className="font-mono text-[11px] uppercase tracking-wide text-accent-2">
+                    {TYPE_LABEL[o.type] ?? o.type}
+                  </span>
+                  <span className="font-display text-sm font-bold">{o.title}</span>
+                  <span className="text-sm text-text-muted">{o.company_name}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
