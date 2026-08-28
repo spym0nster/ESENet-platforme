@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # ESENet — project context
 
 ESENet is ESEN's (École Supérieure de l'Économie Numérique, Manouba, Tunisia)
@@ -55,6 +59,29 @@ to WASM bindings automatically, but Turbopack requires native bindings, so
 `package.json` scripts pass `--webpack` explicitly. Don't remove that flag
 without checking Turbopack works on the target machine first.
 
+**`next dev` also rewrites `web/AGENTS.md`** (imported by `web/CLAUDE.md`)
+with a warning that this Next.js version has breaking changes vs. training
+data — read `web/node_modules/next/dist/docs/` before writing App Router
+code, and commit that file's regenerated content with your work rather than
+reverting it.
+
+## Commands
+
+All commands run from `web/`:
+
+```bash
+npm run dev      # dev server on :3000 (webpack, not turbopack — see Windows note)
+npm run build    # production build — part of the pre-merge check
+npm run lint     # eslint (flat config, eslint-config-next)
+```
+
+There is **no test runner** — `package.json` has no `test` script and no
+test files exist. Verification is `npm run lint` + `npm run build` plus the
+manual regression flow in `web/docs/QA.md`, run against the real dev Supabase
+project (there are 4 permanent QA accounts; the password is not in the repo).
+Treat that checklist as the substitute for an automated suite when a change
+touches auth / companies / opportunities / applications / feed / RLS.
+
 ## Getting the app running
 
 ```bash
@@ -98,6 +125,60 @@ the shared `is_company_actor()` predicate, and admin-only moderation via
 running log of real RLS bugs found and fixed — read it before touching any
 policy in this schema, several of its gotchas are non-obvious and have bitten
 this project more than once.
+
+## Architecture & conventions
+
+App Router under `web/src/app`, path alias `@/*` → `web/src/*`.
+
+- **Mutations are Next.js server actions**, grouped by domain in
+  `src/app/actions/*.ts` (`"use server"`), consumed from client components
+  via `useActionState`. Every action follows the same shape, and it is
+  load-bearing (see `actions/opportunities.ts` for the canonical example):
+  1. `supabase.auth.getUser()` — never trust a client-supplied identity;
+  2. re-check the caller's `role` (and company membership) server-side;
+  3. validate input, returning `{ error, fieldErrors }` — never leak a raw
+     Postgres error to the client (`console.error` server-side instead);
+  4. write, then `revalidatePath(...)` and `redirect(...)`.
+- **RLS is the real security boundary**, not the server-side checks above —
+  those are duplicated defense. Every table has policies (public read for
+  browse/directory/feed, owner-only write). Column-level "owner can edit
+  everything but this one field" rules (`profiles.role`, `companies.verified`,
+  `company_members.role`) are enforced by **DB triggers**, because RLS can
+  only gate which rows a policy touches, not which columns. Read
+  `web/docs/QA.md` before editing any policy — it logs several non-obvious
+  RLS bugs this project already hit (recursive policy needing
+  `SECURITY DEFINER`, `WITH CHECK` OR-ing across policies, RLS-blocked writes
+  returning 200/0-rows rather than an error).
+- **"Which company does this user act for"** is always resolved through
+  `resolveCompanyId()` (`src/lib/company.ts`) / the `is_company_actor()` SQL
+  predicate — never `company_id === auth.uid()`. A company is one permanent
+  identity (`companies.profile_id`) plus 0+ `company_members`.
+- **Page-level auth guards** live in `src/lib/auth/require-*.ts`
+  (`requireStudentUser` / `requireCompanyUser` / `requireAdminUser`). They
+  `redirect()` (to `/login?next=…` or away), never just hide UI, and return
+  `{ supabase, user, ... }` for the page to reuse.
+- **Supabase clients:** `src/lib/supabase/server.ts` (server components /
+  actions, cookie-aware), `client.ts` (browser). `middleware.ts` +
+  `lib/supabase/middleware.ts` refresh the session cookie on every request.
+- **Signup provisioning is deferred to first login.** Email confirmation is
+  on, so `signUp()` has no session to satisfy the `profiles` insert policy;
+  `signIn()` creates the `profiles` / `student_details` row from auth-user
+  metadata on first successful login. Don't "fix" this by disabling email
+  confirmation. A company-role signup with no pending invite is left
+  unattached and routed to `/company/onboarding` (create vs. request-to-join).
+- **`isSupabaseConfigured()`** gates the whole app — with no env vars,
+  middleware no-ops and data pages render a "connect Supabase" state instead
+  of crashing.
+- **DB types are hand-written** in `src/types/database.ts` (not generated
+  from the linked project). Keep them in sync with `schema.sql` +
+  migrations manually.
+- **Styling:** Tailwind v4, dark-first. Compose `src/components/ui/*`
+  (`Button`, `Field`, `Card`, `Badge`, `EmptyState`) rather than
+  re-inlining class stacks; never use a raw hex. Full rules in
+  `web/docs/DESIGN_SYSTEM.md`.
+- **Schema changes are additive migration files only** —
+  `web/supabase/migrations/NNNN_*.sql`, next number in sequence. Never edit
+  `schema.sql` or an existing migration retroactively.
 
 ## Roadmap scope (do NOT build ahead of this without asking)
 
