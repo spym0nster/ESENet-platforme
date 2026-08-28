@@ -25,6 +25,7 @@ const TYPE_OPTIONS: OpportunityType[] = [
 const SORT_OPTIONS = {
   newest: "Newest",
   starting_soon: "Starting soonest",
+  deadline: "Application deadline",
 } as const;
 
 type SortKey = keyof typeof SORT_OPTIONS;
@@ -65,7 +66,10 @@ export default async function OpportunitiesPage({
   const location = firstParam(sp.location);
   const company = firstParam(sp.company);
   const skill = firstParam(sp.skill);
-  const sort: SortKey = sp.sort === "starting_soon" ? "starting_soon" : "newest";
+  const sort: SortKey =
+    sp.sort === "starting_soon" || sp.sort === "deadline"
+      ? sp.sort
+      : "newest";
   const page = Math.max(1, parseInt(firstParam(sp.page), 10) || 1);
 
   const hasFilters = Boolean(q || type || location || company || skill);
@@ -95,10 +99,16 @@ export default async function OpportunitiesPage({
     query = query.contains("skills", [skill]);
   }
 
-  query =
-    sort === "starting_soon"
-      ? query.order("start_date", { ascending: true, nullsFirst: false })
-      : query.order("created_at", { ascending: false });
+  if (sort === "starting_soon") {
+    query = query.order("start_date", { ascending: true, nullsFirst: false });
+  } else if (sort === "deadline") {
+    query = query.order("application_deadline", {
+      ascending: true,
+      nullsFirst: false,
+    });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
 
   // Fetch one extra row past the page size instead of a separate COUNT
   // query — its presence alone tells us whether a next page exists, no
@@ -287,6 +297,12 @@ export default async function OpportunitiesPage({
                   {o.remote && (
                     <span className="text-xs text-text-faint">Remote</span>
                   )}
+                  {o.application_deadline &&
+                    o.application_deadline < todayIso && (
+                      <span className="font-mono text-xs text-text-faint">
+                        Applications closed
+                      </span>
+                    )}
                   {o.application_deadline &&
                     o.application_deadline >= todayIso &&
                     o.application_deadline <= soonIso && (
