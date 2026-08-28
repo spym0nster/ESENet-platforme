@@ -287,6 +287,11 @@ rules above.
 - [ ] Server guard: a direct POST to `applyToOpportunity` for a past-deadline or non-published opportunity returns a friendly error and writes no row (verified via stale page / direct call — cannot be exercised through the UI once the form is hidden)
 - [ ] **Not verified with a real login** (no QA student password available to me): the end-to-end "student clicks Apply before/after deadline" path. Backing SQL + the detail-page render for null / past / soon deadlines were checked directly against the dev DB.
 
+### robots.txt / sitemap.xml
+- [ ] `/robots.txt` allows `/`, disallows `/students`, `/profile`, `/company/`, `/admin/`, `/notifications`, `/applications`, `/saved`, `/reset-password`, `/auth/`, and points at `/sitemap.xml`
+- [ ] `/sitemap.xml` lists the static public routes plus every **published** opportunity (`lastmod` = created_at) and every **verified** company; regenerates hourly (`revalidate = 3600`); reads via the cookie-less public client
+- [ ] Verified in-browser against live dev DB (1 opportunity + 2 companies present, correct absolute URLs from `NEXT_PUBLIC_SITE_URL` / Vercel fallback)
+
 ### Page metadata / link previews
 - [ ] Root layout sets `metadataBase` (`NEXT_PUBLIC_SITE_URL` or the Vercel URL fallback) and a `%s · ESENet` title template
 - [ ] `/opportunities/[id]` `<title>` = "<title> — <company> · ESENet"; `og:title` = "<title> · <type> at <company>"; `og:description` = first 200 chars of the description; a closed/unpublished or missing id → title just "Opportunity"
