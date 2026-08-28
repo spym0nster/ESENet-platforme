@@ -68,7 +68,12 @@ export async function PostCard({
         <div className="min-w-0 flex-1">
           {postingAsCompany ? (
             <p className="flex items-center gap-2 font-semibold text-text">
-              {post.company!.company_name}
+              <Link
+                href={`/companies/${post.company!.profile_id}`}
+                className="hover:text-accent-2"
+              >
+                {post.company!.company_name}
+              </Link>
               {post.company!.verified && <Badge variant="info">Verified</Badge>}
             </p>
           ) : (
@@ -78,7 +83,12 @@ export async function PostCard({
                 <span className="font-normal text-text-muted">
                   {" · "}
                   {post.member_title ? `${post.member_title} · ` : ""}
-                  {post.company.company_name}
+                  <Link
+                    href={`/companies/${post.company.profile_id}`}
+                    className="hover:text-accent-2"
+                  >
+                    {post.company.company_name}
+                  </Link>
                 </span>
               )}
             </p>

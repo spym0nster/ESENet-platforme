@@ -116,7 +116,7 @@ extras. As of this writing:
 
 - `profiles` — one row per authenticated user (`role`: student/company/admin)
 - `student_details` — 1:1 with a student profile (skills, bio, availability, CV), plus `education`/`experiences`/`projects`/`certifications` child tables. All public-read ("for company search") — surfaced at `/students` (signed-in-only directory + filters) and `/students/[id]` (read-only public profile; CV deliberately excluded, it stays in its applicant-scoped private bucket)
-- `companies` — 1:1 with a company profile (name, website, verified flag, logo/banner)
+- `companies` — 1:1 with a company profile (name, website, verified flag, logo/banner). Public page at `/companies/[id]` (logo/banner/description, published opportunities, team) — the company-side mirror of `/students/[id]`
 - `company_members` / `company_invites` — multi-user company accounts: an owner plus invited team members (each with their own login and an optional `title` shown in the feed), invite-by-email with accept-your-own-invite RLS
 - `opportunities` — posted by a company (`type`: internship/pfe/job/alternance/freelance; `status`: pending/published/closed). Any company actor can edit (`/company/opportunities/[id]/edit`) or close/reopen it from the dashboard; a `closed` row leaves the marketplace but a student who already applied keeps read access via `has_application_to()` (`0017`).
 - `applications` (+ `application_status_events`) — a student applying to an opportunity, with a status history log. The company applicants view shows headline/skills inline + a signed CV link; `0018` widened CV read from owner-only to `is_company_actor`

@@ -275,6 +275,12 @@ rules above.
 - [ ] `/opportunities` paginates at 20 per page; filters/sort survive across Previous/Next
 - [ ] Applying a second time to the same opportunity fails with a friendly message, not a raw database error
 
+### Public company profile (`/companies/[id]`)
+- [ ] Renders (no login needed) for a verified company: logo/banner/description, "Verified" badge, website link, its published opportunities, and the team ("Name · Title", owner marked)
+- [ ] An unverified company still renders (row is public) but shows "Not yet verified" and no opportunities
+- [ ] A non-company id 404s
+- [ ] The company name on an opportunity's detail page and on company posts in the feed link here
+
 ### Opportunity edit / close (`0017`)
 - [ ] Dashboard shows Edit + Close/Reopen per opportunity; `/company/opportunities/[id]/edit` prefills every field and saves ("Changes saved." banner)
 - [ ] A team member (not just the owner) can edit and close — `is_company_actor`, not owner-only

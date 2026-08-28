@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
@@ -26,7 +27,7 @@ export default async function OpportunityPage({
   const { data: opportunity } = await supabase
     .from("opportunities")
     .select(
-      "id, type, title, description, skills, location, remote, start_date, end_date, companies(company_name, website, logo_url)"
+      "id, type, title, description, skills, location, remote, start_date, end_date, company_id, companies(company_name, website, logo_url)"
     )
     .eq("id", id)
     .single();
@@ -99,7 +100,12 @@ export default async function OpportunityPage({
         </h1>
       </div>
       <p className="mt-1 text-text-muted">
-        {company?.company_name ?? "ESEN partner company"}
+        <Link
+          href={`/companies/${opportunity.company_id}`}
+          className="text-accent-2 hover:text-text"
+        >
+          {company?.company_name ?? "ESEN partner company"}
+        </Link>
         {opportunity.location ? ` · ${opportunity.location}` : ""}
         {opportunity.remote ? " · Remote" : ""}
         {company?.website && (
