@@ -316,7 +316,9 @@ rules above.
       `applied`) shows an "N new" badge next to the applicant count
 - [ ] Company applicants view: each card has a collapsible "Status history"
       disclosure (Applied + every `application_status_events` row)
-- [ ] **Needs migration `0021`.** Company status update with a note filled in:
+- [ ] Migration `0021` (applied 2026-08-28 via MCP — nullable
+      `application_status_events.note` + `application_status_events_note_len`
+      check). Company status update with a note filled in:
       the note is stored on the `application_status_events` row (≤1000 chars,
       `application_status_events_note_len` check), shown quoted in the company
       history disclosure, shown in a callout on the student's
