@@ -15,4 +15,7 @@ Thumbs.db
 
 # Editor / agent local config
 .claude/
+
+# Vercel CLI
 .vercel
+.env*
