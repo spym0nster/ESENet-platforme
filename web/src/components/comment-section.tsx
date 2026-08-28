@@ -24,7 +24,7 @@ function DeleteCommentButton({ commentId }: { commentId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="font-mono text-[11px] uppercase tracking-wide text-text-faint hover:text-magenta"
+        className="py-2 font-mono text-[11px] uppercase tracking-wide text-text-faint hover:text-magenta"
       >
         Delete
       </button>

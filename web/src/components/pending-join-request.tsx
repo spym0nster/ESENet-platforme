@@ -30,7 +30,7 @@ export function PendingJoinRequest({
         <button
           type="submit"
           disabled={pending}
-          className="font-mono text-xs uppercase tracking-wide text-text-faint hover:text-magenta"
+          className="py-2 font-mono text-xs uppercase tracking-wide text-text-faint hover:text-magenta"
         >
           {pending ? "…" : "Cancel request"}
         </button>

@@ -53,7 +53,7 @@ export function JoinRequestRow({
             <button
               type="submit"
               disabled={approvePending || declinePending}
-              className="font-mono text-xs uppercase tracking-wide text-text-faint hover:text-magenta"
+              className="py-2 font-mono text-xs uppercase tracking-wide text-text-faint hover:text-magenta"
             >
               {declinePending ? "…" : "Decline"}
             </button>

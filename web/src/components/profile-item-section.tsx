@@ -49,7 +49,7 @@ export function ProfileItemSection({
         <button
           type="button"
           onClick={() => setShowForm((v) => !v)}
-          className="font-mono text-xs text-accent-2 hover:text-text"
+          className="py-2 font-mono text-xs text-accent-2 hover:text-text"
         >
           {showForm ? "Cancel" : "+ Add"}
         </button>
@@ -119,7 +119,7 @@ function ItemRow({
         <button
           type="submit"
           disabled={pending}
-          className="font-mono text-xs text-text-faint hover:text-magenta"
+          className="py-2 font-mono text-xs text-text-faint hover:text-magenta"
         >
           {pending ? "…" : "Remove"}
         </button>

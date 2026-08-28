@@ -35,7 +35,7 @@ export function ReportButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="font-mono text-xs uppercase tracking-wide text-text-faint hover:text-magenta"
+        className="py-2 font-mono text-xs uppercase tracking-wide text-text-faint hover:text-magenta"
       >
         Report
       </button>

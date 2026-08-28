@@ -38,7 +38,7 @@ export function TeamMemberRow({
           <button
             type="submit"
             disabled={pending}
-            className="font-mono text-xs text-text-faint hover:text-magenta"
+            className="py-2 font-mono text-xs text-text-faint hover:text-magenta"
           >
             {pending ? "…" : "Remove"}
           </button>
@@ -67,7 +67,7 @@ export function PendingInviteRow({ email, inviteId }: { email: string; inviteId:
         <button
           type="submit"
           disabled={pending}
-          className="font-mono text-xs text-text-faint hover:text-magenta"
+          className="py-2 font-mono text-xs text-text-faint hover:text-magenta"
         >
           {pending ? "…" : "Cancel"}
         </button>

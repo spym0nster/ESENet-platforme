@@ -32,60 +32,67 @@ export async function SiteHeader() {
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-6 w-auto" />
         </Link>
-        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-xs uppercase tracking-wider text-[#B3ADD9]">
-          <Link href="/opportunities" className="hover:text-white">
+        {/* py-3 on every link/button below isn't visual padding — text
+            size and header height look about the same either way, since
+            the row was already taller than the text alone. It exists
+            purely to grow each link's own tap target to the ~40px
+            minimum (confirmed live at 16px without it: text-xs with no
+            padding of its own, relying entirely on the row's height
+            around it, which a touch target doesn't get credit for). */}
+        <nav className="flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-xs uppercase tracking-wider text-[#B3ADD9]">
+          <Link href="/opportunities" className="py-3 hover:text-white">
             Opportunities
           </Link>
-          <Link href="/feed" className="hover:text-white">
+          <Link href="/feed" className="py-3 hover:text-white">
             Feed
           </Link>
           {isStudent && (
             <>
-              <Link href="/profile" className="hover:text-white">
+              <Link href="/profile" className="py-3 hover:text-white">
                 My profile
               </Link>
-              <Link href="/applications" className="hover:text-white">
+              <Link href="/applications" className="py-3 hover:text-white">
                 My applications
               </Link>
-              <Link href="/saved" className="hover:text-white">
+              <Link href="/saved" className="py-3 hover:text-white">
                 Saved
               </Link>
             </>
           )}
           {isCompany && (
             <>
-              <Link href="/company/profile" className="hover:text-white">
+              <Link href="/company/profile" className="py-3 hover:text-white">
                 My profile
               </Link>
-              <Link href="/company/dashboard" className="hover:text-white">
+              <Link href="/company/dashboard" className="py-3 hover:text-white">
                 My company
               </Link>
             </>
           )}
           {isAdmin && (
             <>
-              <Link href="/admin/companies" className="hover:text-white">
+              <Link href="/admin/companies" className="py-3 hover:text-white">
                 Admin
               </Link>
-              <Link href="/admin/reports" className="hover:text-white">
+              <Link href="/admin/reports" className="py-3 hover:text-white">
                 Reports
               </Link>
             </>
           )}
           {user ? (
             <form action={signOut}>
-              <button type="submit" className="hover:text-white">
+              <button type="submit" className="py-3 hover:text-white">
                 Sign out
               </button>
             </form>
           ) : (
             <>
-              <Link href="/login" className="hover:text-white">
+              <Link href="/login" className="py-3 hover:text-white">
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="rounded-md bg-accent px-4 py-2 text-white normal-case tracking-normal"
+                className="rounded-md bg-accent px-4 py-3 text-white normal-case tracking-normal"
               >
                 Sign up
               </Link>

@@ -278,6 +278,10 @@ but don't be surprised it's still in the table.
 - [ ] `npm run lint`
 - [ ] `npm run build`
 
+### Mobile
+- [ ] No horizontal scroll on any core page at 375px width
+- [ ] Every link/button has a real tap target (~32px+ for list actions, ~40px for primary nav) — not just its bare text line-height
+
 ## Posts / feed / moderation (`/feed`, `/admin/reports`)
 
 A single global, chronological feed (`fetchPosts()` in `src/lib/posts.ts`) that
@@ -399,3 +403,44 @@ behavior a real user would notice:
   split correctly (including with a filter applied, preserved across
   Previous/Next), then deleting all 22 and confirming the baseline
   ("Business Intelligence PFE Intern") was untouched.
+
+## Mobile audit (375×812 + 768×1024)
+
+Every QA pass before this one ran at a fixed desktop viewport — this was
+the first real check at mobile/tablet widths, using the Browser pane's
+device emulation and DOM measurement (`getBoundingClientRect`,
+`scrollWidth` vs `innerWidth`) rather than eyeballing screenshots (the
+emulator's screenshot canvas includes letterboxing outside the device
+frame, which looks like a layout bug at a glance but isn't — verify with
+the DOM, not the screenshot proportions).
+
+**Result: no horizontal-overflow bugs found** on any of the 16 routes
+checked at 375px, or on `/opportunities` and `/feed` re-checked at 768px.
+
+**One real, systemic bug found and fixed: near-zero tap targets.** Nearly
+every plain text link/button in the app (`font-mono text-xs ...` with no
+padding of its own) rendered at **16px tall** — the header nav, "+ Add" /
+"Remove" on profile sections, Like/Delete/Report/Remove(admin) on the
+feed, "Team →" / "View applicants →" on the company dashboard, "Clear
+filters" / "Browse opportunities →" on empty states, and more — found via
+a `getBoundingClientRect` sweep of `main a, main button` on each page,
+not a visual guess. 16px is a menu-bar-in-1995 hit target, not a phone
+one (WCAG 2.5.5 and every mobile platform's own guidance calls for
+~40-44px). Fixed by adding `py-2`/`py-2.5`/`py-3` (chosen per element:
+~32px for dense secondary actions in lists, 40px for primary header nav)
+to every instance found across `src/components` and `src/app` — padding
+only, no visual redesign, confirmed with an eslint+build pass and
+re-measured live after the fix. The two skill-chip "×" remove buttons
+(inherently tiny, part of a small tag) got `-m-1 p-1` instead — expands
+the invisible tap area without changing the chip's visual size at all.
+
+**Known tooling limitation, not an app bug:** the Browser pane's
+`computer` click/tap action reliably times out once mobile-device
+emulation is active (touch-event synthesis appears to hang) — `form_input`
+and `javascript_tool`-driven `requestSubmit()` both work fine in the same
+mode. All mobile-viewport testing after that point used
+`form_input`/JS-submit instead of simulated taps, so **real touch-tap
+interaction itself was not exercised by automation** at mobile widths —
+only layout, overflow, and tap-target sizing were. Worth a manual check on
+a real phone (or a differently-configured mobile emulator) before
+launch, specifically for anything with custom pointer/touch handling.

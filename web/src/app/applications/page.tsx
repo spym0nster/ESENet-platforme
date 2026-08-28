@@ -75,7 +75,7 @@ export default async function MyApplicationsPage() {
             title="You haven't applied to anything yet."
             body="Browse opportunities and apply — your applications will show up here."
             action={
-              <Link href="/opportunities" className="font-mono text-sm text-accent-2">
+              <Link href="/opportunities" className="inline-block py-2 font-mono text-sm text-accent-2">
                 Browse opportunities →
               </Link>
             }
@@ -98,7 +98,7 @@ export default async function MyApplicationsPage() {
                     <div>
                       <Link
                         href={`/opportunities/${opportunity?.id}`}
-                        className="font-display font-bold hover:text-accent-2"
+                        className="inline-block py-1 font-display font-bold hover:text-accent-2"
                       >
                         {opportunity?.title ?? "Opportunity"}
                       </Link>

@@ -29,7 +29,7 @@ export function SaveOpportunityButton({
       <button
         type="submit"
         disabled={pending}
-        className={`font-mono text-xs ${nowSaved ? "text-accent-2" : "text-text-faint hover:text-accent-2"}`}
+        className={`py-2 font-mono text-xs ${nowSaved ? "text-accent-2" : "text-text-faint hover:text-accent-2"}`}
         aria-label={nowSaved ? "Unsave opportunity" : "Save opportunity"}
       >
         {pending ? "…" : nowSaved ? "★ Saved" : "☆ Save"}

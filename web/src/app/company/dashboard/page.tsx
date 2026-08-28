@@ -64,7 +64,7 @@ export default async function CompanyDashboardPage({
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/company/team" className="font-mono text-xs text-accent-2 hover:text-text">
+          <Link href="/company/team" className="py-2 font-mono text-xs text-accent-2 hover:text-text">
             Team →
           </Link>
           <LinkButton href="/company/opportunities/new" variant="primary">
@@ -142,7 +142,7 @@ export default async function CompanyDashboardPage({
                   </p>
                   <Link
                     href={`/company/opportunities/${o.id}/applicants`}
-                    className="mt-3 inline-block font-mono text-xs text-accent-2 hover:text-text"
+                    className="mt-3 inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
                   >
                     View applicants ({applicantCounts.get(o.id) ?? 0}) →
                   </Link>

@@ -181,7 +181,7 @@ export default async function OpportunitiesPage({
             Search
           </button>
           {hasFilters && (
-            <Link href="/opportunities" className="font-mono text-xs text-text-muted hover:text-text">
+            <Link href="/opportunities" className="py-2 font-mono text-xs text-text-muted hover:text-text">
               Clear filters
             </Link>
           )}
@@ -205,7 +205,7 @@ export default async function OpportunitiesPage({
             }
             action={
               hasFilters ? (
-                <Link href="/opportunities" className="font-mono text-sm text-accent-2">
+                <Link href="/opportunities" className="inline-block py-2 font-mono text-sm text-accent-2">
                   Clear filters →
                 </Link>
               ) : undefined

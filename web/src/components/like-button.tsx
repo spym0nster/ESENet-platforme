@@ -33,7 +33,7 @@ export function LikeButton({
           }
         });
       }}
-      className={`inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide transition ${
+      className={`inline-flex items-center gap-1.5 py-2 font-mono text-xs uppercase tracking-wide transition ${
         liked ? "text-accent-2" : "text-text-faint hover:text-text-muted"
       }`}
     >

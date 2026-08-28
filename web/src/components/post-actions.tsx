@@ -18,7 +18,7 @@ export function DeletePostButton({ postId }: { postId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="font-mono text-xs uppercase tracking-wide text-text-faint hover:text-magenta"
+        className="py-2 font-mono text-xs uppercase tracking-wide text-text-faint hover:text-magenta"
       >
         Delete
       </button>
@@ -39,7 +39,7 @@ export function RemovePostButton({ postId }: { postId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="font-mono text-xs uppercase tracking-wide text-magenta"
+        className="py-2 font-mono text-xs uppercase tracking-wide text-magenta"
       >
         Remove (admin)
       </button>
@@ -70,7 +70,7 @@ export function RemoveCommentButton({ commentId }: { commentId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="font-mono text-xs uppercase tracking-wide text-magenta"
+        className="py-2 font-mono text-xs uppercase tracking-wide text-magenta"
       >
         Remove (admin)
       </button>

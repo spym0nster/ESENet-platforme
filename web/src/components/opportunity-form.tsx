@@ -91,7 +91,7 @@ export function OpportunityForm() {
                   type="button"
                   onClick={() => setSkills(skills.filter((s) => s !== skill))}
                   aria-label={`Remove ${skill}`}
-                  className="text-accent-2/70 hover:text-accent-2"
+                  className="-m-1 p-1 text-accent-2/70 hover:text-accent-2"
                 >
                   ×
                 </button>

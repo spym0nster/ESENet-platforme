@@ -83,7 +83,7 @@ export default async function ProfilePage() {
               href={cvSignedUrl}
               target="_blank"
               rel="noreferrer"
-              className="font-mono text-xs text-accent-2 hover:text-text"
+              className="py-2 font-mono text-xs text-accent-2 hover:text-text"
             >
               View current CV →
             </a>

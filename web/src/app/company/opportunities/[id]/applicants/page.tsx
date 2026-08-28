@@ -40,7 +40,7 @@ export default async function OpportunityApplicantsPage({
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <Link href="/company/dashboard" className="font-mono text-xs text-accent-2">
+      <Link href="/company/dashboard" className="inline-block py-2 font-mono text-xs text-accent-2">
         ← Back to dashboard
       </Link>
       <p className="mt-4 font-mono text-xs uppercase tracking-widest text-accent-2">

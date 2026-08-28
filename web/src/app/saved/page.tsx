@@ -49,7 +49,7 @@ export default async function SavedOpportunitiesPage() {
             title="Nothing saved yet."
             body="Save opportunities while browsing to come back to them later."
             action={
-              <Link href="/opportunities" className="font-mono text-sm text-accent-2">
+              <Link href="/opportunities" className="inline-block py-2 font-mono text-sm text-accent-2">
                 Browse opportunities →
               </Link>
             }
