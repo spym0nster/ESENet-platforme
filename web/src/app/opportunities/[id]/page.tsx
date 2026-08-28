@@ -122,13 +122,17 @@ export default async function OpportunityPage({
           skills: opportunity.skills ?? [],
         })
       : [];
-  const deadlineLabel = opportunity.application_deadline
-    ? new Date(opportunity.application_deadline).toLocaleDateString(undefined, {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : null;
+  const dateLabel = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : null;
+  const deadlineLabel = dateLabel(opportunity.application_deadline);
+  const startLabel = dateLabel(opportunity.start_date);
+  const endLabel = dateLabel(opportunity.end_date);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -177,9 +181,19 @@ export default async function OpportunityPage({
         )}
       </p>
 
+      {(startLabel || endLabel) && (
+        <p className="mt-4 font-mono text-xs text-text-muted">
+          {startLabel && endLabel
+            ? `${startLabel} → ${endLabel}`
+            : startLabel
+              ? `Starts ${startLabel}`
+              : `Until ${endLabel}`}
+        </p>
+      )}
+
       {deadlineLabel && (
         <p
-          className={`mt-4 font-mono text-xs ${
+          className={`mt-2 font-mono text-xs ${
             deadlinePassed ? "text-text-faint" : "text-accent-2"
           }`}
         >
