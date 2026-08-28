@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { Badge, EmptyState } from "@/components/ui";
 import { fetchCompanyProfile } from "@/lib/companies";
@@ -12,6 +14,29 @@ const TYPE_LABEL: Record<string, string> = {
   alternance: "Alternance",
   freelance: "Freelance",
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/companies/[id]">): Promise<Metadata> {
+  if (!isSupabaseConfigured()) return {};
+  const { id } = await params;
+  const { data } = await createPublicClient()
+    .from("companies")
+    .select("company_name, description")
+    .eq("profile_id", id)
+    .maybeSingle();
+
+  if (!data) return { title: "Company" };
+  const description =
+    (data.description as string | null)?.slice(0, 200) ??
+    `${data.company_name} on ESENet — opportunities and team.`;
+
+  return {
+    title: data.company_name as string,
+    description,
+    openGraph: { title: data.company_name as string, description },
+  };
+}
 
 export default async function CompanyProfilePage({
   params,

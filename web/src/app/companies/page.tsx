@@ -5,7 +5,7 @@ import { EmptyState, Input } from "@/components/ui";
 import { fetchCompanyDirectory } from "@/lib/companies";
 
 export const metadata = {
-  title: "Companies on ESENet",
+  title: "Companies",
   description:
     "ESEN partner companies and startups hiring students and recent graduates.",
 };

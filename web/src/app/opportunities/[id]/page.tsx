@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { ApplyForm } from "@/components/apply-form";
 import { SaveOpportunityButton } from "@/components/save-opportunity-button";
@@ -12,6 +14,36 @@ const TYPE_LABEL: Record<string, string> = {
   alternance: "Alternance",
   freelance: "Freelance",
 };
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/opportunities/[id]">): Promise<Metadata> {
+  if (!isSupabaseConfigured()) return {};
+  const { id } = await params;
+  const { data } = await createPublicClient()
+    .from("opportunities")
+    .select("title, description, status, type, companies(company_name)")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!data || data.status !== "published") return { title: "Opportunity" };
+
+  const company =
+    (data.companies as unknown as { company_name: string } | null)
+      ?.company_name ?? "an ESEN partner company";
+  const label = TYPE_LABEL[data.type as string] ?? "Opportunity";
+  const description = (data.description as string).slice(0, 200);
+
+  return {
+    title: `${data.title} — ${company}`,
+    description,
+    openGraph: {
+      title: `${data.title} · ${label} at ${company}`,
+      description,
+      type: "article",
+    },
+  };
+}
 
 export default async function OpportunityPage({
   params,

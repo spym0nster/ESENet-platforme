@@ -22,10 +22,22 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500", "600"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://esenet-platforme.vercel.app";
+
 export const metadata: Metadata = {
-  title: "ESENet",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "ESENet",
+    template: "%s · ESENet",
+  },
   description:
     "ESENet — the year-round talent network connecting ESEN students, alumni, companies and startups.",
+  openGraph: {
+    siteName: "ESENet",
+    type: "website",
+    locale: "en",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
