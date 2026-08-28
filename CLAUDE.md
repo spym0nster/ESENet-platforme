@@ -59,11 +59,16 @@ to WASM bindings automatically, but Turbopack requires native bindings, so
 `package.json` scripts pass `--webpack` explicitly. Don't remove that flag
 without checking Turbopack works on the target machine first.
 
-**`next dev` also rewrites `web/AGENTS.md`** (imported by `web/CLAUDE.md`)
-with a warning that this Next.js version has breaking changes vs. training
-data — read `web/node_modules/next/dist/docs/` before writing App Router
-code, and commit that file's regenerated content with your work rather than
-reverting it.
+**`web/AGENTS.md` / `web/CLAUDE.md` are managed by Next.js, not by this
+project.** Next 16 bundles its docs at `web/node_modules/next/dist/docs/`;
+on `next dev` startup, `dist/server/lib/generate-agent-files.js` inserts/
+refreshes a `<!-- BEGIN:nextjs-agent-rules -->…<!-- END -->` block in those
+files when an AI agent is detected. This is described as a standard Next.js
+feature (called from `start-server.js` → `app-info-log.js`) — verify against
+the actual files in `node_modules` and `git log` on this machine before
+relying on it, rather than taking this note on faith. In practice the block
+says to consult the local docs for App Router work and to commit the
+regenerated block to keep the git tree clean.
 
 ## Commands
 
