@@ -27,7 +27,7 @@ export default async function OpportunityPage({
   const { data: opportunity } = await supabase
     .from("opportunities")
     .select(
-      "id, type, title, description, skills, location, remote, start_date, end_date, company_id, companies(company_name, website, logo_url)"
+      "id, type, title, description, skills, location, remote, start_date, end_date, application_deadline, status, company_id, companies(company_name, website, logo_url)"
     )
     .eq("id", id)
     .single();
@@ -76,6 +76,19 @@ export default async function OpportunityPage({
     logo_url: string | null;
   } | null;
 
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const deadlinePassed =
+    Boolean(opportunity.application_deadline) &&
+    opportunity.application_deadline! < todayIso;
+  const applicationsClosed = opportunity.status !== "published" || deadlinePassed;
+  const deadlineLabel = opportunity.application_deadline
+    ? new Date(opportunity.application_deadline).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       <div className="flex items-center justify-between gap-4">
@@ -123,6 +136,18 @@ export default async function OpportunityPage({
         )}
       </p>
 
+      {deadlineLabel && (
+        <p
+          className={`mt-4 font-mono text-xs ${
+            deadlinePassed ? "text-text-faint" : "text-accent-2"
+          }`}
+        >
+          {deadlinePassed
+            ? `Applications closed on ${deadlineLabel}`
+            : `Apply by ${deadlineLabel}`}
+        </p>
+      )}
+
       <p className="mt-8 whitespace-pre-wrap text-text">
         {opportunity.description}
       </p>
@@ -141,7 +166,18 @@ export default async function OpportunityPage({
       )}
 
       <div className="mt-10 border-t border-border pt-8">
-        <ApplyForm opportunityId={opportunity.id} alreadyApplied={alreadyApplied} />
+        {alreadyApplied || !applicationsClosed ? (
+          <ApplyForm
+            opportunityId={opportunity.id}
+            alreadyApplied={alreadyApplied}
+          />
+        ) : (
+          <p className="rounded-md border border-border bg-surface-alt px-4 py-3 text-sm text-text-muted">
+            {deadlinePassed
+              ? "The application deadline for this opportunity has passed."
+              : "This opportunity isn't accepting applications right now."}
+          </p>
+        )}
       </div>
     </div>
   );

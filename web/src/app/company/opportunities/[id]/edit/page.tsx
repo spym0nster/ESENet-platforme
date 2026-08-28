@@ -19,7 +19,7 @@ export default async function EditOpportunityPage({
   const { data: opportunity } = await supabase
     .from("opportunities")
     .select(
-      "id, type, title, description, skills, location, remote, start_date, end_date"
+      "id, type, title, description, skills, location, remote, start_date, end_date, application_deadline"
     )
     .eq("id", id)
     .eq("company_id", companyId)
@@ -54,6 +54,7 @@ export default async function EditOpportunityPage({
             remote: opportunity.remote,
             start_date: opportunity.start_date,
             end_date: opportunity.end_date,
+            application_deadline: opportunity.application_deadline,
           }}
         />
       </div>

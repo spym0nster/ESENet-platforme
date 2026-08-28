@@ -32,11 +32,21 @@ export default async function CompanyDashboardPage({
 
   const { data: opportunities, error } = await supabase
     .from("opportunities")
-    .select("id, type, title, location, remote, status, created_at")
+    .select("id, type, title, location, remote, status, created_at, application_deadline")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .returns<
-      Pick<Opportunity, "id" | "type" | "title" | "location" | "remote" | "status" | "created_at">[]
+      Pick<
+        Opportunity,
+        | "id"
+        | "type"
+        | "title"
+        | "location"
+        | "remote"
+        | "status"
+        | "created_at"
+        | "application_deadline"
+      >[]
     >();
 
   // One extra query for applicant counts, keyed by opportunity — avoids an
@@ -152,6 +162,18 @@ export default async function CompanyDashboardPage({
                       year: "numeric",
                     })}
                   </p>
+                  {o.application_deadline && (
+                    <p className="mt-0.5 font-mono text-xs text-text-faint">
+                      {o.application_deadline <
+                      new Date().toISOString().slice(0, 10)
+                        ? "Applications closed "
+                        : "Applications close "}
+                      {new Date(o.application_deadline).toLocaleDateString(
+                        "en-US",
+                        { month: "short", day: "numeric", year: "numeric" }
+                      )}
+                    </p>
+                  )}
                   <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
                     <Link
                       href={`/company/opportunities/${o.id}/applicants`}

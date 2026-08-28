@@ -275,6 +275,15 @@ rules above.
 - [ ] `/opportunities` paginates at 20 per page; filters/sort survive across Previous/Next
 - [ ] Applying a second time to the same opportunity fails with a friendly message, not a raw database error
 
+#### Application deadline (`0022` — additive `opportunities.application_deadline date`, not security-sensitive, APPLIED)
+- [ ] Create form: an application-deadline date in the past is rejected ("can't be in the past"); a future date or blank is accepted
+- [ ] Edit form prefills the existing deadline; a past date is **allowed on edit** (deliberate early close) and immediately closes applications
+- [ ] Opportunity detail: a future deadline shows "Apply by <date>"; once passed it shows "Applications closed on <date>" and the apply form is replaced by a closed notice (a student who already applied still sees "You've applied")
+- [ ] `/opportunities` list: an opportunity whose deadline is within 7 days shows a red "Closes <date>" badge
+- [ ] Company dashboard: each opportunity row shows "Applications close/closed <date>" when a deadline is set
+- [ ] Server guard: a direct POST to `applyToOpportunity` for a past-deadline or non-published opportunity returns a friendly error and writes no row (verified via stale page / direct call — cannot be exercised through the UI once the form is hidden)
+- [ ] **Not verified with a real login** (no QA student password available to me): the end-to-end "student clicks Apply before/after deadline" path. Backing SQL + the detail-page render for null / past / soon deadlines were checked directly against the dev DB.
+
 ### Public company profile (`/companies/[id]`)
 - [ ] Renders (no login needed) for a verified company: logo/banner/description, "Verified" badge, website link, its published opportunities, and the team ("Name · Title", owner marked)
 - [ ] An unverified company still renders (row is public) but shows "Not yet verified" and no opportunities

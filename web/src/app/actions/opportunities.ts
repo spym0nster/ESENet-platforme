@@ -27,12 +27,19 @@ type ParsedOpportunity = {
   remote: boolean;
   start_date: string | null;
   end_date: string | null;
+  application_deadline: string | null;
   skills: string[];
 };
 
+/** Today's date as an ISO `YYYY-MM-DD` string, for comparing against `date` columns. */
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 /** Shared validation for create + edit. */
 function parseOpportunityForm(
-  formData: FormData
+  formData: FormData,
+  { isCreate }: { isCreate: boolean }
 ): { values: ParsedOpportunity; fieldErrors: Record<string, string> } {
   const type = String(formData.get("type") ?? "");
   const title = String(formData.get("title") ?? "").trim();
@@ -41,6 +48,7 @@ function parseOpportunityForm(
   const remote = formData.get("remote") === "on";
   const startDate = String(formData.get("start_date") ?? "").trim();
   const endDate = String(formData.get("end_date") ?? "").trim();
+  const deadline = String(formData.get("application_deadline") ?? "").trim();
   const skillsRaw = String(formData.get("skills") ?? "[]");
 
   const fieldErrors: Record<string, string> = {};
@@ -58,6 +66,12 @@ function parseOpportunityForm(
   }
   if (startDate && endDate && endDate < startDate) {
     fieldErrors.end_date = "End date can't be before the start date.";
+  }
+  // A brand-new posting with an already-passed deadline is almost certainly a
+  // mistake, so block it on create. On edit we allow a past date — that's how
+  // a company deliberately closes applications early.
+  if (deadline && isCreate && deadline < todayIso()) {
+    fieldErrors.application_deadline = "The application deadline can't be in the past.";
   }
 
   let skills: string[] = [];
@@ -79,6 +93,7 @@ function parseOpportunityForm(
       remote,
       start_date: startDate || null,
       end_date: endDate || null,
+      application_deadline: deadline || null,
       skills,
     },
     fieldErrors,
@@ -118,7 +133,7 @@ export async function createOpportunity(
   const { supabase, companyId, error: authError } = await requireCompanyIdForOpportunity();
   if (!companyId) return { error: authError ?? "You don't have permission to do this." };
 
-  const { values, fieldErrors } = parseOpportunityForm(formData);
+  const { values, fieldErrors } = parseOpportunityForm(formData, { isCreate: true });
   if (Object.keys(fieldErrors).length > 0) {
     return { error: "Please fix the highlighted fields.", fieldErrors };
   }
@@ -151,7 +166,7 @@ export async function updateOpportunity(
   const { supabase, companyId, error: authError } = await requireCompanyIdForOpportunity();
   if (!companyId) return { error: authError ?? "You don't have permission to do this." };
 
-  const { values, fieldErrors } = parseOpportunityForm(formData);
+  const { values, fieldErrors } = parseOpportunityForm(formData, { isCreate: false });
   if (Object.keys(fieldErrors).length > 0) {
     return { error: "Please fix the highlighted fields.", fieldErrors };
   }

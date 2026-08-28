@@ -26,6 +26,7 @@ export type OpportunityFormValues = {
   remote: boolean;
   start_date: string | null;
   end_date: string | null;
+  application_deadline: string | null;
 };
 
 export function OpportunityForm({
@@ -174,6 +175,22 @@ export function OpportunityForm({
             />
           </Field>
         </div>
+
+        <Field
+          label="Application deadline"
+          error={fieldErrors?.application_deadline}
+        >
+          <input
+            name="application_deadline"
+            type="date"
+            defaultValue={opportunity?.application_deadline ?? ""}
+            className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2 sm:w-1/2"
+          />
+          <span className="mt-1 block text-xs text-text-faint">
+            After this date students can no longer apply. Leave blank for no
+            deadline.
+          </span>
+        </Field>
       </Section>
 
       {state && "error" in state && (

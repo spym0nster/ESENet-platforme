@@ -67,6 +67,7 @@ export interface Opportunity {
   remote: boolean;
   start_date: string | null;
   end_date: string | null;
+  application_deadline: string | null;
   status: OpportunityStatus;
   created_at: string;
 }

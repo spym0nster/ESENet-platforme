@@ -73,7 +73,7 @@ export default async function OpportunitiesPage({
   let query = supabase
     .from("opportunities")
     .select(
-      "id, type, title, description, skills, location, remote, start_date, companies!inner(company_name)"
+      "id, type, title, description, skills, location, remote, start_date, application_deadline, companies!inner(company_name)"
     )
     .eq("status", "published");
 
@@ -137,6 +137,12 @@ export default async function OpportunitiesPage({
       for (const row of saved ?? []) savedIds.add(row.opportunity_id);
     }
   }
+
+  const now = new Date();
+  const todayIso = now.toISOString().slice(0, 10);
+  const soonIso = new Date(now.getTime() + 7 * 864e5)
+    .toISOString()
+    .slice(0, 10);
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
@@ -227,6 +233,17 @@ export default async function OpportunitiesPage({
                   {o.remote && (
                     <span className="text-xs text-text-faint">Remote</span>
                   )}
+                  {o.application_deadline &&
+                    o.application_deadline >= todayIso &&
+                    o.application_deadline <= soonIso && (
+                      <Badge variant="danger">
+                        Closes{" "}
+                        {new Date(o.application_deadline).toLocaleDateString(
+                          undefined,
+                          { day: "numeric", month: "short" }
+                        )}
+                      </Badge>
+                    )}
                 </div>
                 {isStudent && (
                   <SaveOpportunityButton

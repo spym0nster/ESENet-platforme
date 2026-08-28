@@ -45,6 +45,25 @@ export async function applyToOpportunity(
     return { error: "Only student accounts can apply to opportunities." };
   }
 
+  // Server-side gate: the opportunity must still be open for applications.
+  // The UI hides the form in these cases, so hitting this is a stale page or
+  // a direct POST. RLS can't express "deadline hasn't passed", so this check
+  // lives here.
+  const { data: gate } = await supabase
+    .from("opportunities")
+    .select("status, application_deadline")
+    .eq("id", opportunityId)
+    .maybeSingle();
+  if (!gate || gate.status !== "published") {
+    return { error: "This opportunity isn't accepting applications." };
+  }
+  if (
+    gate.application_deadline &&
+    gate.application_deadline < new Date().toISOString().slice(0, 10)
+  ) {
+    return { error: "The application deadline for this opportunity has passed." };
+  }
+
   const { error } = await supabase.from("applications").insert({
     opportunity_id: opportunityId,
     student_id: user.id,
