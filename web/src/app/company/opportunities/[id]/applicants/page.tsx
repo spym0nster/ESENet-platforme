@@ -6,6 +6,24 @@ import { Card, EmptyState } from "@/components/ui";
 import { ApplicationStatusForm } from "@/components/application-status-form";
 import type { ApplicationStatus } from "@/types/database";
 
+const STATUS_LABEL: Record<string, string> = {
+  applied: "Applied",
+  reviewed: "Under review",
+  shortlisted: "Shortlisted",
+  interview: "Interview",
+  accepted: "Accepted",
+  rejected: "Not selected",
+  withdrawn: "Withdrawn",
+};
+
+function shortDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default async function OpportunityApplicantsPage({
   params,
 }: PageProps<"/company/opportunities/[id]/applicants">) {
@@ -37,6 +55,30 @@ export default async function OpportunityApplicantsPage({
     .select("id, status, message, created_at, student_id, profiles(full_name)")
     .eq("opportunity_id", id)
     .order("created_at", { ascending: false });
+
+  // Status history for every listed application, in one query — keyed by
+  // application id, oldest first.
+  const applicationIds = (applications ?? []).map((a) => a.id as string);
+  const eventsByApplication = new Map<
+    string,
+    { id: string; status: string; created_at: string }[]
+  >();
+  if (applicationIds.length > 0) {
+    const { data: events } = await supabase
+      .from("application_status_events")
+      .select("id, application_id, status, created_at")
+      .in("application_id", applicationIds)
+      .order("created_at", { ascending: true });
+    for (const e of events ?? []) {
+      const aid = e.application_id as string;
+      if (!eventsByApplication.has(aid)) eventsByApplication.set(aid, []);
+      eventsByApplication.get(aid)!.push({
+        id: e.id as string,
+        status: e.status as string,
+        created_at: e.created_at as string,
+      });
+    }
+  }
 
   // One extra query for each applicant's headline / skills / CV, keyed by
   // student — avoids an N+1.
@@ -126,12 +168,7 @@ export default async function OpportunityApplicantsPage({
                         <p className="text-sm text-text-muted">{d.headline}</p>
                       )}
                       <p className="mt-0.5 text-xs text-text-faint">
-                        Applied{" "}
-                        {new Date(a.created_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        Applied {shortDate(a.created_at)}
                       </p>
                     </div>
                     <ApplicationStatusForm
@@ -158,6 +195,30 @@ export default async function OpportunityApplicantsPage({
                     <p className="mt-3 whitespace-pre-wrap text-sm text-text-muted">
                       {a.message}
                     </p>
+                  )}
+
+                  {(eventsByApplication.get(a.id as string)?.length ?? 0) > 0 && (
+                    <details className="mt-3 text-xs">
+                      <summary className="cursor-pointer font-mono text-text-faint hover:text-text">
+                        Status history
+                      </summary>
+                      <ol className="mt-2 space-y-1.5 border-l border-border pl-3">
+                        <li className="text-text-faint">
+                          <span className="font-semibold text-text-muted">
+                            Applied
+                          </span>{" "}
+                          · {shortDate(a.created_at)}
+                        </li>
+                        {eventsByApplication.get(a.id as string)!.map((e) => (
+                          <li key={e.id} className="text-text-faint">
+                            <span className="font-semibold text-text-muted">
+                              {STATUS_LABEL[e.status] ?? e.status}
+                            </span>{" "}
+                            · {shortDate(e.created_at)}
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
                   )}
 
                   <div className="mt-3 flex flex-wrap gap-4 font-mono text-xs">
