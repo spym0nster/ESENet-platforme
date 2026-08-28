@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { Badge, EmptyState, Input, Select } from "@/components/ui";
 import { SaveOpportunityButton } from "@/components/save-opportunity-button";
+import { fetchRecommendedOpportunities } from "@/lib/opportunities";
 import type { OpportunityType } from "@/types/database";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -116,6 +117,7 @@ export default async function OpportunitiesPage({
   } = await supabase.auth.getUser();
 
   let isStudent = false;
+  let studentSkills: string[] = [];
   const savedIds = new Set<string>();
   if (user) {
     const { data: profile } = await supabase
@@ -124,6 +126,15 @@ export default async function OpportunitiesPage({
       .eq("id", user.id)
       .single();
     isStudent = profile?.role === "student";
+
+    if (isStudent) {
+      const { data: details } = await supabase
+        .from("student_details")
+        .select("skills")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+      studentSkills = details?.skills ?? [];
+    }
 
     if (isStudent && opportunities && opportunities.length > 0) {
       const { data: saved } = await supabase
@@ -143,6 +154,15 @@ export default async function OpportunitiesPage({
   const soonIso = new Date(now.getTime() + 7 * 864e5)
     .toISOString()
     .slice(0, 10);
+
+  // Skill-overlap recommendations — only worth showing on the unfiltered
+  // first page (once a student is searching, that intent wins).
+  const recommended =
+    isStudent && !hasFilters && page === 1 && studentSkills.length > 0
+      ? await fetchRecommendedOpportunities(supabase, studentSkills, {
+          limit: 4,
+        })
+      : [];
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
@@ -193,6 +213,40 @@ export default async function OpportunitiesPage({
           )}
         </div>
       </form>
+
+      {recommended.length > 0 && (
+        <section className="mt-10 rounded-lg border border-accent-2/30 bg-accent2-soft/40 p-5">
+          <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
+            Recommended for you
+          </p>
+          <p className="mt-1 text-sm text-text-muted">
+            Based on the skills on your profile.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {recommended.map((o) => (
+              <li key={o.id}>
+                <Link
+                  href={`/opportunities/${o.id}`}
+                  className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-md px-3 py-2 hover:bg-surface"
+                >
+                  <span className="font-display text-sm font-bold">
+                    {o.title}
+                    <span className="ml-2 font-sans font-normal text-text-muted">
+                      {o.company_name}
+                    </span>
+                  </span>
+                  <span className="font-mono text-xs text-accent-2">
+                    {o.matchCount} skill{o.matchCount === 1 ? "" : "s"} match
+                    {o.matchedSkills.length > 0
+                      ? ` · ${o.matchedSkills.slice(0, 3).join(", ")}`
+                      : ""}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {error && (
         <p className="mt-8 text-sm text-magenta">

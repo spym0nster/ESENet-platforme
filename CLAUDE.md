@@ -203,7 +203,9 @@ live-tested** — see `web/docs/QA.md`. Deployed on Vercel
 (`esenet-platforme.vercel.app`); pushes to `main` auto-deploy to prod.
 
 **Explicitly deferred past the event:** alumni network/messaging, a real
-scored matching engine (a simple tag-overlap filter is fine pre-launch),
+scored matching engine (the pre-launch tag-overlap filter is built —
+`fetchRecommendedOpportunities` in `src/lib/opportunities.ts`, surfaced as
+"Recommended for you" on `/opportunities` for students with skills),
 QR check-in/event-day companion, freelance/hackathon/challenge modules.
 
 Current status: Phase 1 is built (student profile with education/experience/

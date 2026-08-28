@@ -273,6 +273,8 @@ rules above.
 - [ ] Student marketplace displays the published opportunity
 - [ ] Opportunity detail page displays correctly
 - [ ] `/opportunities` paginates at 20 per page; filters/sort survive across Previous/Next
+- [ ] Signed in as a student **with skills on the profile**, on the unfiltered first page of `/opportunities`: a "Recommended for you" block appears above the list with up to 4 published opportunities whose `skills` overlap the student's (case-insensitive), ranked by overlap count, each showing "N skills match · skill, skill". Past-deadline opportunities are excluded. The block does not show when filtering/searching, past page 1, for a student with no skills, or for a company/anon viewer. (`fetchRecommendedOpportunities` in `src/lib/opportunities.ts`.)
+- [ ] **Not verified with a real login** (no QA student password): the rendered block. Verified: the `&&` overlap query returns the right rows at the SQL level, no regression on the anon/company `/opportunities` view, lint + build clean. The current QA fixture (student skill `Power BI`, only opp skill `SQL`) has zero overlap, so it exercises the empty path; add a shared skill to see the populated block.
 - [ ] Applying a second time to the same opportunity fails with a friendly message, not a raw database error
 
 #### Application deadline (`0022` — additive `opportunities.application_deadline date`, not security-sensitive, APPLIED)
