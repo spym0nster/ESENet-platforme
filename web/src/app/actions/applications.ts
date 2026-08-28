@@ -51,7 +51,13 @@ export async function applyToOpportunity(
   });
 
   if (error) {
-    return { error: error.message };
+    // The UI already hides this form once alreadyApplied is true, so a
+    // duplicate-key violation here means a race (e.g. a double-submit)
+    // rather than normal use — same friendly-message-plus-server-log
+    // pattern as every other action in this codebase; never the raw
+    // Postgres error (this one used to leak it directly to the client).
+    console.error("applyToOpportunity failed:", error);
+    return { error: "We couldn't submit your application. Please try again." };
   }
 
   revalidatePath(`/opportunities/${opportunityId}`);

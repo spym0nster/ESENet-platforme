@@ -28,6 +28,8 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS;
 
+const PAGE_SIZE = 20;
+
 export default async function OpportunitiesPage({
   searchParams,
 }: PageProps<"/opportunities">) {
@@ -63,6 +65,7 @@ export default async function OpportunitiesPage({
   const company = firstParam(sp.company);
   const skill = firstParam(sp.skill);
   const sort: SortKey = sp.sort === "starting_soon" ? "starting_soon" : "newest";
+  const page = Math.max(1, parseInt(firstParam(sp.page), 10) || 1);
 
   const hasFilters = Boolean(q || type || location || company || skill);
 
@@ -96,7 +99,17 @@ export default async function OpportunitiesPage({
       ? query.order("start_date", { ascending: true, nullsFirst: false })
       : query.order("created_at", { ascending: false });
 
-  const { data: opportunities, error } = await query;
+  // Fetch one extra row past the page size instead of a separate COUNT
+  // query — its presence alone tells us whether a next page exists, no
+  // second round trip needed. Was previously unbounded (every published,
+  // verified opportunity in one query) — fine at QA scale, not at real
+  // volume.
+  const offset = (page - 1) * PAGE_SIZE;
+  query = query.range(offset, offset + PAGE_SIZE);
+
+  const { data: fetched, error } = await query;
+  const hasNextPage = (fetched?.length ?? 0) > PAGE_SIZE;
+  const opportunities = fetched?.slice(0, PAGE_SIZE);
 
   const {
     data: { user },
@@ -233,10 +246,45 @@ export default async function OpportunitiesPage({
           </li>
         ))}
       </ul>
+
+      {(page > 1 || hasNextPage) && (
+        <div className="mt-8 flex items-center justify-between font-mono text-sm">
+          {page > 1 ? (
+            <Link href={pageHref(sp, page - 1)} className="text-accent-2 hover:text-text">
+              ← Previous
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span className="text-text-faint">Page {page}</span>
+          {hasNextPage ? (
+            <Link href={pageHref(sp, page + 1)} className="text-accent-2 hover:text-text">
+              Next →
+            </Link>
+          ) : (
+            <span />
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 function firstParam(v: string | string[] | undefined): string {
   return (Array.isArray(v) ? v[0] : v)?.trim() ?? "";
+}
+
+/** Builds /opportunities?...same filters...&page=N, dropping page=1 (the default). */
+function pageHref(
+  sp: Record<string, string | string[] | undefined>,
+  targetPage: number
+): string {
+  const params = new URLSearchParams();
+  for (const key of ["q", "type", "location", "company", "skill", "sort"]) {
+    const value = firstParam(sp[key]);
+    if (value) params.set(key, value);
+  }
+  if (targetPage > 1) params.set("page", String(targetPage));
+  const query = params.toString();
+  return query ? `/opportunities?${query}` : "/opportunities";
 }

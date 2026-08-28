@@ -225,6 +225,8 @@ but don't be surprised it's still in the table.
 - [ ] Database row is created with the right `company_id` and `status = published`
 - [ ] Student marketplace displays the published opportunity
 - [ ] Opportunity detail page displays correctly
+- [ ] `/opportunities` paginates at 20 per page; filters/sort survive across Previous/Next
+- [ ] Applying a second time to the same opportunity fails with a friendly message, not a raw database error
 
 ### Application
 - [ ] Student can apply
@@ -370,3 +372,30 @@ or by reverting to immediate provisioning at signup — that regresses real
 signups. Also: the project's default mailer has a low send-rate limit: don't
 mass-create test accounts through the signup UI, since that spends real
 confirmation emails and can hit the limit.
+
+## Phase 3 hardening (production-readiness audit)
+
+Two fixes from the Phase 3 production-readiness audit, neither changing
+behavior a real user would notice:
+
+- **`applyToOpportunity` no longer leaks the raw Postgres error** to the
+  client on failure (it used to — every other action in this codebase logs
+  server-side and returns a friendly message; this one was the exception).
+  The UI already hides the apply form once `alreadyApplied` is true, so the
+  realistic trigger for this path is a race (double-submit), not normal
+  use — live-verified by pattern/build only, not by deliberately forcing a
+  duplicate against the QA student's real baseline application (QA.md's
+  own rule above: never re-apply as a new row against that fixture).
+- **`0011_missing_fk_indexes.sql`** adds indexes on foreign-key columns
+  that had none: `opportunities.company_id`, `applications.student_id`,
+  `company_members.profile_id`, `post_likes.profile_id`,
+  `company_invites.company_id`/`email`, `saved_opportunities.opportunity_id`.
+  Postgres never auto-indexes a FK column, only a table's own primary key —
+  invisible at QA-fixture scale, real once there's actual data volume.
+  Purely additive, no behavior change.
+- **`/opportunities` now paginates** at 20 per page instead of fetching
+  every published opportunity in one unbounded query — verified live by
+  temporarily bulk-inserting 22 scratch rows, confirming page 1/page 2
+  split correctly (including with a filter applied, preserved across
+  Previous/Next), then deleting all 22 and confirming the baseline
+  ("Business Intelligence PFE Intern") was untouched.
