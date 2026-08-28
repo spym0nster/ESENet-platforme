@@ -76,7 +76,7 @@ export async function SiteHeader() {
           )}
           {isAdmin && (
             <>
-              <Link href="/admin/companies" className="py-3 hover:text-white">
+              <Link href="/admin" className="py-3 hover:text-white">
                 Admin
               </Link>
               <Link href="/admin/reports" className="py-3 hover:text-white">

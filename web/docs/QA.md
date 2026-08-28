@@ -280,6 +280,13 @@ rules above.
 - [ ] A company cannot self-verify (direct API attempt must fail)
 - [ ] A non-admin cannot flip another company's `verified` flag
 
+### Admin overview (`/admin`, `0016`)
+- [ ] `/admin` loads for an admin, redirects a non-admin/logged-out user away
+- [ ] "Needs attention" surfaces pending companies + open reports, each linking to its queue; absent when both are zero
+- [ ] After `0016`: opportunity and application counts are non-zero when data exists; before `0016` those tiles read 0 and the page still renders
+- [ ] The nav "Admin" link points to `/admin`; `/admin/companies` and `/admin/reports` each have a "← Admin overview" backlink
+- [ ] Direct REST as a non-admin: `is_admin()`-gated SELECT on `opportunities`/`applications` returns only the rows the pre-existing public/owner policies already allowed (0016 is additive, OR'd)
+
 ### Security
 - [ ] Student cannot access `/company/dashboard` or `/admin/companies`
 - [ ] Student cannot create an opportunity

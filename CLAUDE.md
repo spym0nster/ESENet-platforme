@@ -127,7 +127,9 @@ extras. As of this writing:
 RLS policies are already in every migration: public read for
 directory/browse/feed use cases, owner-only write, company-scoped access via
 the shared `is_company_actor()` predicate, and admin-only moderation via
-`is_admin()`. See `web/docs/QA.md` for the full regression checklist and a
+`is_admin()`. `0016` adds admin-only SELECT over `opportunities` /
+`applications` (they were otherwise invisible to admins) — feeds the
+`/admin` overview. See `web/docs/QA.md` for the full regression checklist and a
 running log of real RLS bugs found and fixed — read it before touching any
 policy in this schema, several of its gotchas are non-obvious and have bitten
 this project more than once.

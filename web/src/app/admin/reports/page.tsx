@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
@@ -48,7 +49,13 @@ export default async function AdminReportsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <p className="font-mono text-xs uppercase tracking-widest text-accent-2">Admin</p>
+      <Link
+        href="/admin"
+        className="inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
+      >
+        ← Admin overview
+      </Link>
+      <p className="mt-4 font-mono text-xs uppercase tracking-widest text-accent-2">Admin</p>
       <h1 className="mt-2 font-display text-3xl font-extrabold">Content reports</h1>
       <p className="mt-2 text-text-muted">
         Reports filed by students and companies against feed posts or comments.
