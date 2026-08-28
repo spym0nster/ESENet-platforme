@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { createComment, deleteComment, type CommentActionState } from "@/app/actions/comments";
+import { RemoveCommentButton } from "@/components/post-actions";
 import type { CommentWithAuthor } from "@/lib/comments";
 import { Button } from "@/components/ui";
 
@@ -35,11 +36,13 @@ export function CommentSection({
   postId,
   initialComments,
   currentUserId,
+  currentUserName,
   isAdmin,
 }: {
   postId: string;
   initialComments: CommentWithAuthor[];
   currentUserId: string | null;
+  currentUserName?: string | null;
   isAdmin: boolean;
 }) {
   const [comments, setComments] = useState(initialComments);
@@ -48,6 +51,21 @@ export function CommentSection({
     null
   );
   const [draft, setDraft] = useState("");
+
+  // Reconcile with fresh server data whenever the parent Server Component
+  // re-fetches (e.g. after revalidatePath from a delete/remove action).
+  // Without this, this component's own useState keeps rendering whatever
+  // list it mounted with — a deleted/removed comment lingers on screen
+  // until a full page reload even though the server-side delete succeeded.
+  // Adjusting state during render (React's documented pattern for this,
+  // see "Adjusting state when a prop changes") rather than in a useEffect —
+  // it applies before the stale list ever paints, and ESLint's
+  // react-hooks/set-state-in-effect rule flags the effect version anyway.
+  const [prevInitialComments, setPrevInitialComments] = useState(initialComments);
+  if (initialComments !== prevInitialComments) {
+    setPrevInitialComments(initialComments);
+    setComments(initialComments);
+  }
 
   return (
     <div className="mt-4 space-y-3 border-t border-border pt-4">
@@ -60,7 +78,10 @@ export function CommentSection({
               <span className="text-text-muted">{c.body}</span>{" "}
               <span className="font-mono text-[11px] text-text-faint">{timeAgo(c.created_at)}</span>
             </p>
-            {(c.author_id === currentUserId || isAdmin) && <DeleteCommentButton commentId={c.id} />}
+            {c.author_id === currentUserId && <DeleteCommentButton commentId={c.id} />}
+            {isAdmin && c.author_id !== currentUserId && (
+              <RemoveCommentButton commentId={c.id} />
+            )}
           </div>
         ))}
 
@@ -77,7 +98,9 @@ export function CommentSection({
                 body,
                 created_at: new Date().toISOString(),
                 removed_at: null,
-                author: null,
+                author: currentUserName
+                  ? { id: currentUserId, full_name: currentUserName, avatar_url: null }
+                  : null,
               },
             ]);
             setDraft("");

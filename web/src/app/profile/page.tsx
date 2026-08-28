@@ -192,7 +192,14 @@ export default async function ProfilePage() {
             <EmptyState title="No posts yet" body="Share a project, a milestone, or something you're working on in the feed." />
           ) : (
             myPosts.map((post) => (
-              <PostCard key={post.id} supabase={supabase} post={post} currentUserId={user.id} isAdmin={false} />
+              <PostCard
+                key={post.id}
+                supabase={supabase}
+                post={post}
+                currentUserId={user.id}
+                currentUserName={profile.full_name}
+                isAdmin={false}
+              />
             ))
           )}
         </div>

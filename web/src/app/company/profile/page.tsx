@@ -20,6 +20,12 @@ export default async function CompanyProfilePage() {
     notFound();
   }
 
+  const { data: viewerProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
   const { data: membership } = await supabase
     .from("company_members")
     .select("title")
@@ -81,7 +87,14 @@ export default async function CompanyProfilePage() {
             />
           ) : (
             companyPosts.map((post) => (
-              <PostCard key={post.id} supabase={supabase} post={post} currentUserId={user.id} isAdmin={false} />
+              <PostCard
+                key={post.id}
+                supabase={supabase}
+                post={post}
+                currentUserId={user.id}
+                currentUserName={viewerProfile?.full_name ?? null}
+                isAdmin={false}
+              />
             ))
           )}
         </div>

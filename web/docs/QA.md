@@ -137,6 +137,9 @@ create/delete a scratch account each time):
 - An invited user can only ever see/accept the invite addressed to their own (JWT-verified) email — never someone else's
 - **A user cannot self-promote to `admin`**, and **a company cannot self-verify** — both are blocked by DB triggers (`protect_profile_role`, `protect_company_verified` in `0003_security_hardening.sql`), not just RLS. This is load-bearing: RLS alone can restrict *which rows* a "manage my own row" policy touches, not *which columns* — that's why these needed a trigger. If a future column ever needs the same "owner can edit most fields, but not this one" shape, use a trigger, not a cleverer RLS policy.
 - A student can only ever move their own application to `withdrawn`; a company can set anything except `withdrawn`. (This was also a real bug once — Postgres ORs `WITH CHECK` across all matching UPDATE policies, so a check on one policy can accidentally be satisfied by another policy's `USING` — always re-embed the identity condition inside every `WITH CHECK`, don't assume it inherits from `USING`.)
+- Company B cannot update or delete Company A's posts or comments (verify with direct REST, not just the UI — an RLS-blocked write returns 200/0-rows, never an error)
+- A duplicate like (same profile, same post) is rejected at the DB level (`post_likes` primary key), not just by the client hiding the button
+- A non-admin cannot set `posts.removed_at`/`removed_by`/`removal_reason` or the equivalent comment fields — only through the admin moderation actions
 
 ## Full regression checklist
 
@@ -197,9 +200,103 @@ create/delete a scratch account each time):
 - [ ] Student can save/unsave from the marketplace list and from an opportunity's detail page
 - [ ] `/saved` reflects the current saved set
 
+### Feed / posts / moderation
+- [ ] A student and a company (owner and a team member) can each publish a post
+- [ ] A company post shows the company identity; a team member's personal post shows `Name · Title · Company`; title renders for viewers outside the company too
+- [ ] Like/unlike works; a duplicate like is rejected at the DB level
+- [ ] Comment create works; the author sees `Delete` on their own comment only
+- [ ] Admin sees `Remove (admin)` on someone else's comment (soft delete, audit trail) — never on their own
+- [ ] Deleting/removing a comment updates the visible list immediately, no reload needed
+- [ ] Reporting a post creates an open row in `/admin/reports`; Mark resolved / Dismiss transitions it correctly
+- [ ] Admin `Remove (admin)` on a post soft-deletes it (audit trail kept) and hides it from everyone but the author/admin
+- [ ] Company B cannot modify or delete Company A's post/comment via direct REST
+
 ### Quality
 - [ ] `npm run lint`
 - [ ] `npm run build`
+
+## Posts / feed / moderation (`/feed`, `/admin/reports`)
+
+A single global, chronological feed (`fetchPosts()` in `src/lib/posts.ts`) that
+both students and companies (owner or any team member) publish to. Reuses
+the existing multi-tenant company model rather than a parallel one:
+`published_as` on a post is `'self'` or `'company'`; when `'company'`, the
+`company_id` is server-resolved (`resolveCompanyId`) and checked with the
+same `is_company_actor()` used everywhere else — never trusted from the
+client. One level of comments (no threads), a simple `post_likes` table with
+a composite `(post_id, profile_id)` primary key as the DB-level duplicate-like
+guard, and `content_reports` feeding `/admin/reports`. No permanent QA
+fixture posts are kept — the account list above is reused, but every post/
+comment/like/report created while testing this area should be deleted again
+afterward (see cleanup note below), same "leave it clean" discipline as
+every other section in this file.
+
+**Identity rendering:** a company post shows `Company Name` (+ Verified
+badge); a personal post by a company team member shows
+`Name · Title · Company Name` (title from `company_members.title`, set by
+that member at `/company/profile`); a student's post shows
+`Name · headline`. `company_members` has been publicly readable since
+`0008` specifically so this title renders for *any* viewer, not just people
+inside the company.
+
+To test the full loop:
+1. Log in as any account, publish a post from `/feed` (text + optional
+   image/link; image goes to the public `post-media` bucket)
+2. Log in as a different account (ideally the QA student, to check the
+   "outside viewer" case) and confirm the post appears with the right
+   identity line and title
+3. Like it, confirm the count updates; attempt a duplicate like via direct
+   REST insert on `post_likes` — must 409 on the primary key
+4. Comment as a couple of different accounts
+5. As the comment's own author: **Delete** — hard delete, no audit trail,
+   correct for removing your own content
+6. As admin, on someone else's comment: **Remove (admin)** — soft delete
+   (`removed_at`/`removed_by`), preserves the row for audit; must appear
+   for admin-on-others'-comments and must never appear next to your own
+   comment (that stays a plain Delete)
+7. Report a post as the student (reason `other` is fine), confirm it shows
+   under **Open** at `/admin/reports`, then **Mark resolved** / **Dismiss**
+   and confirm it moves to the resolved section and `content_reports.status`
+   updates in the DB
+8. As admin, **Remove (admin)** a post with a reason — confirm the row gets
+   `removed_at`/`removed_by`/`removal_reason` (not deleted), the author and
+   admin can still see it marked "Removed", and it's invisible to everyone
+   else (including the other company)
+9. As Company B, attempt to update/delete Company A's post or comment via
+   direct REST (not just the UI) — must be a no-op (RLS-blocked writes
+   return 200/0-rows, not an error — check the row is actually unchanged,
+   don't just trust the HTTP status)
+10. Clean up: hard-delete every post created above via admin ("admins
+    delete any post" cascades its comments/likes/reports), reset any
+    `company_members.title` you set back to `null`, sign out
+
+**Bugs found live in this area (fixed):**
+- `company_members` had an UPDATE policy gap — no permissive UPDATE policy
+  at all meant `updateMyTitle()` silently no-opped (PostgREST returns
+  `error: null` / 0 rows for an RLS-blocked write, not an error) while the
+  UI reported "Saved ✓". Fixed in `0007_company_member_title_update.sql`
+  (member can update their own row; `company_id`/`profile_id`/`role` locked
+  immutable by trigger).
+- `company_members` only had `is_company_actor()`-scoped SELECT — a
+  member's `title` (and the whole "Name · Title · Company" feed identity
+  line) was invisible to anyone outside that company, i.e. the feed's
+  actual target audience. Fixed in `0008_company_members_public_read.sql`
+  (public read, write stays owner/actor-scoped — same pattern as every
+  other glanceable table).
+- `RemoveCommentButton` (the admin soft-delete-with-audit-trail component)
+  was never actually rendered anywhere — `comment-section.tsx` showed the
+  self-serve hard-delete `DeleteCommentButton` to admins for *any* comment,
+  including other people's, so admin comment moderation always destroyed
+  the row instead of soft-deleting it. Fixed in `comment-section.tsx`: an
+  author sees `Delete` only on their own comment; an admin sees
+  `Remove (admin)` only on someone else's.
+- Deleting/removing a comment didn't reflect in the list until a full page
+  reload — the client component's local `comments` state was seeded once
+  from `initialComments` and never reconciled with the fresh server data a
+  revalidation sends down. Fixed by adjusting state during render when
+  `initialComments` changes (the pattern React's own docs recommend for
+  this, and what `react-hooks/set-state-in-effect` otherwise flags),
+  instead of a `useEffect`.
 
 ## Known infrastructure note
 

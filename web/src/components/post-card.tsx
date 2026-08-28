@@ -30,11 +30,13 @@ export async function PostCard({
   supabase,
   post,
   currentUserId,
+  currentUserName,
   isAdmin,
 }: {
   supabase: SupabaseClient;
   post: PostWithAuthor;
   currentUserId: string | null;
+  currentUserName?: string | null;
   isAdmin: boolean;
 }) {
   const comments = await fetchComments(supabase, post.id);
@@ -145,6 +147,7 @@ export async function PostCard({
             postId={post.id}
             initialComments={comments}
             currentUserId={currentUserId}
+            currentUserName={currentUserName ?? null}
             isAdmin={isAdmin}
           />
         </div>

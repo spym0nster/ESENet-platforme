@@ -31,6 +31,7 @@ export default async function FeedPage({
   } = await supabase.auth.getUser();
 
   let isAdmin = false;
+  let currentUserName: string | null = null;
   let companyName: string | null = null;
   let ownProjects: { id: string; title: string }[] = [];
   let ownOpportunities: { id: string; title: string }[] = [];
@@ -38,10 +39,11 @@ export default async function FeedPage({
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, full_name")
       .eq("id", user.id)
       .single();
     isAdmin = profile?.role === "admin";
+    currentUserName = profile?.full_name ?? null;
 
     if (profile?.role === "student") {
       const { data: projects } = await supabase
@@ -115,6 +117,7 @@ export default async function FeedPage({
               supabase={supabase}
               post={post}
               currentUserId={user?.id ?? null}
+              currentUserName={currentUserName}
               isAdmin={isAdmin}
             />
           ))}
