@@ -286,6 +286,11 @@ rules above.
 - [ ] Server guard: a direct POST to `applyToOpportunity` for a past-deadline or non-published opportunity returns a friendly error and writes no row (verified via stale page / direct call — cannot be exercised through the UI once the form is hidden)
 - [ ] **Not verified with a real login** (no QA student password available to me): the end-to-end "student clicks Apply before/after deadline" path. Backing SQL + the detail-page render for null / past / soon deadlines were checked directly against the dev DB.
 
+### Home page (`/`)
+- [ ] Hero shows a live "N open roles · N partner companies" line (published opportunities / verified companies counts; hidden entirely if Supabase isn't configured)
+- [ ] "Latest opportunities" strip shows up to 4 most-recent published opportunities linking to their detail pages; hidden when there are none
+- [ ] Reads run through `createPublicClient()` (cookie-less anon) — the page adds no auth dependency; verified against live dev DB ("1 open role · 2 partner companies", BI PFE listed)
+
 ### Public company directory (`/companies`)
 - [ ] Lists **verified** companies only (unverified never appear), each with logo/initial, description snippet, and an open-role count (published opportunities); sorted by open-role count desc then name
 - [ ] `?q=` filters by company name (ILIKE); "Clear" resets

@@ -1,6 +1,70 @@
 import Link from "next/link";
+import { createPublicClient } from "@/lib/supabase/public";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
-export default function Home() {
+// All reads here run as `anon` via a cookie-less client. The route is still
+// rendered per-request today (the shared <SiteHeader> in the root layout
+// reads auth cookies), but this page adds no auth dependency of its own.
+
+const TYPE_LABEL: Record<string, string> = {
+  internship: "Internship",
+  pfe: "PFE",
+  job: "Job",
+  alternance: "Alternance",
+  freelance: "Freelance",
+};
+
+type LatestOpportunity = {
+  id: string;
+  type: string;
+  title: string;
+  company_name: string;
+};
+
+async function getHomeData(): Promise<{
+  openRoles: number | null;
+  companies: number | null;
+  latest: LatestOpportunity[];
+}> {
+  if (!isSupabaseConfigured()) {
+    return { openRoles: null, companies: null, latest: [] };
+  }
+  const supabase = createPublicClient();
+
+  const [openRolesRes, companiesRes, latestRes] = await Promise.all([
+    supabase
+      .from("opportunities")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published"),
+    supabase
+      .from("companies")
+      .select("profile_id", { count: "exact", head: true })
+      .eq("verified", true),
+    supabase
+      .from("opportunities")
+      .select("id, type, title, companies!inner(company_name)")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(4),
+  ]);
+
+  return {
+    openRoles: openRolesRes.count ?? null,
+    companies: companiesRes.count ?? null,
+    latest: (latestRes.data ?? []).map((o) => ({
+      id: o.id as string,
+      type: o.type as string,
+      title: o.title as string,
+      company_name:
+        (o.companies as unknown as { company_name: string } | null)
+          ?.company_name ?? "ESEN partner company",
+    })),
+  };
+}
+
+export default async function Home() {
+  const { openRoles, companies, latest } = await getHomeData();
+
   return (
     <>
       <section className="relative overflow-hidden bg-[linear-gradient(180deg,#0A0C33_0%,#171048_42%,#3C1560_72%,#641274_100%)] px-6 py-28 text-white">
@@ -32,8 +96,55 @@ export default function Home() {
               Create your profile
             </Link>
           </div>
+
+          {(openRoles !== null || companies !== null) && (
+            <div className="mt-12 flex items-center justify-center gap-8 font-mono text-sm text-[#B3ADD9]">
+              {openRoles !== null && (
+                <span>
+                  <span className="text-white">{openRoles}</span> open role
+                  {openRoles === 1 ? "" : "s"}
+                </span>
+              )}
+              {companies !== null && (
+                <span>
+                  <span className="text-white">{companies}</span> partner compan
+                  {companies === 1 ? "y" : "ies"}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </section>
+
+      {latest.length > 0 && (
+        <section className="mx-auto max-w-5xl px-6 pt-16">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-xl font-bold">Latest opportunities</h2>
+            <Link
+              href="/opportunities"
+              className="font-mono text-xs uppercase tracking-wide text-accent-2 hover:text-text"
+            >
+              See all →
+            </Link>
+          </div>
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+            {latest.map((o) => (
+              <li key={o.id}>
+                <Link
+                  href={`/opportunities/${o.id}`}
+                  className="block rounded-lg border border-border bg-surface p-4 transition hover:border-accent-2/50"
+                >
+                  <span className="font-mono text-[11px] uppercase tracking-wide text-accent-2">
+                    {TYPE_LABEL[o.type] ?? o.type}
+                  </span>
+                  <p className="mt-1 font-display font-bold">{o.title}</p>
+                  <p className="text-sm text-text-muted">{o.company_name}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="mx-auto max-w-5xl px-6 py-20">
         <div className="grid gap-8 sm:grid-cols-3">
