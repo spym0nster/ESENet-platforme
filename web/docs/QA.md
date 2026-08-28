@@ -289,6 +289,13 @@ but don't be surprised it's still in the table.
 - [ ] A company owner cannot delete their account, server-side, not just hidden in the UI
 - [ ] `deactivated_at`, `full_name`, `avatar_url`, `banner_url` are all frozen once deactivated — direct REST attempts to change any of them revert
 
+### Ownership transfer
+- [ ] Owner can propose a transfer to an existing member; only one in flight per company
+- [ ] Only the named recipient sees an Accept/Decline offer; nobody else does
+- [ ] Decline leaves `company_members` completely untouched
+- [ ] Accept swaps both rows — recipient becomes owner, outgoing owner becomes member (not removed)
+- [ ] A mere member cannot initiate a transfer (RLS, not just hidden in the UI)
+
 ## Posts / feed / moderation (`/feed`, `/admin/reports`)
 
 A single global, chronological feed (`fetchPosts()` in `src/lib/posts.ts`) that
@@ -530,3 +537,55 @@ account pattern in this file):
 5. As the deactivated account, attempt to clear `deactivated_at` or
    change `full_name`/`avatar_url`/`banner_url` via direct REST — all
    four must revert (0013)
+
+## Company ownership transfer (`/company/team`)
+
+The gap `deleteMyAccount()` left deliberately open (0012/0013): a sole
+owner blocked from deleting had no way to hand the company to a team
+member first. Doesn't touch `protect_company_member_identity`'s
+role-immutability trigger (0007) at all — that trigger only fires on
+`UPDATE`, so this is built entirely on `DELETE`-then-`INSERT` instead,
+the same consent-record shape `company_join_requests` already uses: a
+`company_ownership_transfers` row captures the owner naming a member and
+that member's own acceptance, and every `company_members` write an
+accepted transfer authorizes is narrowly gated by that exact row existing
+— never a general "owners can reassign roles" grant.
+
+**Reminder if you ever query this:** `company_members.company_id` is the
+company's permanent identity (`companies.profile_id`) — it never changes
+on a transfer. Only which row has `role = 'owner'` moves. Confirmed live
+by initially querying the wrong id after a transfer and getting a
+correct-but-confusing empty/blocked result — that was a test-script
+mistake, not a bug, but easy to repeat.
+
+To test the full loop (three scratch accounts: an owner and two
+members):
+1. Owner: `/company/team` → "Make owner" on a member → confirm a
+   "Waiting on X to accept" row appears with Cancel, and every member
+   row's "Make owner" button disappears while one transfer is pending
+   (only one in flight per company, enforced by a partial unique index)
+2. The named member: sees an "wants to make you the owner" card with
+   Accept/Decline — a third member (not named) sees nothing
+3. Decline path: confirm the transfer's `status` becomes `declined` and
+   `company_members` is completely untouched
+4. Accept path: confirm the five-step swap completed — the accepting
+   member is now `owner`, the outgoing owner is now `member` (not
+   removed), everyone else is untouched, and the pending-transfer
+   section disappears for the (former) owner
+5. As the new owner, confirm you can immediately initiate a new
+   transfer yourself — proves the mechanism is fully reusable, not a
+   one-time swap
+6. Direct REST: a mere member attempting to initiate (should 403 — not
+   owner), an unrelated party's `select` (should return `[]` — no
+   visibility), a second pending transfer while one's already in flight
+   (should 409 — unique constraint)
+
+**Bug found live, fixed:** `TeamMemberRow`'s "hide on success" check
+covered both the remove-member action AND the initiate-transfer action
+with one shared condition — so successfully proposing a transfer made
+that *member's own row* vanish from the Members list entirely (they're
+still a member; only the "Make owner" button should have disappeared).
+Confirmed the underlying data was never touched — purely a client-side
+render bug, caught immediately by comparing the UI against a direct
+`company_members` query showing all three rows intact. Fixed by scoping
+the hide-on-success behavior to the remove action only.

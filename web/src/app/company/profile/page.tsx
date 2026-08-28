@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireCompanyUser } from "@/lib/auth/require-company";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
@@ -108,9 +109,13 @@ export default async function CompanyProfilePage() {
         </h2>
         {isOwner ? (
           <p className="mt-2 text-sm text-text-muted">
-            You own {company.company_name} — ownership transfer isn&rsquo;t
-            self-service yet. Contact ESEN to transfer or close this
-            company before deleting your account.
+            You own {company.company_name} — transfer ownership to a team
+            member from the{" "}
+            <Link href="/company/team" className="text-accent-2 hover:text-text">
+              Team page
+            </Link>{" "}
+            before deleting your account. If you&rsquo;re the only person
+            here, contact ESEN to transfer or close the company.
           </p>
         ) : (
           <>

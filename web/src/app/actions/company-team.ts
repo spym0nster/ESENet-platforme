@@ -205,6 +205,194 @@ export async function declineJoinRequest(
 }
 
 /**
+ * The current owner proposes handing the company to an existing member.
+ * RLS ("the current owner proposes a transfer...", 0014) independently
+ * requires the caller to actually be this company's owner and the target
+ * to actually already be a member — never an arbitrary profile.
+ */
+export async function initiateOwnershipTransfer(
+  _prevState: TeamActionState,
+  formData: FormData
+): Promise<TeamActionState> {
+  const toProfileId = String(formData.get("to_profile_id") ?? "");
+  if (!toProfileId) return { error: "Missing member." };
+
+  const { supabase, user, companyId, error: authError } = await requireCompanyActor();
+  if (!user || !companyId) return { error: authError ?? "Unexpected error." };
+
+  const { error } = await supabase.from("company_ownership_transfers").insert({
+    company_id: companyId,
+    from_profile_id: user.id,
+    to_profile_id: toProfileId,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "There's already a pending transfer for this company." };
+    }
+    console.error("initiateOwnershipTransfer failed:", error);
+    return { error: "We couldn't start that transfer. Please try again." };
+  }
+
+  revalidatePath("/company/team");
+  return { success: true };
+}
+
+export async function cancelOwnershipTransfer(
+  _prevState: TeamActionState,
+  formData: FormData
+): Promise<TeamActionState> {
+  const transferId = String(formData.get("transfer_id") ?? "");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be signed in." };
+
+  // RLS ("the initiating owner cancels...") independently restricts this
+  // to the transfer's own initiator and to a still-pending row.
+  const { error } = await supabase
+    .from("company_ownership_transfers")
+    .delete()
+    .eq("id", transferId)
+    .eq("from_profile_id", user.id);
+
+  if (error) {
+    console.error("cancelOwnershipTransfer failed:", error);
+    return { error: "We couldn't cancel that transfer." };
+  }
+
+  revalidatePath("/company/team");
+  return { success: true };
+}
+
+export async function declineOwnershipTransfer(
+  _prevState: TeamActionState,
+  formData: FormData
+): Promise<TeamActionState> {
+  const transferId = String(formData.get("transfer_id") ?? "");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be signed in." };
+
+  const { error } = await supabase
+    .from("company_ownership_transfers")
+    .update({ status: "declined", decided_at: new Date().toISOString() })
+    .eq("id", transferId)
+    .eq("to_profile_id", user.id);
+
+  if (error) {
+    console.error("declineOwnershipTransfer failed:", error);
+    return { error: "We couldn't decline that transfer." };
+  }
+
+  revalidatePath("/company/team");
+  return { success: true };
+}
+
+/**
+ * The named recipient accepts, becoming the new owner. Five sequential
+ * writes, same non-atomic shape already accepted for join-request
+ * approval (see approveJoinRequest above) — each step's RLS check depends
+ * on the previous one having actually committed, so order matters:
+ *   1. mark the transfer 'accepted' (unlocks the four company_members
+ *      policies below, all gated on finding this exact accepted row)
+ *   2. delete the recipient's own 'member' row — must happen before step 3
+ *      inserts a row with the same (company_id, profile_id) primary key
+ *   3. insert the recipient as 'owner'
+ *   4. delete the outgoing owner's 'owner' row — before step 5 reinserts
+ *      that same (company_id, profile_id) pair
+ *   5. insert the outgoing owner as 'member'
+ * If this fails partway through, re-running Accept is mostly safe to
+ * retry (each step is idempotent against its own already-done state) — the
+ * one real gap is between steps 4 and 5: if step 5 never runs, the
+ * outgoing owner is left with no company_members row at all (removed, not
+ * demoted) rather than silently duplicated or corrupted. Worth a manual
+ * fix if it's ever actually hit, not a data-integrity risk either way.
+ */
+export async function acceptOwnershipTransfer(
+  _prevState: TeamActionState,
+  formData: FormData
+): Promise<TeamActionState> {
+  const transferId = String(formData.get("transfer_id") ?? "");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be signed in." };
+
+  const { data: transfer, error: fetchError } = await supabase
+    .from("company_ownership_transfers")
+    .select("company_id, from_profile_id, to_profile_id, status")
+    .eq("id", transferId)
+    .eq("to_profile_id", user.id)
+    .single();
+
+  if (fetchError || !transfer) {
+    return { error: "We couldn't find that transfer." };
+  }
+  if (transfer.status !== "pending") {
+    return { error: "This transfer has already been decided." };
+  }
+
+  const { error: decideError } = await supabase
+    .from("company_ownership_transfers")
+    .update({ status: "accepted", decided_at: new Date().toISOString() })
+    .eq("id", transferId)
+    .eq("to_profile_id", user.id);
+  if (decideError) {
+    console.error("acceptOwnershipTransfer decide failed:", decideError);
+    return { error: "We couldn't accept that transfer. Please try again." };
+  }
+
+  const { company_id: companyId, from_profile_id: fromProfileId } = transfer;
+
+  const { error: removeSelfError } = await supabase
+    .from("company_members")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("profile_id", user.id)
+    .eq("role", "member");
+  if (removeSelfError) {
+    console.error("acceptOwnershipTransfer remove-self failed:", removeSelfError);
+    return { error: "Accepted, but we couldn't finish the transfer. Please try again." };
+  }
+
+  const { error: promoteError } = await supabase
+    .from("company_members")
+    .insert({ company_id: companyId, profile_id: user.id, role: "owner" });
+  if (promoteError) {
+    console.error("acceptOwnershipTransfer promote failed:", promoteError);
+    return { error: "Accepted, but we couldn't finish the transfer. Please try again." };
+  }
+
+  const { error: removeOldOwnerError } = await supabase
+    .from("company_members")
+    .delete()
+    .eq("company_id", companyId)
+    .eq("profile_id", fromProfileId)
+    .eq("role", "owner");
+  if (removeOldOwnerError) {
+    console.error("acceptOwnershipTransfer remove-old-owner failed:", removeOldOwnerError);
+    return { error: "Accepted, but we couldn't finish the transfer. Please try again." };
+  }
+
+  const { error: demoteError } = await supabase
+    .from("company_members")
+    .insert({ company_id: companyId, profile_id: fromProfileId, role: "member" });
+  if (demoteError) {
+    console.error("acceptOwnershipTransfer demote failed:", demoteError);
+    return { error: "Accepted, but we couldn't finish the transfer. Please try again." };
+  }
+
+  revalidatePath("/company/team");
+  revalidatePath("/company/profile");
+  return { success: true };
+}
+
+/**
  * A member sets their own professional title (e.g. "HR Manager") shown next
  * to their name in the feed. Deliberately self-service and scoped to their
  * own row only — always .eq("profile_id", user.id), so an owner can't set

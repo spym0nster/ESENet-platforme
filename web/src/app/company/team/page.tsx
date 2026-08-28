@@ -4,15 +4,19 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { InviteTeamMemberForm } from "@/components/invite-team-member-form";
 import { TeamMemberRow, PendingInviteRow } from "@/components/team-member-row";
 import { JoinRequestRow } from "@/components/join-request-row";
+import {
+  PendingOwnershipTransferRow,
+  IncomingOwnershipTransfer,
+} from "@/components/ownership-transfer";
 
 export default async function CompanyTeamPage() {
   if (!isSupabaseConfigured()) {
     notFound();
   }
 
-  const { supabase, company, companyId, isOwner } = await requireCompanyUser("/company/team");
+  const { supabase, user, company, companyId, isOwner } = await requireCompanyUser("/company/team");
 
-  const [{ data: members }, { data: invites }, { data: joinRequests }] = await Promise.all([
+  const [{ data: members }, { data: invites }, { data: joinRequests }, { data: transfer }] = await Promise.all([
     supabase
       .from("company_members")
       .select("profile_id, role, profiles(full_name)")
@@ -34,6 +38,16 @@ export default async function CompanyTeamPage() {
       .eq("company_id", companyId)
       .eq("status", "pending")
       .order("requested_at", { ascending: false }),
+    supabase
+      // Same ambiguous-FK situation as company_join_requests above —
+      // from_profile_id and to_profile_id both point at profiles.
+      .from("company_ownership_transfers")
+      .select(
+        "id, from_profile_id, to_profile_id, to:profiles!company_ownership_transfers_to_profile_id_fkey(full_name)"
+      )
+      .eq("company_id", companyId)
+      .eq("status", "pending")
+      .maybeSingle(),
   ]);
 
   return (
@@ -65,12 +79,39 @@ export default async function CompanyTeamPage() {
                 }
                 role={m.role as "owner" | "member"}
                 canRemove={isOwner && m.role === "member"}
+                canTransferTo={isOwner && m.role === "member" && !transfer}
                 memberId={m.profile_id}
               />
             </li>
           ))}
         </ul>
       </div>
+
+      {transfer && transfer.to_profile_id === user.id && (
+        <div className="mt-10">
+          <IncomingOwnershipTransfer
+            transferId={transfer.id}
+            companyName={company?.company_name ?? "this company"}
+          />
+        </div>
+      )}
+
+      {transfer && transfer.from_profile_id === user.id && (
+        <div className="mt-10">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+            Ownership transfer
+          </h2>
+          <div className="mt-3">
+            <PendingOwnershipTransferRow
+              transferId={transfer.id}
+              toName={
+                (transfer.to as unknown as { full_name: string } | null)?.full_name ??
+                "that member"
+              }
+            />
+          </div>
+        </div>
+      )}
 
       {joinRequests && joinRequests.length > 0 && (
         <div className="mt-10">

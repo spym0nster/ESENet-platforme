@@ -19,18 +19,12 @@ export type AccountActionState = { error: string } | null;
  *  - the account is marked deactivated_at (one-way, enforced by trigger)
  *    and signed out immediately
  *
- * A company OWNER is blocked here on purpose. Deleting an owner's account
- * would leave their company ownerless — the only way out is to promote
- * an existing team member to owner first, which the current schema
- * deliberately doesn't allow (company_members.role is trigger-locked
- * immutable, by design, from the same security-hardening pass that closed
- * two real privilege-escalation bugs — see 0003/0007). Building a safe
- * ownership-transfer path means carefully relaxing a trigger that exists
- * specifically to prevent role manipulation, which is real, security-
- * sensitive scope of its own — not something to bolt on hastily under an
- * unrelated "delete my account" feature. Until that's built, a sole
- * owner who wants to delete their account (or close the company) needs to
- * go through ESEN directly.
+ * A company OWNER is blocked here on purpose — deleting an owner's account
+ * would leave their company ownerless. If they have another team member,
+ * /company/team now offers a real ownership-transfer flow (0014); once
+ * transferred, they're a plain member and can delete normally. A sole
+ * owner with nobody to hand it to still has no self-service path and
+ * needs to go through ESEN directly to transfer or close the company.
  */
 export async function deleteMyAccount(): Promise<AccountActionState> {
   const supabase = await createClient();
@@ -57,9 +51,17 @@ export async function deleteMyAccount(): Promise<AccountActionState> {
         .maybeSingle();
 
       if (membership?.role === "owner") {
+        const { count: otherMembers } = await supabase
+          .from("company_members")
+          .select("profile_id", { count: "exact", head: true })
+          .eq("company_id", companyId)
+          .eq("role", "member");
+
         return {
           error:
-            "You're the owner of a company — ownership transfer isn't self-service yet. Contact ESEN to transfer or close it before deleting your account.",
+            otherMembers && otherMembers > 0
+              ? "You're the owner of a company — transfer ownership to a team member on your company page before deleting your account."
+              : "You're the owner of a company with nobody to hand it to — contact ESEN to transfer or close it before deleting your account.",
         };
       }
 
