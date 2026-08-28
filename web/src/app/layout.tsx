@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <SiteHeader />
         <main className="flex-1">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );

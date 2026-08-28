@@ -54,6 +54,18 @@ export function SignupForm() {
         </p>
       )}
 
+      <p className="text-xs text-text-faint">
+        By creating an account you agree to ESENet&rsquo;s{" "}
+        <a href="/terms" target="_blank" className="text-accent-2 hover:text-text">
+          Terms
+        </a>{" "}
+        and{" "}
+        <a href="/privacy" target="_blank" className="text-accent-2 hover:text-text">
+          Privacy Policy
+        </a>
+        .
+      </p>
+
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Creating account…" : "Create account"}
       </Button>
