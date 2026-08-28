@@ -12,3 +12,7 @@ out/
 # OS
 .DS_Store
 Thumbs.db
+
+# Editor / agent local config
+.claude/
+.vercel
