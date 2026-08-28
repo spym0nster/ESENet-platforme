@@ -4,6 +4,7 @@ import { requireCompanyUser } from "@/lib/auth/require-company";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { Opportunity } from "@/types/database";
 import { Card, Badge, EmptyState, LinkButton } from "@/components/ui";
+import { OpportunityStatusButton } from "@/components/opportunity-status-button";
 
 const TYPE_LABEL: Record<string, string> = {
   internship: "Internship",
@@ -26,7 +27,7 @@ export default async function CompanyDashboardPage({
     notFound();
   }
 
-  const { published } = await searchParams;
+  const { published, updated } = await searchParams;
   const { supabase, company, companyId } = await requireCompanyUser("/company/dashboard");
 
   const { data: opportunities, error } = await supabase
@@ -73,12 +74,14 @@ export default async function CompanyDashboardPage({
         </div>
       </div>
 
-      {published === "1" && (
+      {(published === "1" || updated === "1") && (
         <p
           className="mt-6 rounded-md px-4 py-3 text-sm font-medium"
           style={{ background: "var(--accent-soft)", color: "var(--accent-on-soft)" }}
         >
-          Opportunity published successfully.
+          {published === "1"
+            ? "Opportunity published successfully."
+            : "Changes saved."}
         </p>
       )}
 
@@ -140,12 +143,21 @@ export default async function CompanyDashboardPage({
                       year: "numeric",
                     })}
                   </p>
-                  <Link
-                    href={`/company/opportunities/${o.id}/applicants`}
-                    className="mt-3 inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
-                  >
-                    View applicants ({applicantCounts.get(o.id) ?? 0}) →
-                  </Link>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
+                    <Link
+                      href={`/company/opportunities/${o.id}/applicants`}
+                      className="py-2 font-mono text-xs text-accent-2 hover:text-text"
+                    >
+                      View applicants ({applicantCounts.get(o.id) ?? 0}) →
+                    </Link>
+                    <Link
+                      href={`/company/opportunities/${o.id}/edit`}
+                      className="py-2 font-mono text-xs text-text-muted hover:text-text"
+                    >
+                      Edit
+                    </Link>
+                    <OpportunityStatusButton opportunityId={o.id} status={o.status} />
+                  </div>
                 </Card>
               </li>
             ))}

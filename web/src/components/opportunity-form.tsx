@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import {
   createOpportunity,
+  updateOpportunity,
   type OpportunityState,
 } from "@/app/actions/opportunities";
 
@@ -15,12 +16,29 @@ const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "freelance", label: "Freelance" },
 ];
 
-export function OpportunityForm() {
+export type OpportunityFormValues = {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  skills: string[];
+  location: string | null;
+  remote: boolean;
+  start_date: string | null;
+  end_date: string | null;
+};
+
+export function OpportunityForm({
+  opportunity,
+}: {
+  opportunity?: OpportunityFormValues;
+}) {
+  const isEdit = Boolean(opportunity);
   const [state, action, pending] = useActionState<OpportunityState, FormData>(
-    createOpportunity,
+    isEdit ? updateOpportunity.bind(null, opportunity!.id) : createOpportunity,
     null
   );
-  const [skills, setSkills] = useState<string[]>([]);
+  const [skills, setSkills] = useState<string[]>(opportunity?.skills ?? []);
   const [skillDraft, setSkillDraft] = useState("");
   const fieldErrors = state && "fieldErrors" in state ? state.fieldErrors : undefined;
 
@@ -41,7 +59,7 @@ export function OpportunityForm() {
           <select
             name="type"
             required
-            defaultValue=""
+            defaultValue={opportunity?.type ?? ""}
             className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
           >
             <option value="" disabled>
@@ -62,6 +80,7 @@ export function OpportunityForm() {
             required
             minLength={3}
             maxLength={120}
+            defaultValue={opportunity?.title ?? ""}
             placeholder="Business Intelligence PFE Intern"
             className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
           />
@@ -72,6 +91,7 @@ export function OpportunityForm() {
             name="description"
             required
             rows={6}
+            defaultValue={opportunity?.description ?? ""}
             placeholder="We are looking for a Business Intelligence student to join our data team for a PFE project..."
             className="w-full rounded-md border border-border bg-surface p-3 text-sm outline-none focus:border-accent-2"
           />
@@ -120,6 +140,7 @@ export function OpportunityForm() {
           <input
             name="location"
             type="text"
+            defaultValue={opportunity?.location ?? ""}
             placeholder="Tunis, Sousse, Hybrid…"
             className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
           />
@@ -129,6 +150,7 @@ export function OpportunityForm() {
           <input
             type="checkbox"
             name="remote"
+            defaultChecked={opportunity?.remote ?? false}
             className="h-4 w-4 rounded border-border accent-accent"
           />
           This opportunity can be done remotely
@@ -139,6 +161,7 @@ export function OpportunityForm() {
             <input
               name="start_date"
               type="date"
+              defaultValue={opportunity?.start_date ?? ""}
               className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
             />
           </Field>
@@ -146,6 +169,7 @@ export function OpportunityForm() {
             <input
               name="end_date"
               type="date"
+              defaultValue={opportunity?.end_date ?? ""}
               className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
             />
           </Field>
@@ -162,7 +186,13 @@ export function OpportunityForm() {
           disabled={pending}
           className="rounded-md bg-accent px-6 py-2.5 font-mono text-sm text-white disabled:opacity-60"
         >
-          {pending ? "Publishing…" : "Publish Opportunity"}
+          {pending
+            ? isEdit
+              ? "Saving…"
+              : "Publishing…"
+            : isEdit
+              ? "Save changes"
+              : "Publish Opportunity"}
         </button>
         <Link
           href="/company/dashboard"

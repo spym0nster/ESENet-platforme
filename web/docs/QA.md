@@ -265,6 +265,14 @@ rules above.
 - [ ] `/opportunities` paginates at 20 per page; filters/sort survive across Previous/Next
 - [ ] Applying a second time to the same opportunity fails with a friendly message, not a raw database error
 
+### Opportunity edit / close (`0017`)
+- [ ] Dashboard shows Edit + Close/Reopen per opportunity; `/company/opportunities/[id]/edit` prefills every field and saves ("Changes saved." banner)
+- [ ] A team member (not just the owner) can edit and close — `is_company_actor`, not owner-only
+- [ ] Editing another company's opportunity by URL 404s (ownership-scoped fetch + RLS)
+- [ ] Closing removes the opportunity from `/opportunities` and 404s its public detail page for non-applicants; reopening restores both
+- [ ] After `0017`: a student who already applied still sees the opportunity title/company on `/applications` even once it's closed (not the "Opportunity" / "ESEN partner company" placeholder)
+- [ ] `updateOpportunity` never changes `company_id` or `status`; `setOpportunityStatus` only moves between `published` and `closed`
+
 ### Application
 - [ ] Student can apply
 - [ ] Application row is created, referencing the correct student and opportunity
