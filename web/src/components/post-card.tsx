@@ -7,6 +7,7 @@ import { LikeButton } from "@/components/like-button";
 import { CommentSection } from "@/components/comment-section";
 import { ReportButton } from "@/components/report-button";
 import { DeletePostButton, RemovePostButton } from "@/components/post-actions";
+import { PostBody } from "@/components/post-body";
 
 const TYPE_LABEL: Record<string, string> = {
   internship: "Internship",
@@ -43,6 +44,10 @@ export async function PostCard({
 
   const postingAsCompany = post.published_as === "company" && post.company;
   const isOwnPost = currentUserId === post.author_id;
+  // On insert both timestamps come from the same transaction `now()`, so any
+  // later edit (which the DB trigger stamps with a fresh now()) makes them
+  // differ.
+  const isEdited = post.updated_at !== post.created_at;
 
   return (
     <Card>
@@ -98,7 +103,13 @@ export async function PostCard({
             {timeAgo(post.created_at)}
           </p>
 
-          <p className="mt-2 whitespace-pre-wrap text-sm text-text">{post.body}</p>
+          <PostBody
+            postId={post.id}
+            body={post.body}
+            linkUrl={post.link_url}
+            isEdited={isEdited}
+            canEdit={isOwnPost}
+          />
 
           {post.media_url && (
             // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL

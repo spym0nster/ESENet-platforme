@@ -388,6 +388,10 @@ rules above.
 - [ ] Reporting a post creates an open row in `/admin/reports`; Mark resolved / Dismiss transitions it correctly
 - [ ] Admin `Remove (admin)` on a post soft-deletes it (audit trail kept) and hides it from everyone but the author/admin
 - [ ] Company B cannot modify or delete Company A's post/comment via direct REST
+- [ ] Post author sees an "Edit" affordance under their own post body (not on others'); editing the text and/or link and saving updates the post in place and adds an "edited" marker (`updated_at !== created_at`)
+- [ ] The edit form closes on its own after a successful save (no reload); Cancel discards changes
+- [ ] `editPost` is body + link only — it cannot change `published_as` / `company_id` / attached opportunity or project (the `protect_post_admin_fields` trigger freezes attribution), and a non-author / removed post → "You can't edit this post"
+- [ ] **Not verified with a real login** (no QA password available to me): the actual in-browser Edit → Save round trip. Verified: the card renders with the new client `PostBody` component, the "edited" marker appears once `updated_at` moves, lint + build clean. Backing RLS ("authors edit their own post") + the trigger already existed — no migration.
 
 ### Notifications (`0015`, header bell + `/notifications`)
 - [ ] Student applies → every actor of the target company gets an `application_received` notification linking to that opportunity's applicants page

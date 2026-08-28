@@ -132,6 +132,57 @@ export async function createPost(
   return { success: true };
 }
 
+/**
+ * Edits the text of an existing post — body and link only. Media,
+ * attributions (`published_as` / `company_id`), and any linked
+ * opportunity/project are immutable after creation (the
+ * `protect_post_admin_fields` trigger also freezes the attribution columns
+ * and bumps `updated_at`). The update is scoped to `author_id = user.id`
+ * here and independently by the "authors edit their own post" RLS policy.
+ */
+export async function editPost(
+  _prevState: PostActionState,
+  formData: FormData
+): Promise<PostActionState> {
+  const postId = String(formData.get("post_id") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  const linkUrl = String(formData.get("link_url") ?? "").trim();
+
+  if (!postId) return { error: "Missing post." };
+  if (!body || body.length > 3000) {
+    return { error: "Write something (up to 3000 characters)." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be signed in." };
+
+  const { data: updated, error } = await supabase
+    .from("posts")
+    .update({ body, link_url: linkUrl || null })
+    .eq("id", postId)
+    .eq("author_id", user.id)
+    .is("removed_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("editPost failed:", error);
+    return { error: "We couldn't save your changes. Please try again." };
+  }
+  if (!updated) {
+    // 0 rows: not the author, or the post was removed by a moderator.
+    return { error: "You can't edit this post." };
+  }
+
+  revalidatePath("/feed");
+  revalidatePath("/profile");
+  revalidatePath("/company/profile");
+  return { success: true };
+}
+
 export async function deletePost(
   _prevState: PostActionState,
   formData: FormData
