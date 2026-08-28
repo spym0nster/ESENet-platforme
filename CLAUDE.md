@@ -110,7 +110,7 @@ layers everything after it — read both, the migrations are not optional
 extras. As of this writing:
 
 - `profiles` — one row per authenticated user (`role`: student/company/admin)
-- `student_details` — 1:1 with a student profile (skills, bio, availability, CV), plus `education`/`experiences`/`projects`/`certifications` child tables
+- `student_details` — 1:1 with a student profile (skills, bio, availability, CV), plus `education`/`experiences`/`projects`/`certifications` child tables. All public-read ("for company search") — surfaced at `/students` (signed-in-only directory + filters) and `/students/[id]` (read-only public profile; CV deliberately excluded, it stays in its applicant-scoped private bucket)
 - `companies` — 1:1 with a company profile (name, website, verified flag, logo/banner)
 - `company_members` / `company_invites` — multi-user company accounts: an owner plus invited team members (each with their own login and an optional `title` shown in the feed), invite-by-email with accept-your-own-invite RLS
 - `opportunities` — posted by a company (`type`: internship/pfe/job/alternance/freelance; `status`: pending/published/closed)
@@ -184,7 +184,9 @@ App Router under `web/src/app`, path alias `@/*` → `web/src/*`.
 
 **Phase 1 — ship for Nov 2026:** student profile, company posting
 (internship/PFE/job), browse + filter, apply flow, admin approval of
-companies/postings. **Done and live-tested** — see `web/docs/QA.md`.
+companies/postings, student directory (`/students`). **Done and
+live-tested** — see `web/docs/QA.md`. Deployed on Vercel
+(`esenet-platforme.vercel.app`); pushes to `main` auto-deploy to prod.
 
 **Explicitly deferred past the event:** alumni network/messaging, a real
 scored matching engine (a simple tag-overlap filter is fine pre-launch),

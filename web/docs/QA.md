@@ -259,6 +259,15 @@ but don't be surprised it's still in the table.
 - [ ] CV is only readable by its owner and companies the student applied to (private bucket)
 - [ ] Education/Experience/Projects/Certifications can be added and removed, scoped to the owning student
 
+### Student directory (`/students`, `/students/[id]`)
+- [ ] Logged out: `/students` and `/students/[id]` show a "log in" gate, not data
+- [ ] Logged in (any role): the directory lists students who have filled in a profile; a bare student_details row (no headline/bio/skills) does NOT appear
+- [ ] A deactivated (deleted) account never appears in the directory or opens as a profile
+- [ ] Keyword / skill / "looking for" / available-now filters each narrow the list; filters survive Previous/Next; 20 per page
+- [ ] `/students/[id]` shows headline, bio, skills, looking-for, availability, LinkedIn, the four history sections, and the student's feed posts — but NOT their CV
+- [ ] A company viewing an applicant on `/company/opportunities/[id]/applicants` can click the name through to `/students/[id]`
+- [ ] Pages are `robots: noindex`
+
 ### Saved opportunities
 - [ ] Student can save/unsave from the marketplace list and from an opportunity's detail page
 - [ ] `/saved` reflects the current saved set
