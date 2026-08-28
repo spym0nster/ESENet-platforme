@@ -66,35 +66,56 @@ cp .env.local.example .env.local
 Then:
 1. Create a project at [supabase.com](https://supabase.com) (free tier is enough for now).
 2. Project Settings → API → copy the Project URL and `anon public` key into `.env.local`.
-3. SQL Editor → paste and run `web/supabase/schema.sql` (creates all tables + row-level security policies).
+3. SQL Editor → run `web/supabase/schema.sql`, then every file in
+   `web/supabase/migrations/` **in filename order** (`0002_...` through the
+   highest-numbered file) — each one is additive on top of the last, not a
+   replacement for `schema.sql`.
 4. `npm run dev` → http://localhost:3000
 
 Without a configured Supabase project, the app still runs — pages that need
 data show a "connect Supabase" message instead of crashing (see
 `isSupabaseConfigured()` in `web/src/lib/supabase/is-configured.ts`).
 
-## Data model (Phase 1 — see `web/supabase/schema.sql`)
+## Data model
+
+`web/supabase/schema.sql` has the Phase 1 core; `web/supabase/migrations/`
+layers everything after it — read both, the migrations are not optional
+extras. As of this writing:
 
 - `profiles` — one row per authenticated user (`role`: student/company/admin)
-- `student_details` — 1:1 with a student profile (skills, bio, availability, CV)
-- `companies` — 1:1 with a company profile (name, website, verified flag)
+- `student_details` — 1:1 with a student profile (skills, bio, availability, CV), plus `education`/`experiences`/`projects`/`certifications` child tables
+- `companies` — 1:1 with a company profile (name, website, verified flag, logo/banner)
+- `company_members` / `company_invites` — multi-user company accounts: an owner plus invited team members (each with their own login and an optional `title` shown in the feed), invite-by-email with accept-your-own-invite RLS
 - `opportunities` — posted by a company (`type`: internship/pfe/job/alternance/freelance; `status`: pending/published/closed)
-- `applications` — a student applying to an opportunity
+- `applications` (+ `application_status_events`) — a student applying to an opportunity, with a status history log
+- `saved_opportunities` — a student's bookmarks
+- `posts` / `post_comments` / `post_likes` / `content_reports` — the LinkedIn-style feed: students and company people (owner or team member) publish posts (optionally as themselves or as the company), one level of comments, simple likes, and a reporting/admin-moderation queue with soft-delete + audit trail
 
-RLS policies are already in the schema: public read for directory/browse use
-cases, owner-only write, and companies can read applications to their own
-postings.
+RLS policies are already in every migration: public read for
+directory/browse/feed use cases, owner-only write, company-scoped access via
+the shared `is_company_actor()` predicate, and admin-only moderation via
+`is_admin()`. See `web/docs/QA.md` for the full regression checklist and a
+running log of real RLS bugs found and fixed — read it before touching any
+policy in this schema, several of its gotchas are non-obvious and have bitten
+this project more than once.
 
 ## Roadmap scope (do NOT build ahead of this without asking)
 
-**Phase 1 — ship for Nov 2026 (this is what's scaffolded so far):**
-student profile, company posting (internship/PFE/job), browse + filter,
-apply flow, admin approval of companies/postings.
+**Phase 1 — ship for Nov 2026:** student profile, company posting
+(internship/PFE/job), browse + filter, apply flow, admin approval of
+companies/postings. **Done and live-tested** — see `web/docs/QA.md`.
 
 **Explicitly deferred past the event:** alumni network/messaging, a real
 scored matching engine (a simple tag-overlap filter is fine pre-launch),
 QR check-in/event-day companion, freelance/hackathon/challenge modules.
 
-Current status: scaffold only (landing page, auth, opportunity browse/apply
-flow, empty database). Still missing: company posting UI, admin approval
-queue, student profile edit UI, seed content.
+Current status: Phase 1 is built (student profile with education/experience/
+projects/certifications, company posting + admin approval, browse/filter,
+apply flow) plus a Phase 2 layer on top — multi-user company accounts and a
+LinkedIn-style community feed (posts, comments, likes, reporting, admin
+moderation) shared by students and companies. All of it has been live-tested
+against a real Supabase project, not just code-reviewed; bugs found that way
+are logged in `web/docs/QA.md` alongside the regression checklist. No seed/
+demo content is checked in — QA fixtures live only in the dev Supabase
+project (see `web/docs/QA.md`), and the feed/opportunity lists are meant to
+start empty in a fresh environment.
