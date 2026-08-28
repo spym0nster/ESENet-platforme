@@ -205,6 +205,28 @@ export interface ContentReport {
   resolved_by: string | null;
 }
 
+export type NotificationKind =
+  | "application_received"
+  | "application_status_changed"
+  | "application_withdrawn"
+  | "join_request_received"
+  | "join_request_approved"
+  | "join_request_declined"
+  | "ownership_transfer_proposed"
+  | "post_comment";
+
+export interface AppNotification {
+  id: string;
+  recipient_id: string;
+  actor_id: string | null;
+  kind: NotificationKind;
+  title: string;
+  body: string | null;
+  link: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
 /** Denormalized shape used by feed/profile UI — a post plus what it needs to render. */
 export interface PostWithAuthor extends Post {
   author: {

@@ -196,6 +196,43 @@ but don't be surprised it's still in the table.
 - Company B cannot update or delete Company A's posts or comments (verify with direct REST, not just the UI — an RLS-blocked write returns 200/0-rows, never an error)
 - A duplicate like (same profile, same post) is rejected at the DB level (`post_likes` primary key), not just by the client hiding the button
 - A non-admin cannot set `posts.removed_at`/`removed_by`/`removal_reason` or the equivalent comment fields — only through the admin moderation actions
+- A user can only read/update/delete their **own** `notifications` rows. The INSERT policy (`0015`) is deliberately loose: any authenticated user can create a notification *for someone else* with a truthful `actor_id` (their own, or null) and never targeting themselves. **Known, accepted for launch** — every real call site is a server action that already did its own authz; the residual abuse is "an authed user POSTs a junk notification to another user, attributed to themselves". They can't read it back, can't forge a third-party actor, can't self-target. A future pass can swap this for a `SECURITY DEFINER` RPC that re-checks the actor↔recipient relationship per `notification_kind`.
+
+## Notifications (`/notifications`, header bell — `0015`)
+
+In-app only — no email or push (that's a separate, not-yet-built piece).
+One `notifications` table, one row per recipient per event. Rows are written
+**best-effort from the server actions that already perform the mutation**
+(`notify()` in `src/lib/notifications.ts`) — same "app code inserts, RLS is
+the real boundary" shape as `application_status_events`, deliberately not a
+trigger. `notify()` never throws and never blocks its caller: an application
+still submits even if pinging the company fails. It dedups recipients and
+drops the actor from the list (you're never notified of your own action).
+Company-directed events fan out to every actor of the company via
+`companyActorIds()` (owner + members, all of whom have a `company_members`
+row since `0004`'s backfill).
+
+Wired events (`notification_kind`): `application_received`,
+`application_status_changed`, `application_withdrawn`,
+`join_request_received`, `join_request_approved`, `join_request_declined`,
+`ownership_transfer_proposed`, `post_comment`.
+
+The header bell shows the unread count (capped display at `9+`). Opening
+`/notifications` fires `markAllNotificationsRead()` once on mount — it
+revalidates the layout (so the bell clears everywhere) but **not** the
+`/notifications` route, so the list you're looking at keeps its unread
+highlighting until you navigate away and back. There's also a manual "Mark
+all read" button.
+
+**Degrades before the migration is applied:** `unreadNotificationCount()`
+and `fetchNotifications()` both return `0` / `[]` on a query error rather
+than throwing, so the header (rendered in the root layout) and every page
+keep working if `0015` hasn't run yet.
+
+To test: log in as the QA student, apply to Company A's fixture opportunity,
+then log in as Company A and check the bell + `/notifications`. Reverse for
+status changes. Clean up any scratch applications afterward per the apply-flow
+rules above.
 
 ## Full regression checklist
 
@@ -282,6 +319,18 @@ but don't be surprised it's still in the table.
 - [ ] Reporting a post creates an open row in `/admin/reports`; Mark resolved / Dismiss transitions it correctly
 - [ ] Admin `Remove (admin)` on a post soft-deletes it (audit trail kept) and hides it from everyone but the author/admin
 - [ ] Company B cannot modify or delete Company A's post/comment via direct REST
+
+### Notifications (`0015`, header bell + `/notifications`)
+- [ ] Student applies → every actor of the target company gets an `application_received` notification linking to that opportunity's applicants page
+- [ ] Company changes an application's status → the student gets `application_status_changed` linking to `/applications`
+- [ ] Student withdraws → company actors get `application_withdrawn`
+- [ ] Someone requests to join a company → company actors get `join_request_received`; approve/decline → the requester gets `join_request_approved` / `join_request_declined`
+- [ ] Owner proposes an ownership transfer → only the named member gets `ownership_transfer_proposed`
+- [ ] Someone comments on a post → the post author (only, and not if it's their own comment) gets `post_comment`
+- [ ] The header bell shows the unread count; opening `/notifications` clears it (marks all read) but the list keeps highlighting what was unread for that view
+- [ ] A user can only ever see their own notifications (direct REST as another user returns `[]`)
+- [ ] Direct REST: an authenticated user can create a notification for *another* user (known, documented — see below) but NOT for themselves, NOT with a forged `actor_id`, and cannot read anyone else's back
+- [ ] Header + `/notifications` still render (as "0" / empty) before `0015` is applied — the read helpers degrade, they don't throw
 
 ### Quality
 - [ ] `npm run lint`

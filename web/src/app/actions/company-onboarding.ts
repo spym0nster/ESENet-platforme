@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { resolveCompanyId } from "@/lib/company";
+import { notify, companyActorIds } from "@/lib/notifications";
 
 export type OnboardingState = { error: string } | { success: true } | null;
 
@@ -124,6 +125,22 @@ export async function requestToJoinCompany(
     console.error("requestToJoinCompany failed:", error);
     return { error: "We couldn't send that request. Please try again." };
   }
+
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+  await notify(supabase, {
+    recipientIds: await companyActorIds(supabase, companyId),
+    actorId: user.id,
+    kind: "join_request_received",
+    title: "New request to join your company",
+    body: `${me?.full_name ?? "Someone"} asked to join${
+      message ? `: "${message}"` : "."
+    }`,
+    link: "/company/team",
+  });
 
   revalidatePath("/company/onboarding");
   return { success: true };

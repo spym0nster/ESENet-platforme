@@ -122,6 +122,7 @@ extras. As of this writing:
 - `applications` (+ `application_status_events`) — a student applying to an opportunity, with a status history log
 - `saved_opportunities` — a student's bookmarks
 - `posts` / `post_comments` / `post_likes` / `content_reports` — the LinkedIn-style feed: students and company people (owner or team member) publish posts (optionally as themselves or as the company), one level of comments, simple likes, and a reporting/admin-moderation queue with soft-delete + audit trail
+- `notifications` — per-user in-app feed (bell in the header + `/notifications`). Written best-effort from the server actions that already do the underlying mutation (`notify()` in `src/lib/notifications.ts`), never a trigger; recipient-only read/update. No email/push yet.
 
 RLS policies are already in every migration: public read for
 directory/browse/feed use cases, owner-only write, company-scoped access via

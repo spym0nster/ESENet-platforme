@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { resolveCompanyId } from "@/lib/company";
+import { notify } from "@/lib/notifications";
 
 export type TeamActionState = { error: string } | { success: true } | null;
 
@@ -177,6 +178,15 @@ export async function approveJoinRequest(
     return { error: "Approved, but we couldn't add them as a member yet. Try again." };
   }
 
+  await notify(supabase, {
+    recipientId: requesterId,
+    actorId: user.id,
+    kind: "join_request_approved",
+    title: "You've joined the company",
+    body: "Your request to join was approved — you can post opportunities and manage applicants now.",
+    link: "/company/profile",
+  });
+
   revalidatePath("/company/team");
   return { success: true };
 }
@@ -189,6 +199,13 @@ export async function declineJoinRequest(
   const { supabase, user, companyId, error: authError } = await requireCompanyActor();
   if (!user || !companyId) return { error: authError ?? "Unexpected error." };
 
+  const { data: request } = await supabase
+    .from("company_join_requests")
+    .select("profile_id")
+    .eq("id", requestId)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("company_join_requests")
     .update({ status: "declined", decided_at: new Date().toISOString(), decided_by: user.id })
@@ -198,6 +215,17 @@ export async function declineJoinRequest(
   if (error) {
     console.error("declineJoinRequest failed:", error);
     return { error: "We couldn't decline that request." };
+  }
+
+  if (request) {
+    await notify(supabase, {
+      recipientId: request.profile_id as string,
+      actorId: user.id,
+      kind: "join_request_declined",
+      title: "Join request declined",
+      body: "Your request to join wasn't approved. You can create your own company or request to join another.",
+      link: "/company/onboarding",
+    });
   }
 
   revalidatePath("/company/team");
@@ -233,6 +261,15 @@ export async function initiateOwnershipTransfer(
     console.error("initiateOwnershipTransfer failed:", error);
     return { error: "We couldn't start that transfer. Please try again." };
   }
+
+  await notify(supabase, {
+    recipientId: toProfileId,
+    actorId: user.id,
+    kind: "ownership_transfer_proposed",
+    title: "You've been offered company ownership",
+    body: "The current owner wants to transfer ownership to you. Accept or decline on the team page.",
+    link: "/company/team",
+  });
 
   revalidatePath("/company/team");
   return { success: true };

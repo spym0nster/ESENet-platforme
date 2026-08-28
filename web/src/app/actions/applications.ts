@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolveCompanyId } from "@/lib/company";
+import { notify, companyActorIds } from "@/lib/notifications";
 import type { ApplicationStatus } from "@/types/database";
 
 export type ApplyState = { error: string } | { success: true } | null;
@@ -36,7 +37,7 @@ export async function applyToOpportunity(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, full_name")
     .eq("id", user.id)
     .single();
 
@@ -58,6 +59,22 @@ export async function applyToOpportunity(
     // Postgres error (this one used to leak it directly to the client).
     console.error("applyToOpportunity failed:", error);
     return { error: "We couldn't submit your application. Please try again." };
+  }
+
+  const { data: opp } = await supabase
+    .from("opportunities")
+    .select("title, company_id")
+    .eq("id", opportunityId)
+    .maybeSingle();
+  if (opp) {
+    await notify(supabase, {
+      recipientIds: await companyActorIds(supabase, opp.company_id),
+      actorId: user.id,
+      kind: "application_received",
+      title: `New application: ${opp.title}`,
+      body: `${profile.full_name} applied.`,
+      link: `/company/opportunities/${opportunityId}/applicants`,
+    });
   }
 
   revalidatePath(`/opportunities/${opportunityId}`);
@@ -124,6 +141,25 @@ export async function updateApplicationStatus(
     changed_by: user.id,
   });
 
+  const { data: app } = await supabase
+    .from("applications")
+    .select("student_id, opportunities(title)")
+    .eq("id", applicationId)
+    .maybeSingle();
+  if (app) {
+    const oppTitle =
+      (app.opportunities as unknown as { title: string } | null)?.title ??
+      "an opportunity";
+    await notify(supabase, {
+      recipientId: app.student_id as string,
+      actorId: user.id,
+      kind: "application_status_changed",
+      title: `Application update: ${oppTitle}`,
+      body: `Your application is now "${status}".`,
+      link: "/applications",
+    });
+  }
+
   revalidatePath(`/company/opportunities/${opportunityId}/applicants`);
   return { success: true };
 }
@@ -147,6 +183,13 @@ export async function withdrawApplication(
     return { error: "You must be signed in to withdraw an application." };
   }
 
+  const { data: appBefore } = await supabase
+    .from("applications")
+    .select("opportunity_id, opportunities(title, company_id)")
+    .eq("id", applicationId)
+    .eq("student_id", user.id)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("applications")
     .update({ status: "withdrawn" })
@@ -163,6 +206,20 @@ export async function withdrawApplication(
     status: "withdrawn",
     changed_by: user.id,
   });
+
+  const opp = appBefore?.opportunities as unknown as
+    | { title: string; company_id: string }
+    | null;
+  if (opp) {
+    await notify(supabase, {
+      recipientIds: await companyActorIds(supabase, opp.company_id),
+      actorId: user.id,
+      kind: "application_withdrawn",
+      title: `Application withdrawn: ${opp.title}`,
+      body: "A candidate withdrew their application.",
+      link: `/company/opportunities/${appBefore!.opportunity_id}/applicants`,
+    });
+  }
 
   revalidatePath("/applications");
   return { success: true };
