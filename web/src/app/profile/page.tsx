@@ -5,6 +5,7 @@ import { StudentProfileForm } from "@/components/student-profile-form";
 import { CvUploadForm } from "@/components/cv-upload-form";
 import { ProfileMediaUpload } from "@/components/profile-media-upload";
 import { ProfileItemSection } from "@/components/profile-item-section";
+import { ProfileCompleteness } from "@/components/profile-completeness";
 import { DeleteAccountButton } from "@/components/delete-account-button";
 import { fetchPosts } from "@/lib/posts";
 import { PostCard } from "@/components/post-card";
@@ -59,6 +60,21 @@ export default async function ProfilePage() {
     cvSignedUrl = data?.signedUrl ?? null;
   }
 
+  const completenessChecks = [
+    { label: "a photo", done: Boolean(profile.avatar_url) },
+    { label: "a headline", done: Boolean(studentDetails?.headline) },
+    { label: "a short bio", done: Boolean(studentDetails?.bio) },
+    { label: "at least one skill", done: (studentDetails?.skills?.length ?? 0) > 0 },
+    { label: "what you're looking for", done: Boolean(studentDetails?.looking_for) },
+    { label: "your availability", done: Boolean(studentDetails?.availability) },
+    { label: "a CV", done: Boolean(studentDetails?.cv_url) },
+    { label: "your education", done: (education?.length ?? 0) > 0 },
+    {
+      label: "an experience or project",
+      done: (experiences?.length ?? 0) > 0 || (projects?.length ?? 0) > 0,
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
       <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
@@ -67,6 +83,8 @@ export default async function ProfilePage() {
       <h1 className="mt-2 font-display text-3xl font-extrabold">
         {profile.full_name}
       </h1>
+
+      <ProfileCompleteness checks={completenessChecks} />
 
       <div className="mt-10 space-y-6">
         <ProfileMediaUpload kind="avatar" currentUrl={profile.avatar_url} label="Photo" />

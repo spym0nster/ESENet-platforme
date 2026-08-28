@@ -316,6 +316,7 @@ rules above.
 - [ ] RLS remains enabled on all tables
 
 ### Student profile
+- [ ] The "Profile N% complete" nudge lists exactly the missing items and disappears at 100% (9 checks: photo, headline, bio, ≥1 skill, looking-for, availability, CV, education, experience-or-project)
 - [ ] Core profile fields save
 - [ ] CV upload accepts PDF, rejects other types and files over 5MB
 - [ ] CV is only readable by its owner and by any actor (owner or member, `0018`) of a company the student applied to — private bucket, verify a third company gets nothing via direct Storage API
