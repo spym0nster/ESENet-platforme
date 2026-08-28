@@ -273,6 +273,12 @@ rules above.
 - [ ] After `0017`: a student who already applied still sees the opportunity title/company on `/applications` even once it's closed (not the "Opportunity" / "ESEN partner company" placeholder)
 - [ ] `updateOpportunity` never changes `company_id` or `status`; `setOpportunityStatus` only moves between `published` and `closed`
 
+### Applicant review (`0018`)
+- [ ] The applicants page shows each applicant's headline + skill chips inline, a "Full profile →" link to `/students/[id]`, and a "View CV (PDF) →" link when they uploaded one
+- [ ] The CV link opens a working signed URL (private `cvs` bucket, 10-min expiry)
+- [ ] After `0018`: a company **team member** (not just the owner) can open applicant CVs — pre-`0018` the link just doesn't render for them (per-path signed-URL error is swallowed), it never 403s in the user's face
+- [ ] An applicant with no CV / no `student_details` row still renders cleanly (name + status only)
+
 ### Application
 - [ ] Student can apply
 - [ ] Application row is created, referencing the correct student and opportunity
@@ -308,7 +314,7 @@ rules above.
 ### Student profile
 - [ ] Core profile fields save
 - [ ] CV upload accepts PDF, rejects other types and files over 5MB
-- [ ] CV is only readable by its owner and companies the student applied to (private bucket)
+- [ ] CV is only readable by its owner and by any actor (owner or member, `0018`) of a company the student applied to — private bucket, verify a third company gets nothing via direct Storage API
 - [ ] Education/Experience/Projects/Certifications can be added and removed, scoped to the owning student
 
 ### Student directory (`/students`, `/students/[id]`)
