@@ -34,7 +34,7 @@ export default async function OpportunityApplicantsPage({
 
   const { data: applications, error } = await supabase
     .from("applications")
-    .select("id, status, message, created_at, profiles(full_name)")
+    .select("id, status, message, created_at, student_id, profiles(full_name)")
     .eq("opportunity_id", id)
     .order("created_at", { ascending: false });
 
@@ -70,10 +70,13 @@ export default async function OpportunityApplicantsPage({
               <Card>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-display font-bold">
+                    <Link
+                      href={`/students/${a.student_id}`}
+                      className="font-display font-bold hover:text-accent-2"
+                    >
                       {(a.profiles as unknown as { full_name: string } | null)
                         ?.full_name ?? "ESEN student"}
-                    </p>
+                    </Link>
                     <p className="text-xs text-text-faint">
                       Applied{" "}
                       {new Date(a.created_at).toLocaleDateString("en-US", {

@@ -32,6 +32,7 @@ export interface Profile {
   avatar_url: string | null;
   banner_url: string | null;
   created_at: string;
+  deactivated_at: string | null;
 }
 
 export interface StudentDetails {
