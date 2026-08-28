@@ -85,6 +85,7 @@ export interface ApplicationStatusEvent {
   application_id: string;
   status: ApplicationStatus;
   changed_by: string;
+  note: string | null;
   created_at: string;
 }
 

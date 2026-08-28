@@ -61,12 +61,12 @@ export default async function OpportunityApplicantsPage({
   const applicationIds = (applications ?? []).map((a) => a.id as string);
   const eventsByApplication = new Map<
     string,
-    { id: string; status: string; created_at: string }[]
+    { id: string; status: string; note: string | null; created_at: string }[]
   >();
   if (applicationIds.length > 0) {
     const { data: events } = await supabase
       .from("application_status_events")
-      .select("id, application_id, status, created_at")
+      .select("id, application_id, status, note, created_at")
       .in("application_id", applicationIds)
       .order("created_at", { ascending: true });
     for (const e of events ?? []) {
@@ -75,6 +75,7 @@ export default async function OpportunityApplicantsPage({
       eventsByApplication.get(aid)!.push({
         id: e.id as string,
         status: e.status as string,
+        note: e.note as string | null,
         created_at: e.created_at as string,
       });
     }
@@ -215,6 +216,11 @@ export default async function OpportunityApplicantsPage({
                               {STATUS_LABEL[e.status] ?? e.status}
                             </span>{" "}
                             · {shortDate(e.created_at)}
+                            {e.note && (
+                              <span className="mt-0.5 block whitespace-pre-wrap text-text-muted">
+                                “{e.note}”
+                              </span>
+                            )}
                           </li>
                         ))}
                       </ol>

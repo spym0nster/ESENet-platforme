@@ -94,6 +94,7 @@ export async function updateApplicationStatus(
   const applicationId = String(formData.get("application_id") ?? "");
   const opportunityId = String(formData.get("opportunity_id") ?? "");
   const status = String(formData.get("status") ?? "") as ApplicationStatus;
+  const note = String(formData.get("note") ?? "").trim().slice(0, 1000) || null;
 
   if (!COMPANY_SETTABLE_STATUSES.includes(status)) {
     return { error: "Invalid status." };
@@ -139,6 +140,7 @@ export async function updateApplicationStatus(
     application_id: applicationId,
     status,
     changed_by: user.id,
+    note,
   });
 
   const { data: app } = await supabase
@@ -155,7 +157,9 @@ export async function updateApplicationStatus(
       actorId: user.id,
       kind: "application_status_changed",
       title: `Application update: ${oppTitle}`,
-      body: `Your application is now "${status}".`,
+      body: note
+        ? `Now "${status}" — "${note}"`
+        : `Your application is now "${status}".`,
       link: `/applications/${applicationId}`,
     });
   }

@@ -91,7 +91,7 @@ export default async function ApplicationDetailPage({
 
   const { data: events } = await supabase
     .from("application_status_events")
-    .select("id, status, changed_by, created_at")
+    .select("id, status, changed_by, note, created_at")
     .eq("application_id", id)
     .order("created_at", { ascending: true });
 
@@ -103,18 +103,21 @@ export default async function ApplicationDetailPage({
     status: ApplicationStatus;
     at: string;
     byYou: boolean;
+    note: string | null;
   }[] = [
     {
       key: "applied",
       status: "applied",
       at: application.created_at,
       byYou: true,
+      note: null,
     },
     ...(events ?? []).map((e) => ({
       key: e.id,
       status: e.status as ApplicationStatus,
       at: e.created_at,
       byYou: e.changed_by === user.id,
+      note: e.note as string | null,
     })),
   ];
 
@@ -183,6 +186,11 @@ export default async function ApplicationDetailPage({
                   {formatDate(entry.at)} ·{" "}
                   {entry.byYou ? "by you" : "by the company"}
                 </p>
+                {entry.note && (
+                  <p className="mt-1 whitespace-pre-wrap rounded-md bg-surface-alt px-3 py-2 text-sm text-text-muted">
+                    {entry.note}
+                  </p>
+                )}
               </div>
             </li>
           ))}

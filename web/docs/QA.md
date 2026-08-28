@@ -312,6 +312,17 @@ rules above.
       interview)
 - [ ] Another student's application id at `/applications/[id]` → `notFound()`
       (RLS + the explicit `student_id !== user.id` guard)
+- [ ] Company dashboard: an opportunity with untriaged applications (still at
+      `applied`) shows an "N new" badge next to the applicant count
+- [ ] Company applicants view: each card has a collapsible "Status history"
+      disclosure (Applied + every `application_status_events` row)
+- [ ] **Needs migration `0021`.** Company status update with a note filled in:
+      the note is stored on the `application_status_events` row (≤1000 chars,
+      `application_status_events_note_len` check), shown quoted in the company
+      history disclosure, shown in a callout on the student's
+      `/applications/[id]` timeline, and included in the
+      `application_status_changed` notification body. Empty note → unchanged
+      behaviour.
 
 ### Trust & verification
 - [ ] Admin can see pending/verified companies at `/admin/companies`
