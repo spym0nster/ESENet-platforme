@@ -197,8 +197,8 @@ but don't be surprised it's still in the table.
 - A duplicate like (same profile, same post) is rejected at the DB level (`post_likes` primary key), not just by the client hiding the button
 - A non-admin cannot set `posts.removed_at`/`removed_by`/`removal_reason` or the equivalent comment fields — only through the admin moderation actions
 
-**Supabase security-advisor state (checked 2026-08-28, after `0019`):**
-- `function_search_path_mutable` — **fixed** by `0019` (pinned `search_path = public` on `is_admin` + the 7 `protect_*` trigger fns; the newer helpers already had it).
+**Supabase security-advisor state (checked 2026-08-28, after `0020`):**
+- `function_search_path_mutable` — **fixed.** `0019` pinned `search_path = public` on `is_admin` + the 7 `protect_*` trigger fns; `0020` tightened all ten project functions (those + `is_company_actor` / `has_application_to`) to `public, pg_temp` — `pg_temp` named explicitly and last, so it's searched after `public` for relation names instead of implicitly before.
 - `anon/authenticated_security_definer_function_executable` on `is_company_actor` / `has_application_to` — **accepted, not a bug.** They're RLS-policy predicates; `authenticated` (and `anon`, for the OR'd public policies) must keep `EXECUTE` or every query against the protected tables fails. Each only ever reflects the *caller's own* access (`auth.uid()` vs. their own memberships/applications), so direct `/rpc/` callability leaks nothing. Moving them to a private schema is the only real silencer and isn't worth the multi-policy rewrite.
 - `rls_auto_enable` (event-trigger fn, `ensure_rls`) — same lint, benign: an event-trigger function can't be meaningfully called via `/rpc/`.
 - `auth_leaked_password_protection` disabled — enable in the dashboard (Authentication → Providers), one toggle.
