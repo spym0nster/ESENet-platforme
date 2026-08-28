@@ -27,9 +27,14 @@ export function SignupForm() {
       </div>
       <input type="hidden" name="role" value={role} />
 
-      <Field label={role === "student" ? "Full name" : "Company name"}>
+      <Field label="Your full name">
         <Input name="full_name" type="text" required />
       </Field>
+      {role === "company" && (
+        <p className="text-xs text-text-faint">
+          You&rsquo;ll create or join a company right after signing in.
+        </p>
+      )}
       <Field label="Email">
         <Input name="email" type="email" required />
       </Field>

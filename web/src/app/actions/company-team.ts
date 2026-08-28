@@ -109,6 +109,70 @@ export async function removeTeamMember(
   return { success: true };
 }
 
+export async function approveJoinRequest(
+  _prevState: TeamActionState,
+  formData: FormData
+): Promise<TeamActionState> {
+  const requestId = String(formData.get("request_id") ?? "");
+  const requesterId = String(formData.get("requester_id") ?? "");
+  const { supabase, user, companyId, error: authError } = await requireCompanyActor();
+  if (!user || !companyId) return { error: authError ?? "Unexpected error." };
+
+  // Two-step, same non-atomic shape as invite-acceptance in provisionProfile
+  // (update the decision, then insert the membership row) — the membership
+  // insert's RLS check requires the request to already be 'approved', so
+  // the order matters. If the second step fails, the request is left
+  // 'approved' with no member row yet; re-running Approve is safe (the
+  // membership insert is naturally idempotent — RLS just re-checks the
+  // same already-approved row — and the unique PK on company_members stops
+  // a duplicate if it had actually succeeded).
+  const { error: decideError } = await supabase
+    .from("company_join_requests")
+    .update({ status: "approved", decided_at: new Date().toISOString(), decided_by: user.id })
+    .eq("id", requestId)
+    .eq("company_id", companyId);
+
+  if (decideError) {
+    console.error("approveJoinRequest decide failed:", decideError);
+    return { error: "We couldn't approve that request." };
+  }
+
+  const { error: memberError } = await supabase
+    .from("company_members")
+    .insert({ company_id: companyId, profile_id: requesterId, role: "member" });
+
+  if (memberError) {
+    console.error("approveJoinRequest membership failed:", memberError);
+    return { error: "Approved, but we couldn't add them as a member yet. Try again." };
+  }
+
+  revalidatePath("/company/team");
+  return { success: true };
+}
+
+export async function declineJoinRequest(
+  _prevState: TeamActionState,
+  formData: FormData
+): Promise<TeamActionState> {
+  const requestId = String(formData.get("request_id") ?? "");
+  const { supabase, user, companyId, error: authError } = await requireCompanyActor();
+  if (!user || !companyId) return { error: authError ?? "Unexpected error." };
+
+  const { error } = await supabase
+    .from("company_join_requests")
+    .update({ status: "declined", decided_at: new Date().toISOString(), decided_by: user.id })
+    .eq("id", requestId)
+    .eq("company_id", companyId);
+
+  if (error) {
+    console.error("declineJoinRequest failed:", error);
+    return { error: "We couldn't decline that request." };
+  }
+
+  revalidatePath("/company/team");
+  return { success: true };
+}
+
 /**
  * A member sets their own professional title (e.g. "HR Manager") shown next
  * to their name in the feed. Deliberately self-service and scoped to their

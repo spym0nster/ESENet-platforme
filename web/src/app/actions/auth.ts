@@ -9,10 +9,20 @@ import type { UserRole } from "@/types/database";
 export type AuthState = { error: string } | { info: string } | null;
 
 /**
- * Creates the profiles + companies/student_details rows for a just-signed-up
- * user. Only callable with an active session for that user (RLS requires
- * auth.uid() = id) — see the two call sites below for why that isn't always
- * available right after auth.signUp().
+ * Creates the profiles row for a just-signed-up user, plus student_details
+ * for a student. Only callable with an active session for that user (RLS
+ * requires auth.uid() = id) — see the two call sites below for why that
+ * isn't always available right after auth.signUp().
+ *
+ * A company-role signup deliberately does NOT auto-create a companies row
+ * here anymore (it used to: the "full_name" field doubled as the new
+ * company's name, and every company signup became that company's owner,
+ * unconditionally). That made it impossible for a second person at a real
+ * company to ever attach themselves to it instead of creating a duplicate
+ * — there was no moment to choose. A company-role profile with no invite
+ * and no company yet is left exactly that way; requireCompanyUser() routes
+ * them to /company/onboarding, where they explicitly create a new company
+ * or request to join an existing one (see actions/company-onboarding.ts).
  */
 async function provisionProfile(
   supabase: SupabaseClient,
@@ -52,15 +62,10 @@ async function provisionProfile(
       }
     }
 
-    const { error: companyError } = await supabase
-      .from("companies")
-      .insert({ profile_id: user.id, company_name: fullName });
-    if (companyError) return companyError;
-
-    const { error: ownerError } = await supabase
-      .from("company_members")
-      .insert({ company_id: user.id, profile_id: user.id, role: "owner" });
-    return ownerError;
+    // No pending invite: leave them unattached. /company/onboarding (via
+    // requireCompanyUser) is where they choose create-new vs
+    // request-to-join — see the note above.
+    return null;
   }
   if (role === "student") {
     const { error } = await supabase

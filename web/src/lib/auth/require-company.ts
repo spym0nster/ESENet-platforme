@@ -31,7 +31,10 @@ export async function requireCompanyUser(nextPath: string) {
 
   const companyId = await resolveCompanyId(supabase, user.id);
   if (!companyId) {
-    redirect("/");
+    // A company-role profile with no company yet (fresh signup, or a
+    // declined/still-pending join request) — send them to the page that
+    // actually resolves that, instead of dead-ending at the landing page.
+    redirect("/company/onboarding");
   }
 
   const { data: company } = await supabase

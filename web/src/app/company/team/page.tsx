@@ -3,6 +3,7 @@ import { requireCompanyUser } from "@/lib/auth/require-company";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { InviteTeamMemberForm } from "@/components/invite-team-member-form";
 import { TeamMemberRow, PendingInviteRow } from "@/components/team-member-row";
+import { JoinRequestRow } from "@/components/join-request-row";
 
 export default async function CompanyTeamPage() {
   if (!isSupabaseConfigured()) {
@@ -11,7 +12,7 @@ export default async function CompanyTeamPage() {
 
   const { supabase, company, companyId, isOwner } = await requireCompanyUser("/company/team");
 
-  const [{ data: members }, { data: invites }] = await Promise.all([
+  const [{ data: members }, { data: invites }, { data: joinRequests }] = await Promise.all([
     supabase
       .from("company_members")
       .select("profile_id, role, profiles(full_name)")
@@ -23,6 +24,16 @@ export default async function CompanyTeamPage() {
       .eq("company_id", companyId)
       .is("accepted_at", null)
       .order("created_at", { ascending: false }),
+    supabase
+      // company_join_requests has two FKs to profiles (profile_id and
+      // decided_by) — a bare "profiles(full_name)" embed is ambiguous and
+      // PostgREST rejects the whole query. Same fix as fetchPosts() in
+      // lib/posts.ts: name the specific FK to embed through.
+      .from("company_join_requests")
+      .select("id, profile_id, message, profiles!company_join_requests_profile_id_fkey(full_name)")
+      .eq("company_id", companyId)
+      .eq("status", "pending")
+      .order("requested_at", { ascending: false }),
   ]);
 
   return (
@@ -60,6 +71,29 @@ export default async function CompanyTeamPage() {
           ))}
         </ul>
       </div>
+
+      {joinRequests && joinRequests.length > 0 && (
+        <div className="mt-10">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+            Requests to join
+          </h2>
+          <ul className="mt-3 space-y-2">
+            {joinRequests.map((r) => (
+              <li key={r.id}>
+                <JoinRequestRow
+                  requestId={r.id}
+                  requesterId={r.profile_id}
+                  requesterName={
+                    (r.profiles as unknown as { full_name: string } | null)?.full_name ??
+                    "Someone"
+                  }
+                  message={r.message}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {invites && invites.length > 0 && (
         <div className="mt-10">

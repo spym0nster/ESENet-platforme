@@ -123,12 +123,68 @@ create/delete a scratch account each time):
 
 **Known trap if you touch this area again:** `is_company_actor()` is called from *inside* a SELECT policy on `company_members` itself — it must stay `SECURITY DEFINER` (with `search_path` pinned), or every query against `company_members` recurses into its own RLS policy and Postgres throws "stack depth limit exceeded". Confirmed live during this build. If you ever add a new predicate function that queries the same table its policy protects, assume you need `SECURITY DEFINER` unless you've specifically checked otherwise.
 
+**Request to join an existing company (`/company/onboarding`)**
+Phase 3 audit finding: company signup used to unconditionally auto-create a
+brand-new company (the signup form's "full name" field doubled as the new
+company's name). A second real employee at a company that was already on
+ESENet had no way to attach themselves to it — only to accidentally create
+a duplicate. `company_join_requests` (`0009`/`0010`) is the fix: a
+company-role profile with no company yet lands on `/company/onboarding`
+and either creates a new company or searches for and requests to join an
+existing one; any actor of the target company approves or declines from
+`/company/team`. `provisionProfile()` no longer auto-creates a company when
+there's no invite — it just leaves the profile unattached, exactly the
+state `/company/onboarding` is built to resolve.
+
+To test the full loop (same "no permanent extra fixture — scratch account,
+delete it after" pattern as team invites above):
+1. Create a scratch pre-confirmed company-role auth user via the Admin API
+2. Log in as it through the real form — first company-gated page hit
+   redirects to `/company/onboarding` (not the create-a-company flow of old)
+3. Search for an existing company, send a join request with a message
+4. As that company (owner or any member): `/company/team` shows a
+   "Requests to join" section with the requester's name and message —
+   Approve or Decline
+5. Approve → the scratch account immediately shows the target company on
+   `/company/profile`, no reload/relogin needed for the company side (their
+   own next page load resolves through `company_members`, not a cache)
+6. Delete the scratch account afterward — cascades the profile, membership,
+   and any join-request rows automatically (`company_join_requests.profile_id`
+   references `profiles(id) on delete cascade`)
+
+**Bugs found live in this area (fixed):**
+- The insert policy on `company_join_requests` only checked
+  `profile_id = auth.uid()`, never that the requester is actually a
+  company-role profile — confirmed live via direct REST as the QA student,
+  which succeeded and created a real row. The app's own `requestToJoinCompany`
+  action already blocked this, but per this project's "never rely on
+  frontend restrictions" rule, `0010` closes it at the RLS layer too.
+- `/company/team`'s new "Requests to join" query used a bare
+  `profiles(full_name)` embed, but `company_join_requests` has two foreign
+  keys into `profiles` (`profile_id` and `decided_by`) — PostgREST can't
+  disambiguate that and rejects the whole query, so the section silently
+  never rendered. Same class of bug `fetchPosts()` already hit and fixed
+  the same way: name the specific FK to embed through
+  (`profiles!company_join_requests_profile_id_fkey(full_name)`).
+
+**Known leftover, not a bug:** there's no RLS delete policy for an already-
+`approved`/`declined` `company_join_requests` row (only a still-`pending`
+one is deletable, by its own requester) — matching how an accepted
+`company_invites` row also has no delete path. A decided request is meant
+to stay as a historical record. This means QA testing in this area leaves
+one inert, undeletable row per real test run; it never appears in any UI
+(the team page only ever queries `status = 'pending'`), so it's harmless,
+but don't be surprised it's still in the table.
+
 ## Security expectations to re-check
 
 - Logged-out user hitting `/company/dashboard`, `/admin/companies`, or `/applications` → redirected to `/login?next=...`
 - Logged-in student hitting `/company/dashboard` or `/admin/companies` → redirected away
 - A student cannot create an opportunity (server-side role check in `createOpportunity`, independently enforced by RLS)
 - Only a `student`-role profile can create an application (`applyToOpportunity` checks this server-side; RLS enforces it independently too)
+- Only a `company`-role profile can insert a `company_join_requests` row (RLS-enforced, not just app-checked)
+- A company actor can only insert a `company_members` row for a profile that has an `approved` join request to that exact company — never an arbitrary third party
+- An unrelated company/student can't see, approve, or decline a join request addressed to a different company
 - `company_id` on an opportunity is always the authenticated user's id — never trust a client-supplied value
 - Company B cannot see, edit, or delete Company A's opportunities (RLS via `is_company_actor`)
 - Unauthenticated requests cannot insert into `opportunities`
@@ -156,6 +212,11 @@ create/delete a scratch account each time):
 - [ ] An invited team member joins the inviting company (not a new one) on first login
 - [ ] A team member can post/manage opportunities attributed to the right company
 - [ ] Only the owner can remove a team member; a non-owner member cannot
+- [ ] A fresh company-role signup with no invite lands on `/company/onboarding`, not an auto-created company
+- [ ] "Create a new company" on that page works and lands on `/company/profile`
+- [ ] Searching for an existing company and requesting to join creates a pending request, visible to that company on `/company/team`
+- [ ] Approving a request immediately grants membership (visible on both sides without a relogin); declining does not
+- [ ] A company-role profile that already belongs to a company can't create or request a second one through this page (it redirects away instead)
 
 ### Opportunity
 - [ ] Company can open the create form
