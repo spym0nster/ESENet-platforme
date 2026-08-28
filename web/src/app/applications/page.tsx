@@ -118,6 +118,12 @@ export default async function MyApplicationsPage() {
                         )}
                     </div>
                   </div>
+                  <Link
+                    href={`/applications/${a.id}`}
+                    className="mt-3 inline-block font-mono text-xs text-accent-2 hover:text-text"
+                  >
+                    Details &amp; status history →
+                  </Link>
                 </Card>
               </li>
             );

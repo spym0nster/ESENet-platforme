@@ -156,7 +156,7 @@ export async function updateApplicationStatus(
       kind: "application_status_changed",
       title: `Application update: ${oppTitle}`,
       body: `Your application is now "${status}".`,
-      link: "/applications",
+      link: `/applications/${applicationId}`,
     });
   }
 

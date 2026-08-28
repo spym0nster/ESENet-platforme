@@ -303,6 +303,15 @@ rules above.
 - [ ] Status change is logged in `application_status_events`
 - [ ] Student can withdraw; company cannot set a status to `withdrawn`
 - [ ] Only a `student`-role account can create an application
+- [ ] `/applications/[id]` (from the "Details & status history" link, or the
+      `application_status_changed` notification): shows the opportunity +
+      company links, a status timeline seeded with a synthetic "Applied" entry
+      from `applications.created_at` plus each `application_status_events` row
+      ("by you" vs "by the company"), the cover message if any, and a Withdraw
+      button only while the status is still open (applied/reviewed/shortlisted/
+      interview)
+- [ ] Another student's application id at `/applications/[id]` → `notFound()`
+      (RLS + the explicit `student_id !== user.id` guard)
 
 ### Trust & verification
 - [ ] Admin can see pending/verified companies at `/admin/companies`
