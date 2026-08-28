@@ -26,6 +26,68 @@ export type CompanyTeamMember = {
   role: "owner" | "member";
 };
 
+export type DirectoryCompany = {
+  id: string;
+  company_name: string;
+  description: string | null;
+  logo_url: string | null;
+  openRoles: number;
+};
+
+/**
+ * The public "who's on ESENet" directory — verified companies only (an
+ * unverified company has a page but shouldn't be advertised, and its
+ * opportunities are RLS-hidden anyway). Sorted by open-role count then
+ * name. Two queries: the company rows, then a single grouped count of
+ * their published opportunities.
+ */
+export async function fetchCompanyDirectory(
+  supabase: SupabaseClient,
+  opts: { q?: string } = {}
+): Promise<DirectoryCompany[]> {
+  let query = supabase
+    .from("companies")
+    .select("profile_id, company_name, description, logo_url")
+    .eq("verified", true);
+
+  const q = opts.q?.trim();
+  if (q) query = query.ilike("company_name", `%${q}%`);
+
+  const { data: companies, error } = await query;
+  if (error) {
+    console.error("fetchCompanyDirectory failed:", error);
+    return [];
+  }
+  if (!companies || companies.length === 0) return [];
+
+  const ids = companies.map((c) => c.profile_id as string);
+  const { data: openOpps } = await supabase
+    .from("opportunities")
+    .select("company_id")
+    .eq("status", "published")
+    .in("company_id", ids);
+
+  const openByCompany = new Map<string, number>();
+  for (const row of openOpps ?? []) {
+    const cid = row.company_id as string;
+    openByCompany.set(cid, (openByCompany.get(cid) ?? 0) + 1);
+  }
+
+  return companies
+    .map((c) => ({
+      id: c.profile_id as string,
+      company_name: c.company_name as string,
+      description: (c.description as string | null) ?? null,
+      logo_url: (c.logo_url as string | null) ?? null,
+      openRoles: openByCompany.get(c.profile_id as string) ?? 0,
+    }))
+    .sort(
+      (a, b) =>
+        b.openRoles - a.openRoles ||
+        a.company_name.localeCompare(b.company_name)
+    );
+}
+
 /**
  * A company's public page: the company row (public-read), its currently
  * published opportunities, and its team (public since `0008`, so the

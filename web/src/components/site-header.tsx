@@ -45,6 +45,9 @@ export async function SiteHeader() {
           <Link href="/opportunities" className="py-3 hover:text-white">
             Opportunities
           </Link>
+          <Link href="/companies" className="py-3 hover:text-white">
+            Companies
+          </Link>
           <Link href="/students" className="py-3 hover:text-white">
             Students
           </Link>
