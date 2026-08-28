@@ -4,6 +4,8 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { CompanyProfileForm } from "@/components/company-profile-form";
 import { ProfileMediaUpload } from "@/components/profile-media-upload";
 import { MyTitleForm } from "@/components/my-title-form";
+import { LeaveCompanyButton } from "@/components/leave-company-button";
+import { DeleteAccountButton } from "@/components/delete-account-button";
 import { Badge, EmptyState } from "@/components/ui";
 import { fetchPosts } from "@/lib/posts";
 import { PostCard } from "@/components/post-card";
@@ -14,7 +16,7 @@ export default async function CompanyProfilePage() {
     notFound();
   }
 
-  const { supabase, user, company, companyId } = await requireCompanyUser("/company/profile");
+  const { supabase, user, company, companyId, isOwner } = await requireCompanyUser("/company/profile");
 
   if (!company) {
     notFound();
@@ -98,6 +100,32 @@ export default async function CompanyProfilePage() {
             ))
           )}
         </div>
+      </div>
+
+      <div className="mt-16 border-t border-border pt-8">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-magenta">
+          Danger zone
+        </h2>
+        {isOwner ? (
+          <p className="mt-2 text-sm text-text-muted">
+            You own {company.company_name} — ownership transfer isn&rsquo;t
+            self-service yet. Contact ESEN to transfer or close this
+            company before deleting your account.
+          </p>
+        ) : (
+          <>
+            <p className="mt-2 text-sm text-text-muted">
+              Leave {company.company_name} to detach from it and keep your
+              ESENet account, or delete your account entirely — that
+              removes your profile details and signs you out immediately.
+              Neither can be undone.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <LeaveCompanyButton companyName={company.company_name} />
+              <DeleteAccountButton />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

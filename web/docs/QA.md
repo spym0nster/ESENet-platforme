@@ -282,6 +282,13 @@ but don't be surprised it's still in the table.
 - [ ] No horizontal scroll on any core page at 375px width
 - [ ] Every link/button has a real tap target (~32px+ for list actions, ~40px for primary nav) — not just its bare text line-height
 
+### Account deletion
+- [ ] Student deletion removes CV/avatar storage files, `student_details` and its children, keeps the profile as an anonymized tombstone
+- [ ] A post/comment/application belonging to a deleted account still renders, now attributed to "Deleted user"
+- [ ] A non-owner company member can leave without deleting their account, and can delete their account (auto-leaving) in one step
+- [ ] A company owner cannot delete their account, server-side, not just hidden in the UI
+- [ ] `deactivated_at`, `full_name`, `avatar_url`, `banner_url` are all frozen once deactivated — direct REST attempts to change any of them revert
+
 ## Posts / feed / moderation (`/feed`, `/admin/reports`)
 
 A single global, chronological feed (`fetchPosts()` in `src/lib/posts.ts`) that
@@ -444,3 +451,82 @@ interaction itself was not exercised by automation** at mobile widths —
 only layout, overflow, and tap-target sizing were. Worth a manual check on
 a real phone (or a differently-configured mobile emulator) before
 launch, specifically for anything with custom pointer/touch handling.
+
+## Account deletion (`/profile`, `/company/profile`)
+
+Phase 3 audit item 8. Anonymize-and-deactivate, not a hard delete —
+`profiles.id` IS `auth.users.id` (the primary key doubles as the FK), so
+deleting the auth row cascades and destroys the profile, which cascades
+further into every comment/application/post that references it,
+destroying OTHER people's legitimate records as collateral (a comment
+thread someone else is part of, a company's own hiring record). Instead:
+
+- The profile survives as a tombstone (`full_name` → "Deleted user",
+  images cleared) so existing content still renders correctly for
+  whoever legitimately holds it.
+- Everything purely personal — CV, education/experience/projects/
+  certifications (all cascade from deleting `student_details`), saved
+  opportunities — is actually removed, storage files included.
+- `profiles.deactivated_at` is set (one-way, trigger-enforced — see the
+  bug below) and the session is signed out immediately.
+- A company **owner** is blocked from deleting outright — see "Known gap"
+  below.
+- A company **member** (non-owner) deleting their account is auto-removed
+  from `company_members` as part of the same action; **leaving** a
+  company (`/company/profile` → "Leave [company]") is offered separately,
+  for someone who wants to detach without deleting their whole account.
+
+**Known, disclosed limitation:** there's no way to block login at the
+Supabase Auth layer itself without a service-role key or introspecting
+`auth.users`' exact schema (e.g. a `banned_until` column, version-
+dependent) — neither of which this action has/does. A "deleted" account
+can still authenticate; it just has nothing left to see or do beyond a
+blank, anonymized, deactivated profile. Confirmed live: logging back in
+with the same credentials after deletion succeeds (200 on the token
+grant), landing on an empty profile.
+
+**Known, deliberate gap: no self-service ownership transfer.**
+`company_members.role` is trigger-locked immutable (0007) specifically to
+close two real privilege-escalation bugs from earlier in this project —
+relaxing that trigger to allow "owner promotes a member to owner" is
+real, security-sensitive scope of its own, not something to bolt onto an
+unrelated account-deletion feature under time pressure. A sole owner who
+wants to delete their account or close their company needs to contact
+ESEN directly for now. The UI states this plainly rather than offering a
+broken or half-working transfer flow.
+
+**Bug found live, fixed (0013):** `deactivated_at` was correctly one-way
+(0012's trigger blocks clearing it), but nothing stopped the account from
+continuing to update `full_name`/`avatar_url`/`banner_url` afterward —
+confirmed by logging back in as a just-deleted scratch account and
+successfully PATCHing `full_name` back to a real-looking name via direct
+REST. That defeated the entire point of the tombstone: anyone could
+"undelete" their own visible identity immediately. Fixed by freezing
+those three fields too, the same "old.X is not null → freeze X" shape,
+once `deactivated_at` is already set.
+
+To test the full loop (four scratch accounts needed — a student with
+real content, a company owner, and two non-owner members — created via
+the Admin API and fully deleted afterward, same as every other scratch-
+account pattern in this file):
+1. Student: populate CV, education, a project, an avatar, a post, and
+   have a different account comment on that post. Delete the account.
+   Confirm: CV/avatar files actually gone from storage, student_details
+   and its children gone, profile shows "Deleted user" with
+   `deactivated_at` set, the post and the other account's comment on it
+   are both still there and still render correctly, and any application
+   the student had submitted is untouched (check via the owning
+   company's own view — admin has no read policy on `applications` at
+   all, so an empty result there proves nothing either way)
+2. Company member (non-owner): "Leave company" — confirm the
+   `company_members` row is gone but the profile is completely
+   untouched (not anonymized, `deactivated_at` still null)
+3. A different member: "Delete my account" directly — confirm this
+   auto-removes their `company_members` row AND anonymizes the profile
+   in one step
+4. Company owner: confirm the delete button doesn't even render, and
+   that the underlying action would refuse it server-side too — the
+   check lives in `deleteMyAccount()` itself, not just the UI
+5. As the deactivated account, attempt to clear `deactivated_at` or
+   change `full_name`/`avatar_url`/`banner_url` via direct REST — all
+   four must revert (0013)

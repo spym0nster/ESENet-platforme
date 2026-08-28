@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { resolveCompanyId } from "@/lib/company";
@@ -107,6 +108,36 @@ export async function removeTeamMember(
 
   revalidatePath("/company/team");
   return { success: true };
+}
+
+/**
+ * A member detaches from their company without deleting their ESENet
+ * account — e.g. to join a different company afterward via the
+ * /company/onboarding request-to-join flow. RLS ("a member can remove
+ * themselves", 0012) independently restricts this to the caller's own
+ * row and to role = 'member' — an owner can't leave this way, same
+ * reasoning as deleteMyAccount() in actions/account.ts.
+ */
+export async function leaveCompany(): Promise<TeamActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be signed in." };
+
+  const { error } = await supabase
+    .from("company_members")
+    .delete()
+    .eq("profile_id", user.id)
+    .eq("role", "member");
+
+  if (error) {
+    console.error("leaveCompany failed:", error);
+    return { error: "We couldn't remove you from the company." };
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/company/onboarding");
 }
 
 export async function approveJoinRequest(

@@ -5,6 +5,7 @@ import { StudentProfileForm } from "@/components/student-profile-form";
 import { CvUploadForm } from "@/components/cv-upload-form";
 import { ProfileMediaUpload } from "@/components/profile-media-upload";
 import { ProfileItemSection } from "@/components/profile-item-section";
+import { DeleteAccountButton } from "@/components/delete-account-button";
 import { fetchPosts } from "@/lib/posts";
 import { PostCard } from "@/components/post-card";
 import { EmptyState } from "@/components/ui";
@@ -202,6 +203,20 @@ export default async function ProfilePage() {
               />
             ))
           )}
+        </div>
+      </div>
+
+      <div className="mt-16 border-t border-border pt-8">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-magenta">
+          Danger zone
+        </h2>
+        <p className="mt-2 text-sm text-text-muted">
+          Deleting your account removes your CV, education, experience,
+          projects, and certifications, and signs you out immediately. It
+          can&rsquo;t be undone.
+        </p>
+        <div className="mt-4">
+          <DeleteAccountButton />
         </div>
       </div>
     </div>

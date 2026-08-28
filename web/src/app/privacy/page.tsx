@@ -88,15 +88,26 @@ export default function PrivacyPage() {
 
       <LegalSection title="Account deletion">
         <p>
-          Account self-deletion is not yet available in the product as of
-          this writing — this section will be updated once it ships, and
-          this paragraph will be replaced rather than left inaccurate. In
-          the meantime, deletion can only be requested directly from ESEN.
+          Students and company team members can delete their own account
+          from their profile page. Doing so removes your CV, education,
+          experience, projects, certifications, and profile photos, and
+          signs you out immediately. Your posts, comments, and applications
+          are not deleted outright — deleting them would also destroy
+          other people&rsquo;s legitimate records that reference them (a
+          comment thread someone else is part of, a company&rsquo;s own
+          record of your application) — instead your name on them changes
+          to &ldquo;Deleted user&rdquo;.
+        </p>
+        <p>
+          A company account that currently owns a company can&rsquo;t self-
+          delete yet — ownership transfer isn&rsquo;t built, so an owner
+          needs to contact ESEN directly to transfer or close their
+          company first.
         </p>
         <NeedsReview>
-          The request channel (an email address, a form) and what actually
-          happens to an account&rsquo;s applications, posts, and comments on
-          deletion — anonymized in place, or removed outright.
+          Whether posts/comments/applications should eventually be
+          eligible for full removal on request (not just anonymization),
+          and after how long.
         </NeedsReview>
       </LegalSection>
 
