@@ -392,6 +392,9 @@ rules above.
 - [ ] The edit form closes on its own after a successful save (no reload); Cancel discards changes
 - [ ] `editPost` is body + link only — it cannot change `published_as` / `company_id` / attached opportunity or project (the `protect_post_admin_fields` trigger freezes attribution), and a non-author / removed post → "You can't edit this post"
 - [ ] **Not verified with a real login** (no QA password available to me): the actual in-browser Edit → Save round trip. Verified: the card renders with the new client `PostBody` component, the "edited" marker appears once `updated_at` moves, lint + build clean. Backing RLS ("authors edit their own post") + the trigger already existed — no migration.
+- [ ] Comment author sees "Edit" next to "Delete" on their own comment; editing updates it in place and adds "· edited" (`post_comments.edited_at`, migration `0023` — additive nullable column, APPLIED); the edit form closes on save, Cancel discards
+- [ ] `editComment` is body-only, scoped to `author_id` + non-removed; a non-author / removed comment → "You can't edit this comment"; the `protect_comment_admin_fields` trigger passes `edited_at` through untouched (checked directly via SQL: an UPDATE setting `body` + `edited_at` keeps both, freezes `author_id`/`post_id`)
+- [ ] **Not verified with a real login**: the in-browser comment Edit → Save round trip (verified the feed renders the edited comment + "· edited" marker via a throwaway SQL fixture, since removed).
 
 ### Notifications (`0015`, header bell + `/notifications`)
 - [ ] Student applies → every actor of the target company gets an `application_received` notification linking to that opportunity's applicants page

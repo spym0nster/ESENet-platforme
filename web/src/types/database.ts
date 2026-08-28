@@ -174,6 +174,7 @@ export interface PostComment {
   author_id: string;
   body: string;
   created_at: string;
+  edited_at: string | null;
   removed_at: string | null;
   removed_by: string | null;
 }

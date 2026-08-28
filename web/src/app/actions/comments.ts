@@ -60,6 +60,47 @@ export async function createComment(
   return { success: true };
 }
 
+export async function editComment(
+  _prevState: CommentActionState,
+  formData: FormData
+): Promise<CommentActionState> {
+  const commentId = String(formData.get("comment_id") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+
+  if (!commentId) return { error: "Missing comment." };
+  if (!body || body.length > 1000) {
+    return { error: "Write a comment (up to 1000 characters)." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be signed in." };
+
+  // Scoped to the author's own, non-removed comment here and independently
+  // by the "authors edit their own comment" RLS policy. `edited_at` is set
+  // by us (there's no updated_at column); the protect_comment_admin_fields
+  // trigger doesn't touch it.
+  const { data: updated, error } = await supabase
+    .from("post_comments")
+    .update({ body, edited_at: new Date().toISOString() })
+    .eq("id", commentId)
+    .eq("author_id", user.id)
+    .is("removed_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("editComment failed:", error);
+    return { error: "We couldn't save your changes. Please try again." };
+  }
+  if (!updated) return { error: "You can't edit this comment." };
+
+  revalidatePath("/feed");
+  return { success: true };
+}
+
 export async function deleteComment(
   _prevState: CommentActionState,
   formData: FormData

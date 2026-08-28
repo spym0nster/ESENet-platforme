@@ -1,7 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { createComment, deleteComment, type CommentActionState } from "@/app/actions/comments";
+import {
+  createComment,
+  deleteComment,
+  editComment,
+  type CommentActionState,
+} from "@/app/actions/comments";
 import { RemoveCommentButton } from "@/components/post-actions";
 import type { CommentWithAuthor } from "@/lib/comments";
 import { Button } from "@/components/ui";
@@ -32,6 +37,83 @@ function DeleteCommentButton({ commentId }: { commentId: string }) {
   );
 }
 
+function CommentRow({
+  comment,
+  currentUserId,
+  isAdmin,
+}: {
+  comment: CommentWithAuthor;
+  currentUserId: string | null;
+  isAdmin: boolean;
+}) {
+  const isOwn = comment.author_id === currentUserId;
+  const [editingFrom, setEditingFrom] = useState<string | null>(null);
+  const [state, action, pending] = useActionState<CommentActionState, FormData>(
+    editComment,
+    null
+  );
+  // Closes itself once the successful edit revalidates and the new body
+  // arrives as a prop — no setState-in-effect (see PostBody for the same
+  // pattern).
+  const editing = editingFrom !== null && editingFrom === comment.body;
+
+  if (editing) {
+    return (
+      <form action={action} className="flex items-center gap-2 text-sm">
+        <input type="hidden" name="comment_id" value={comment.id} />
+        <input
+          name="body"
+          defaultValue={comment.body}
+          maxLength={1000}
+          required
+          className="w-full rounded-md border border-border bg-surface p-2 text-sm outline-none focus:border-accent-2"
+        />
+        <Button type="submit" variant="secondary" disabled={pending} className="px-3 py-2 text-xs">
+          {pending ? "…" : "Save"}
+        </Button>
+        <button
+          type="button"
+          onClick={() => setEditingFrom(null)}
+          className="py-2 font-mono text-[11px] uppercase tracking-wide text-text-faint hover:text-text"
+        >
+          Cancel
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <div className="flex items-start justify-between gap-2 text-sm">
+      <p>
+        <span className="font-semibold text-text">{comment.author?.full_name ?? "Someone"}</span>{" "}
+        <span className="text-text-muted">{comment.body}</span>{" "}
+        <span className="font-mono text-[11px] text-text-faint">
+          {timeAgo(comment.created_at)}
+          {comment.edited_at ? " · edited" : ""}
+        </span>
+        {state && "error" in state && (
+          <span className="ml-2 text-[11px] text-magenta">{state.error}</span>
+        )}
+      </p>
+      <div className="flex shrink-0 items-center gap-1">
+        {isOwn && (
+          <>
+            <button
+              type="button"
+              onClick={() => setEditingFrom(comment.body)}
+              className="py-2 font-mono text-[11px] uppercase tracking-wide text-text-faint hover:text-text"
+            >
+              Edit
+            </button>
+            <DeleteCommentButton commentId={comment.id} />
+          </>
+        )}
+        {isAdmin && !isOwn && <RemoveCommentButton commentId={comment.id} />}
+      </div>
+    </div>
+  );
+}
+
 export function CommentSection({
   postId,
   initialComments,
@@ -53,7 +135,7 @@ export function CommentSection({
   const [draft, setDraft] = useState("");
 
   // Reconcile with fresh server data whenever the parent Server Component
-  // re-fetches (e.g. after revalidatePath from a delete/remove action).
+  // re-fetches (e.g. after revalidatePath from a delete/remove/edit action).
   // Without this, this component's own useState keeps rendering whatever
   // list it mounted with — a deleted/removed comment lingers on screen
   // until a full page reload even though the server-side delete succeeded.
@@ -72,17 +154,12 @@ export function CommentSection({
       {comments
         .filter((c) => !c.removed_at)
         .map((c) => (
-          <div key={c.id} className="flex items-start justify-between gap-2 text-sm">
-            <p>
-              <span className="font-semibold text-text">{c.author?.full_name ?? "Someone"}</span>{" "}
-              <span className="text-text-muted">{c.body}</span>{" "}
-              <span className="font-mono text-[11px] text-text-faint">{timeAgo(c.created_at)}</span>
-            </p>
-            {c.author_id === currentUserId && <DeleteCommentButton commentId={c.id} />}
-            {isAdmin && c.author_id !== currentUserId && (
-              <RemoveCommentButton commentId={c.id} />
-            )}
-          </div>
+          <CommentRow
+            key={c.id}
+            comment={c}
+            currentUserId={currentUserId}
+            isAdmin={isAdmin}
+          />
         ))}
 
       {currentUserId && (
@@ -97,6 +174,7 @@ export function CommentSection({
                 author_id: currentUserId,
                 body,
                 created_at: new Date().toISOString(),
+                edited_at: null,
                 removed_at: null,
                 author: currentUserName
                   ? { id: currentUserId, full_name: currentUserName, avatar_url: null }

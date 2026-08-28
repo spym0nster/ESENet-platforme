@@ -6,6 +6,7 @@ export interface CommentWithAuthor {
   author_id: string;
   body: string;
   created_at: string;
+  edited_at: string | null;
   removed_at: string | null;
   author: { id: string; full_name: string; avatar_url: string | null } | null;
 }
@@ -23,7 +24,7 @@ export async function fetchComments(
   const { data, error } = await supabase
     .from("post_comments")
     .select(
-      "id, post_id, author_id, body, created_at, removed_at, author:profiles!post_comments_author_id_fkey(id, full_name, avatar_url)"
+      "id, post_id, author_id, body, created_at, edited_at, removed_at, author:profiles!post_comments_author_id_fkey(id, full_name, avatar_url)"
     )
     .eq("post_id", postId)
     .order("created_at", { ascending: true })
