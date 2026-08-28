@@ -43,13 +43,22 @@ export default async function CompanyDashboardPage({
   // N+1 by fetching all of this company's applications at once.
   const opportunityIds = opportunities?.map((o) => o.id) ?? [];
   const applicantCounts = new Map<string, number>();
+  const newApplicantCounts = new Map<string, number>();
   if (opportunityIds.length > 0) {
     const { data: applicationRows } = await supabase
       .from("applications")
-      .select("opportunity_id")
+      .select("opportunity_id, status")
       .in("opportunity_id", opportunityIds);
     for (const row of applicationRows ?? []) {
       applicantCounts.set(row.opportunity_id, (applicantCounts.get(row.opportunity_id) ?? 0) + 1);
+      // "New" = still at the default 'applied' status, i.e. the company
+      // hasn't triaged it yet.
+      if (row.status === "applied") {
+        newApplicantCounts.set(
+          row.opportunity_id,
+          (newApplicantCounts.get(row.opportunity_id) ?? 0) + 1
+        );
+      }
     }
   }
 
@@ -146,9 +155,14 @@ export default async function CompanyDashboardPage({
                   <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
                     <Link
                       href={`/company/opportunities/${o.id}/applicants`}
-                      className="py-2 font-mono text-xs text-accent-2 hover:text-text"
+                      className="flex items-center gap-2 py-2 font-mono text-xs text-accent-2 hover:text-text"
                     >
                       View applicants ({applicantCounts.get(o.id) ?? 0}) →
+                      {(newApplicantCounts.get(o.id) ?? 0) > 0 && (
+                        <Badge variant="info">
+                          {newApplicantCounts.get(o.id)} new
+                        </Badge>
+                      )}
                     </Link>
                     <Link
                       href={`/company/opportunities/${o.id}/edit`}
