@@ -240,6 +240,10 @@ rules above.
 - [ ] Company A can log in
 - [ ] Company B can log in
 - [ ] Student can log in
+- [ ] `/forgot-password` → submitting any email shows the same "if that email has an account…" message (no account-existence leak)
+- [ ] The reset email link lands on `/auth/callback`, exchanges, forwards to `/reset-password` with a session; setting a new password (min 8, must match confirm) works and the old one stops working
+- [ ] An expired / already-used reset link → `/reset-password` shows "invalid or expired" + "Request a new link"; a bad `code` on `/auth/callback` bounces to `/login?error=…`
+- [ ] **Needs Supabase dashboard:** `<prod-origin>/auth/callback` and `http://localhost:3000/auth/callback` are in Authentication → URL Configuration → Redirect URLs, or the email link errors out
 
 ### Company
 - [ ] Company A reaches dashboard

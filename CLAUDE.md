@@ -174,6 +174,12 @@ App Router under `web/src/app`, path alias `@/*` → `web/src/*`.
   metadata on first successful login. Don't "fix" this by disabling email
   confirmation. A company-role signup with no pending invite is left
   unattached and routed to `/company/onboarding` (create vs. request-to-join).
+- **Password reset** is `/forgot-password` → `resetPasswordForEmail` (redirect
+  to `/auth/callback?next=/reset-password`) → `route.ts` does the PKCE
+  `exchangeCodeForSession` → `/reset-password` form calls `updateUser`.
+  `/auth/callback` is the only route handler and the general email-link
+  landing point. **Supabase dashboard must allowlist `<origin>/auth/callback`**
+  (prod + localhost) under Authentication → URL Configuration.
 - **`isSupabaseConfigured()`** gates the whole app — with no env vars,
   middleware no-ops and data pages render a "connect Supabase" state instead
   of crashing.

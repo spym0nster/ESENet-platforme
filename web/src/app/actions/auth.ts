@@ -2,11 +2,27 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/types/database";
 
 export type AuthState = { error: string } | { info: string } | null;
+
+/**
+ * This request's own origin (scheme + host), for building absolute
+ * redirect URLs Supabase Auth emails back to. Server actions are POSTs, so
+ * `origin` is normally set; fall back to the forwarded host behind Vercel's
+ * proxy, then localhost for dev.
+ */
+async function requestOrigin(): Promise<string> {
+  const h = await headers();
+  const origin = h.get("origin");
+  if (origin) return origin;
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return host ? `${proto}://${host}` : "http://localhost:3000";
+}
 
 /**
  * Creates the profiles row for a just-signed-up user, plus student_details
@@ -179,4 +195,71 @@ export async function signOut() {
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+/**
+ * Sends the password-reset email. Always reports the same thing whether or
+ * not the address has an account — never confirm which emails are
+ * registered. The link lands on /auth/callback (exchanges the code for a
+ * short-lived session), which forwards to /reset-password.
+ */
+export async function requestPasswordReset(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email || !email.includes("@")) {
+    return { error: "Enter a valid email address." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${await requestOrigin()}/auth/callback?next=/reset-password`,
+  });
+  if (error) {
+    console.error("requestPasswordReset failed:", error);
+  }
+
+  return {
+    info: "If that email has an ESENet account, a password reset link is on its way. Check your inbox.",
+  };
+}
+
+/**
+ * Sets a new password. Only works with the recovery session established by
+ * clicking the email link (via /auth/callback) — otherwise there's no user
+ * and we bounce them back to request a fresh link.
+ */
+export async function updatePassword(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+
+  if (password.length < 8) {
+    return { error: "Use at least 8 characters." };
+  }
+  if (password !== confirm) {
+    return { error: "The two passwords don't match." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      error: "Your reset link has expired. Request a new one from the login page.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    console.error("updatePassword failed:", error);
+    return { error: "We couldn't update your password. Please try again." };
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/opportunities");
 }
