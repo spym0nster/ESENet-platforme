@@ -9,7 +9,9 @@ import {
 } from "@/app/actions/comments";
 import { RemoveCommentButton } from "@/components/post-actions";
 import type { CommentWithAuthor } from "@/lib/comments";
-import { Button } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
+
+const VISIBLE = 3;
 
 function timeAgo(iso: string) {
   const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -29,7 +31,7 @@ function DeleteCommentButton({ commentId }: { commentId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="py-2 font-mono text-[11px] uppercase tracking-wide text-text-faint hover:text-magenta"
+        className="py-1 font-mono text-[11px] uppercase tracking-widest text-text-faint hover:text-magenta"
       >
         Delete
       </button>
@@ -52,42 +54,37 @@ function CommentRow({
     editComment,
     null
   );
-  // Closes itself once the successful edit revalidates and the new body
-  // arrives as a prop — no setState-in-effect (see PostBody for the same
-  // pattern).
+  // Closes itself once the successful edit revalidates (see PostBody).
   const editing = editingFrom !== null && editingFrom === comment.body;
 
   if (editing) {
     return (
-      <form action={action} className="flex items-center gap-2 text-sm">
+      <form action={action} className="flex items-center gap-2">
         <input type="hidden" name="comment_id" value={comment.id} />
-        <input
-          name="body"
-          defaultValue={comment.body}
-          maxLength={1000}
-          required
-          className="w-full rounded-md border border-border bg-surface p-2 text-sm outline-none focus:border-accent-2"
-        />
-        <Button type="submit" variant="secondary" disabled={pending} className="px-3 py-2 text-xs">
+        <Input name="body" defaultValue={comment.body} maxLength={1000} required />
+        <Button type="submit" size="compact" variant="secondary" disabled={pending}>
           {pending ? "…" : "Save"}
         </Button>
-        <button
+        <Button
           type="button"
+          size="compact"
+          variant="ghost"
           onClick={() => setEditingFrom(null)}
-          className="py-2 font-mono text-[11px] uppercase tracking-wide text-text-faint hover:text-text"
         >
           Cancel
-        </button>
+        </Button>
       </form>
     );
   }
 
   return (
-    <div className="flex items-start justify-between gap-2 text-sm">
-      <p>
-        <span className="font-semibold text-text">{comment.author?.full_name ?? "Someone"}</span>{" "}
-        <span className="text-text-muted">{comment.body}</span>{" "}
-        <span className="font-mono text-[11px] text-text-faint">
+    <div className="flex items-start justify-between gap-3 text-sm">
+      <p className="min-w-0">
+        <span className="font-semibold text-text">
+          {comment.author?.full_name ?? "Someone"}
+        </span>{" "}
+        <span className="text-text/[0.88]">{comment.body}</span>{" "}
+        <span className="whitespace-nowrap font-mono text-[11px] text-text-faint">
           {timeAgo(comment.created_at)}
           {comment.edited_at ? " · edited" : ""}
         </span>
@@ -95,13 +92,13 @@ function CommentRow({
           <span className="ml-2 text-[11px] text-magenta">{state.error}</span>
         )}
       </p>
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center gap-2">
         {isOwn && (
           <>
             <button
               type="button"
               onClick={() => setEditingFrom(comment.body)}
-              className="py-2 font-mono text-[11px] uppercase tracking-wide text-text-faint hover:text-text"
+              className="py-1 font-mono text-[11px] uppercase tracking-widest text-text-faint hover:text-text"
             >
               Edit
             </button>
@@ -133,34 +130,40 @@ export function CommentSection({
     null
   );
   const [draft, setDraft] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
-  // Reconcile with fresh server data whenever the parent Server Component
-  // re-fetches (e.g. after revalidatePath from a delete/remove/edit action).
-  // Without this, this component's own useState keeps rendering whatever
-  // list it mounted with — a deleted/removed comment lingers on screen
-  // until a full page reload even though the server-side delete succeeded.
-  // Adjusting state during render (React's documented pattern for this,
-  // see "Adjusting state when a prop changes") rather than in a useEffect —
-  // it applies before the stale list ever paints, and ESLint's
-  // react-hooks/set-state-in-effect rule flags the effect version anyway.
-  const [prevInitialComments, setPrevInitialComments] = useState(initialComments);
-  if (initialComments !== prevInitialComments) {
-    setPrevInitialComments(initialComments);
+  // Reconcile with fresh server data on the parent's re-fetch (see the long
+  // note this replaced — same "adjust state during render" pattern).
+  const [prevInitial, setPrevInitial] = useState(initialComments);
+  if (initialComments !== prevInitial) {
+    setPrevInitial(initialComments);
     setComments(initialComments);
   }
 
+  const live = comments.filter((c) => !c.removed_at);
+  const hidden = Math.max(0, live.length - VISIBLE);
+  const shown = showAll ? live : live.slice(-VISIBLE);
+
   return (
     <div className="mt-4 space-y-3 border-t border-border pt-4">
-      {comments
-        .filter((c) => !c.removed_at)
-        .map((c) => (
-          <CommentRow
-            key={c.id}
-            comment={c}
-            currentUserId={currentUserId}
-            isAdmin={isAdmin}
-          />
-        ))}
+      {hidden > 0 && !showAll && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          className="font-mono text-[11px] uppercase tracking-widest text-accent-2 hover:text-text"
+        >
+          Show {hidden} earlier {hidden === 1 ? "comment" : "comments"}
+        </button>
+      )}
+
+      {shown.map((c) => (
+        <CommentRow
+          key={c.id}
+          comment={c}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
+        />
+      ))}
 
       {currentUserId && (
         <form
@@ -182,21 +185,21 @@ export function CommentSection({
               },
             ]);
             setDraft("");
+            setShowAll(true);
             action(formData);
           }}
           className="flex items-center gap-2"
         >
           <input type="hidden" name="post_id" value={postId} />
-          <input
+          <Input
             name="body"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Write a comment…"
+            placeholder="Write a comment"
             maxLength={1000}
             required
-            className="w-full rounded-md border border-border bg-surface p-2 text-sm outline-none focus:border-accent-2"
           />
-          <Button type="submit" variant="secondary" disabled={pending} className="px-3 py-2 text-xs">
+          <Button type="submit" size="compact" variant="secondary" disabled={pending}>
             Post
           </Button>
         </form>
