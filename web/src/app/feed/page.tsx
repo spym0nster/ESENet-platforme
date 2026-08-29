@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { resolveCompanyId } from "@/lib/company";
 import { fetchPosts } from "@/lib/posts";
 import { PostComposer } from "@/components/post-composer";
 import { PostCard } from "@/components/post-card";
-import { EmptyState } from "@/components/ui";
+import { EmptyState, LinkButton } from "@/components/ui";
 
 export default async function FeedPage({
   searchParams,
@@ -83,10 +82,15 @@ export default async function FeedPage({
   return (
     <div className="mx-auto max-w-2xl px-6 py-12">
       <div className="mb-8">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent-2">Community</p>
-        <h1 className="mt-2 font-display text-3xl font-extrabold">Feed</h1>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-accent-2">
+          Community
+        </p>
+        <h1 className="mt-2 font-display text-[29px] font-semibold tracking-tight">
+          Feed
+        </h1>
         <p className="mt-2 text-sm text-text-muted">
-          What ESEN students, alumni and companies are building, sharing and hiring for.
+          What ESEN students, alumni and companies are building, sharing and
+          hiring for.
         </p>
       </div>
 
@@ -99,16 +103,23 @@ export default async function FeedPage({
           />
         </div>
       ) : (
-        <div className="mb-8 rounded-lg border border-border bg-surface-alt p-4 text-sm text-text-muted">
-          <Link href="/login" className="text-accent-2 hover:text-text">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-4 [box-shadow:var(--lift)]">
+          <p className="text-sm text-text-muted">Log in to post, like and comment.</p>
+          <LinkButton href="/login?next=/feed" variant="primary" size="compact">
             Log in
-          </Link>{" "}
-          to post, like and comment.
+          </LinkButton>
         </div>
       )}
 
       {posts.length === 0 ? (
-        <EmptyState title="No posts yet" body="Be the first to share something with the ESEN community." />
+        <EmptyState
+          title="Nothing here yet"
+          body={
+            user
+              ? "Share a project, a milestone, or a role you're hiring for — your post starts the feed."
+              : "Students and companies post what they're building and hiring for here."
+          }
+        />
       ) : (
         <div className="space-y-5">
           {posts.map((post) => (
@@ -126,12 +137,12 @@ export default async function FeedPage({
 
       {nextCursor && (
         <div className="mt-8 text-center">
-          <Link
+          <a
             href={`/feed?before=${encodeURIComponent(nextCursor)}`}
-            className="font-mono text-xs uppercase tracking-wide text-accent-2 hover:text-text"
+            className="font-mono text-[11px] uppercase tracking-widest text-accent-2 hover:text-text"
           >
-            Older posts →
-          </Link>
+            Older posts
+          </a>
         </div>
       )}
     </div>
