@@ -289,6 +289,11 @@ rules above.
 - [ ] Server guard: a direct POST to `applyToOpportunity` for a past-deadline or non-published opportunity returns a friendly error and writes no row (verified via stale page / direct call — cannot be exercised through the UI once the form is hidden)
 - [ ] **Not verified with a real login** (no QA student password available to me): the end-to-end "student clicks Apply before/after deadline" path. Backing SQL + the detail-page render for null / past / soon deadlines were checked directly against the dev DB.
 
+### Error / not-found pages
+- [ ] A bad URL (unknown route, or `/opportunities/<bad-id>`, `/companies/<bad-id>`) renders the branded 404 (`src/app/not-found.tsx`) — "This page isn't here", Browse opportunities / Go home buttons — not the default Next page
+- [ ] An uncaught render error shows `src/app/error.tsx` ("We hit an unexpected error", Try again / Go home, logs to console with the digest ref) — verified by code review only, not triggered
+- [ ] Verified both 404 paths in-browser (unknown route + bad opportunity id)
+
 ### robots.txt / sitemap.xml
 - [ ] `/robots.txt` allows `/`, disallows `/students`, `/profile`, `/company/`, `/admin/`, `/notifications`, `/applications`, `/saved`, `/reset-password`, `/auth/`, and points at `/sitemap.xml`
 - [ ] `/sitemap.xml` lists the static public routes plus every **published** opportunity (`lastmod` = created_at) and every **verified** company; regenerates hourly (`revalidate = 3600`); reads via the cookie-less public client
