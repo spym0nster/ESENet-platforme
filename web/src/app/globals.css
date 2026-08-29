@@ -8,8 +8,20 @@
   --surface-alt: #1e1a63;
   --text: #f5f3fc;
   --text-muted: #b3add9;
-  --text-faint: #7a74a8;
-  --border: rgba(245, 243, 252, 0.13);
+  /* was #7a74a8 — that lands ~3.9:1 on --surface, under AA for the 11px
+     mono meta it styles. #8a84b8 clears 4.5:1 with the same character. */
+  --text-faint: #8a84b8;
+  /* Softened from .13 so cards read as light-over-dark, not boxed. Only
+     safe together with --lift — the inset highlight is what stops a card
+     dissolving at this weight. */
+  --border: rgba(245, 243, 252, 0.09);
+  /* A visible edge, for things that need one: inputs, secondary buttons. */
+  --border-strong: rgba(245, 243, 252, 0.16);
+  /* Depth on a dark ground is light, not shadow: a 1px top highlight. */
+  --lift: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* Hover only. Carries the lift so it can be swapped in as one value. */
+  --glow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 30px -12px rgba(123, 83, 253, 0.55);
   --accent: #7b53fd;
   --accent-2: #1aa6fc;
   --accent-ink: #0b0e36;
@@ -29,8 +41,13 @@
     --surface-alt: #ece9f8;
     --text: #17143c;
     --text-muted: #58527e;
-    --text-faint: #8b85ad;
+    /* was #8b85ad — ~3.5:1 on white, fails AA at 11px. #6d6889 clears it. */
+    --text-faint: #6d6889;
     --border: #ddd7f0;
+    --border-strong: #cbc2e3;
+    --lift: 0 1px 2px rgba(23, 20, 60, 0.05);
+    --glow: 0 1px 2px rgba(23, 20, 60, 0.05),
+      0 12px 30px -12px rgba(106, 62, 224, 0.28);
     --accent: #6a3ee0;
     --accent-2: #08699e;
     --accent-ink: #ffffff;
@@ -49,8 +66,12 @@
   --surface-alt: #ece9f8;
   --text: #17143c;
   --text-muted: #58527e;
-  --text-faint: #8b85ad;
+  --text-faint: #6d6889;
   --border: #ddd7f0;
+  --border-strong: #cbc2e3;
+  --lift: 0 1px 2px rgba(23, 20, 60, 0.05);
+  --glow: 0 1px 2px rgba(23, 20, 60, 0.05),
+    0 12px 30px -12px rgba(106, 62, 224, 0.28);
   --accent: #6a3ee0;
   --accent-2: #08699e;
   --accent-ink: #ffffff;
@@ -71,6 +92,7 @@
   --color-text-muted: var(--text-muted);
   --color-text-faint: var(--text-faint);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-accent-soft: var(--accent-soft);
@@ -80,12 +102,44 @@
   --font-display: var(--font-poppins);
   --font-sans: var(--font-manrope);
   --font-mono: var(--font-plex-mono);
+  /* var() kept live so cards follow the theme swap */
+  --shadow-lift: var(--lift);
+  --shadow-glow: var(--glow);
+}
+
+@theme {
+  --radius-card: 16px;
+  --radius-ctrl: 10px;
+  --radius-chip: 6px;
+  /* the soft violet cast under a primary button */
+  --shadow-button: 0 6px 18px -8px rgba(123, 83, 253, 0.9);
 }
 
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans), "Segoe UI", sans-serif;
+}
+
+/* Quality floor: one visible keyboard focus ring everywhere, in cyan.
+   Components may tune the offset but never remove this. */
+:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+/* Motion confirms an interaction; it never entertains. When the OS asks
+   for less, there is none — transitions, animations, and the skeleton
+   shimmer all stop. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Keyboard skip link — hidden until focused, then pinned top-left. */

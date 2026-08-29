@@ -1,9 +1,16 @@
 # ESENet design system
 
+> **Superseded by `UX_ELEVATION.md` for visual language** (hierarchy, depth,
+> the component contracts, the type scale, the derived tokens). Where this
+> file and `UX_ELEVATION.md` disagree, `UX_ELEVATION.md` wins. This file is
+> still current for: the token *names* and their Tailwind wiring, the "compose
+> `ui/*`, don't hand-roll" rule, and the "no new hex / no new font" rule. A
+> full reconcile of the two lands as the last commit of the elevation work.
+
 This documents the design language that already existed implicitly across
 the codebase (tokens in `src/app/globals.css`, patterns repeated across
 forms/pages) and the shared component set extracted from it in this phase.
-**This is a documentation + extraction pass, not a redesign** — no new
+This was a documentation + extraction pass, not a redesign — no new
 colors, fonts, or layout paradigm were introduced. Every future screen
 should build from this file's components rather than hand-rolling Tailwind
 classes again.
