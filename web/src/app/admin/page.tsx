@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { Card } from "@/components/ui";
 import { fetchAdminStats } from "@/lib/admin";
 
 const STATUS_ORDER = [
@@ -50,16 +49,10 @@ export default async function AdminOverviewPage() {
         Admin
       </p>
       <h1 className="mt-2 font-display text-3xl font-extrabold">Overview</h1>
-      <p className="mt-2 text-text-muted">
-        Platform health at a glance. Counts need migration{" "}
-        <code className="rounded bg-surface-alt px-1 py-0.5 font-mono text-xs">
-          0016
-        </code>{" "}
-        applied for opportunities and applications.
-      </p>
+      <p className="mt-2 text-text-muted">Platform health at a glance.</p>
 
-      {needsAttention.length > 0 && (
-        <div className="mt-8 rounded-lg border border-accent-2/40 bg-accent2-soft/40 p-5">
+      {needsAttention.length > 0 ? (
+        <div className="mt-8 rounded-card border border-accent-2/30 bg-accent2-soft/30 p-5">
           <h2 className="font-mono text-xs uppercase tracking-widest text-accent-2">
             Needs attention
           </h2>
@@ -76,59 +69,69 @@ export default async function AdminOverviewPage() {
             ))}
           </ul>
         </div>
+      ) : (
+        <div className="mt-8 rounded-card border border-border bg-surface px-5 py-4 [box-shadow:var(--lift)]">
+          <p className="text-sm text-text-muted">
+            Nothing in the queues — no companies awaiting verification, no open
+            reports.
+          </p>
+        </div>
       )}
 
       <section className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           People
         </h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Students" value={stats.students} />
-          <Stat label="Companies" value={stats.companies} />
-          <Stat
-            label="Verified companies"
-            value={stats.companiesVerified}
-            sub={`${stats.companiesPending} pending`}
-          />
-          <Stat label="Deactivated accounts" value={stats.deactivated} />
-          <Stat label="New signups · 7d" value={stats.signupsLast7} />
-          <Stat label="New signups · 30d" value={stats.signupsLast30} />
-        </div>
+        <StatStrip
+          items={[
+            { label: "Students", value: stats.students },
+            { label: "Companies", value: stats.companies },
+            {
+              label: "Verified",
+              value: stats.companiesVerified,
+              sub: `${stats.companiesPending} pending`,
+            },
+            { label: "Deactivated", value: stats.deactivated },
+            { label: "Signups · 7d", value: stats.signupsLast7 },
+            { label: "Signups · 30d", value: stats.signupsLast30 },
+          ]}
+        />
       </section>
 
       <section className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Marketplace
         </h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Opportunities" value={stats.opportunities} />
-          <Stat label="Published" value={stats.opportunitiesPublished} />
-          <Stat label="Pending" value={stats.opportunitiesPending} />
-          <Stat label="Closed" value={stats.opportunitiesClosed} />
-          <Stat label="Applications" value={stats.applications} />
-          <Stat label="Community posts" value={stats.posts} />
-        </div>
+        <StatStrip
+          items={[
+            { label: "Opportunities", value: stats.opportunities },
+            { label: "Published", value: stats.opportunitiesPublished },
+            { label: "Pending", value: stats.opportunitiesPending },
+            { label: "Closed", value: stats.opportunitiesClosed },
+            { label: "Applications", value: stats.applications },
+            { label: "Community posts", value: stats.posts },
+          ]}
+        />
       </section>
 
       {stats.applications > 0 && (
         <section className="mt-10">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
             Applications by status
           </h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {STATUS_ORDER.filter((s) => stats.applicationsByStatus[s]).map((s) => (
-              <Stat
-                key={s}
-                label={s[0].toUpperCase() + s.slice(1)}
-                value={stats.applicationsByStatus[s]}
-              />
-            ))}
-          </div>
+          <StatStrip
+            items={STATUS_ORDER.filter((s) => stats.applicationsByStatus[s]).map(
+              (s) => ({
+                label: s[0].toUpperCase() + s.slice(1),
+                value: stats.applicationsByStatus[s],
+              })
+            )}
+          />
         </section>
       )}
 
       <section className="mt-12 border-t border-border pt-8">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Queues
         </h2>
         <div className="mt-4 flex flex-wrap gap-4 font-mono text-sm">
@@ -144,22 +147,29 @@ export default async function AdminOverviewPage() {
   );
 }
 
-function Stat({
-  label,
-  value,
-  sub,
+/**
+ * A run of counts as one hairline-divided strip — not a grid of cards. The
+ * `gap-px` over a `bg-border` fill draws the 1px dividers; each cell repaints
+ * `bg-surface` on top.
+ */
+function StatStrip({
+  items,
 }: {
-  label: string;
-  value: number;
-  sub?: string;
+  items: { label: string; value: number; sub?: string }[];
 }) {
   return (
-    <Card>
-      <p className="font-display text-3xl font-extrabold tabular-nums">{value}</p>
-      <p className="mt-1 font-mono text-xs uppercase tracking-wide text-text-faint">
-        {label}
-      </p>
-      {sub && <p className="mt-0.5 text-xs text-text-muted">{sub}</p>}
-    </Card>
+    <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-border bg-border sm:grid-cols-3">
+      {items.map((s) => (
+        <div key={s.label} className="bg-surface px-4 py-3">
+          <dd className="font-display text-2xl font-extrabold tabular-nums">
+            {s.value}
+          </dd>
+          <dt className="mt-0.5 font-mono text-[11px] uppercase tracking-wide text-text-faint">
+            {s.label}
+          </dt>
+          {s.sub && <dd className="mt-0.5 text-xs text-text-muted">{s.sub}</dd>}
+        </div>
+      ))}
+    </dl>
   );
 }
