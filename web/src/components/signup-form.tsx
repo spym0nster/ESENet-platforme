@@ -46,10 +46,7 @@ export function SignupForm() {
         <p className="text-sm text-magenta">{state.error}</p>
       )}
       {state && "info" in state && (
-        <p
-          className="rounded-md px-4 py-3 text-sm font-medium"
-          style={{ background: "var(--accent-soft)", color: "var(--accent-on-soft)" }}
-        >
+        <p className="rounded-ctrl border border-accent/30 bg-accent-soft px-4 py-3 text-sm font-medium text-accent-on-soft">
           {state.info}
         </p>
       )}
@@ -86,10 +83,10 @@ function RoleButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
+      className={`min-h-9 rounded-ctrl border px-3 text-sm font-medium transition ${
         active
           ? "border-accent-2 bg-accent2-soft text-accent-2"
-          : "border-border text-text-muted"
+          : "border-border-strong text-text-muted hover:text-text"
       }`}
     >
       {label}

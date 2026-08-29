@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { LinkButton } from "@/components/ui";
 import { ResetPasswordForm } from "@/components/reset-password-form";
 
 export const metadata = {
@@ -15,7 +15,7 @@ export default async function ResetPasswordPage() {
 
   return (
     <div className="mx-auto max-w-sm px-6 py-20">
-      <h1 className="font-display text-2xl font-bold">Set a new password</h1>
+      <h1 className="font-display text-3xl font-extrabold">Set a new password</h1>
 
       {user ? (
         <>
@@ -32,12 +32,11 @@ export default async function ResetPasswordPage() {
             This reset link is invalid or has expired — they only work once and
             for a short window.
           </p>
-          <Link
-            href="/forgot-password"
-            className="mt-8 inline-block rounded-md bg-accent px-6 py-3 font-semibold text-white"
-          >
-            Request a new link
-          </Link>
+          <div className="mt-8">
+            <LinkButton href="/forgot-password" variant="primary">
+              Request a new link
+            </LinkButton>
+          </div>
         </>
       )}
     </div>
