@@ -159,7 +159,7 @@ export default async function OpportunityPage({
   const { data: opportunity } = await supabase
     .from("opportunities")
     .select(
-      "id, type, title, description, skills, location, remote, start_date, end_date, application_deadline, status, created_at, company_id, companies(company_name, website, logo_url)"
+      "id, type, title, description, skills, location, remote, start_date, end_date, application_deadline, status, created_at, company_id, companies(company_name, website, logo_url, verified)"
     )
     .eq("id", id)
     .single();
@@ -212,6 +212,7 @@ export default async function OpportunityPage({
     company_name: string;
     website: string | null;
     logo_url: string | null;
+    verified: boolean;
   } | null;
   const companyName = company?.company_name ?? "ESEN partner company";
 
@@ -279,19 +280,26 @@ export default async function OpportunityPage({
         <div className="flex gap-4">
           <CompanyLogo name={companyName} src={company?.logo_url} size="lg" />
           <div className="min-w-0 flex-1">
-            <Link
-              href={`/companies/${opportunity.company_id}`}
-              className="text-sm font-semibold text-accent-2 hover:text-text"
-            >
-              {companyName}
-            </Link>
+            <span className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/companies/${opportunity.company_id}`}
+                className="text-sm font-semibold text-accent-2 hover:text-text"
+              >
+                {companyName}
+              </Link>
+              {company?.verified && <Badge tone="cyan">Verified</Badge>}
+            </span>
             <h1 className="mt-1 font-display text-[26px] font-semibold leading-tight tracking-tight">
               {opportunity.title}
             </h1>
           </div>
-          {showArc && (
-            <MatchArc matched={matched.length} required={oppSkills.length} />
-          )}
+          {isStudent &&
+            studentSkills.length >= 3 &&
+            (oppSkills.length > 0 ? (
+              <MatchArc matched={matched.length} required={oppSkills.length} />
+            ) : (
+              <div className="size-[46px] shrink-0" aria-hidden />
+            ))}
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">

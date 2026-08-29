@@ -25,7 +25,13 @@ export function CompanyLogo({
   if (src) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL
-      <img src={src} alt="" className={`${shared} object-cover`} />
+      <img
+        src={src}
+        alt=""
+        // object-contain on a neutral tile: a wide or oddly-cropped logo
+        // letterboxes inside the same box instead of breaking the row.
+        className={`${shared} bg-surface-alt object-contain p-1.5`}
+      />
     );
   }
 

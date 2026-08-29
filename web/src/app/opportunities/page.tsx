@@ -87,7 +87,7 @@ export default async function OpportunitiesPage({
   let query = supabase
     .from("opportunities")
     .select(
-      "id, type, title, description, skills, location, remote, start_date, application_deadline, companies!inner(company_name)"
+      "id, type, title, description, skills, location, remote, start_date, application_deadline, companies!inner(company_name, logo_url)"
     )
     .eq("status", "published");
 
@@ -303,9 +303,11 @@ export default async function OpportunitiesPage({
           const oppSkills = (o.skills as string[] | null) ?? [];
           const matched = showArcs ? overlap(oppSkills, studentSkills) : [];
           const matchedSet = new Set(matched.map((s) => s.toLowerCase()));
-          const companyName =
-            (o.companies as unknown as { company_name: string } | null)
-              ?.company_name ?? "ESEN partner company";
+          const companyRow = o.companies as unknown as {
+            company_name: string;
+            logo_url: string | null;
+          } | null;
+          const companyName = companyRow?.company_name ?? "ESEN partner company";
           const deadline = o.application_deadline as string | null;
 
           return (
@@ -318,7 +320,7 @@ export default async function OpportunitiesPage({
                 />
 
                 <div className="flex gap-3">
-                  <CompanyLogo name={companyName} />
+                  <CompanyLogo name={companyName} src={companyRow?.logo_url} />
 
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 text-xs text-text-faint">
@@ -331,9 +333,15 @@ export default async function OpportunitiesPage({
                     </h2>
                   </div>
 
-                  {showArcs && oppSkills.length > 0 && (
-                    <MatchArc matched={matched.length} required={oppSkills.length} />
-                  )}
+                  {/* Reserve the arc's slot for every card once arcs are on
+                      for this viewer, so titles wrap at the same width
+                      whether or not a given opportunity lists skills. */}
+                  {showArcs &&
+                    (oppSkills.length > 0 ? (
+                      <MatchArc matched={matched.length} required={oppSkills.length} />
+                    ) : (
+                      <div className="size-[46px] shrink-0" aria-hidden />
+                    ))}
                 </div>
 
                 {oppSkills.length > 0 && (
