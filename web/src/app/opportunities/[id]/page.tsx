@@ -16,6 +16,73 @@ const TYPE_LABEL: Record<string, string> = {
   freelance: "Freelance",
 };
 
+// schema.org JobPosting employmentType values
+const EMPLOYMENT_TYPE: Record<string, string> = {
+  internship: "INTERN",
+  pfe: "INTERN",
+  job: "FULL_TIME",
+  alternance: "OTHER",
+  freelance: "CONTRACTOR",
+};
+
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://esenet-platforme.vercel.app";
+
+/**
+ * Google-for-Jobs JobPosting structured data. Only emitted for a published
+ * opportunity. `directApply` is true — applying happens on this page.
+ */
+function jobPostingJsonLd(o: {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  location: string | null;
+  remote: boolean;
+  application_deadline: string | null;
+  created_at: string;
+  companyName: string;
+  companyWebsite: string | null;
+}) {
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org/",
+    "@type": "JobPosting",
+    title: o.title,
+    description: o.description,
+    datePosted: o.created_at,
+    employmentType: EMPLOYMENT_TYPE[o.type] ?? "OTHER",
+    directApply: true,
+    url: `${siteUrl}/opportunities/${o.id}`,
+    hiringOrganization: {
+      "@type": "Organization",
+      name: o.companyName,
+      ...(o.companyWebsite ? { sameAs: o.companyWebsite } : {}),
+    },
+  };
+
+  if (o.application_deadline) data.validThrough = o.application_deadline;
+
+  if (o.location) {
+    data.jobLocation = {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: o.location,
+        addressCountry: "TN",
+      },
+    };
+  }
+  if (o.remote) {
+    data.jobLocationType = "TELECOMMUTE";
+    data.applicantLocationRequirements = {
+      "@type": "Country",
+      name: "Tunisia",
+    };
+  }
+
+  return data;
+}
+
 export async function generateMetadata({
   params,
 }: PageProps<"/opportunities/[id]">): Promise<Metadata> {
@@ -60,7 +127,7 @@ export default async function OpportunityPage({
   const { data: opportunity } = await supabase
     .from("opportunities")
     .select(
-      "id, type, title, description, skills, location, remote, start_date, end_date, application_deadline, status, company_id, companies(company_name, website, logo_url)"
+      "id, type, title, description, skills, location, remote, start_date, end_date, application_deadline, status, created_at, company_id, companies(company_name, website, logo_url)"
     )
     .eq("id", id)
     .single();
@@ -122,6 +189,22 @@ export default async function OpportunityPage({
           skills: opportunity.skills ?? [],
         })
       : [];
+
+  const jsonLd =
+    opportunity.status === "published"
+      ? jobPostingJsonLd({
+          id: opportunity.id,
+          type: opportunity.type,
+          title: opportunity.title,
+          description: opportunity.description,
+          location: opportunity.location,
+          remote: opportunity.remote,
+          application_deadline: opportunity.application_deadline,
+          created_at: opportunity.created_at,
+          companyName: company?.company_name ?? "ESEN partner company",
+          companyWebsite: company?.website ?? null,
+        })
+      : null;
   const dateLabel = (iso: string | null) =>
     iso
       ? new Date(iso).toLocaleDateString(undefined, {
@@ -136,6 +219,16 @@ export default async function OpportunityPage({
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          // Company-authored fields (title/description) can contain "<" — escape
+          // it so a literal "</script>" in the text can't break out of the tag.
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+      )}
       <div className="flex items-center justify-between gap-4">
         <span className="rounded bg-accent2-soft px-2 py-0.5 font-mono text-xs uppercase tracking-wide text-accent-2">
           {TYPE_LABEL[opportunity.type] ?? opportunity.type}

@@ -298,6 +298,7 @@ rules above.
 - [ ] Root layout sets `metadataBase` (`NEXT_PUBLIC_SITE_URL` or the Vercel URL fallback) and a `%s · ESENet` title template
 - [ ] `/opportunities/[id]` `<title>` = "<title> — <company> · ESENet"; `og:title` = "<title> · <type> at <company>"; `og:description` = first 200 chars of the description; a closed/unpublished or missing id → title just "Opportunity"
 - [ ] `/companies/[id]` `<title>` = "<company> · ESENet"; `og:title`/`og:description` set from the company name + description
+- [ ] `/opportunities/[id]` emits a `<script type="application/ld+json">` `JobPosting` for a **published** opp: title, description, datePosted (= created_at), employmentType (intern/pfe→INTERN, job→FULL_TIME, alternance→OTHER, freelance→CONTRACTOR), hiringOrganization (+ `sameAs` when the company has a website), `jobLocation` PostalAddress (addressCountry TN) when a location is set, `jobLocationType: TELECOMMUTE` + `applicantLocationRequirements` when remote, `validThrough` when a deadline is set, `directApply: true`, absolute `url`. Not emitted for a closed/pending opp. `<` escaped to `<` so a `</script>` in company text can't break out. Verified in-browser (parsed the block, all fields correct).
 - [ ] Verified in-browser against live dev DB (both titles + all `og:` tags present and correct); lint + build clean
 
 ### Home page (`/`)
