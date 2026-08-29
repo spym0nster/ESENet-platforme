@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { loadOgFonts } from "@/lib/og";
 
 export const alt = "An opportunity on ESENet";
 export const size = { width: 1200, height: 630 };
@@ -26,6 +27,7 @@ export default async function Image({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const fonts = await loadOgFonts();
 
   let title = "Opportunity";
   let company = "an ESEN partner company";
@@ -63,7 +65,7 @@ export default async function Image({
           background:
             "linear-gradient(135deg, #0A0C33 0%, #171048 42%, #3C1560 72%, #641274 100%)",
           color: "#F5F3FC",
-          fontFamily: "sans-serif",
+          fontFamily: "Poppins, sans-serif",
         }}
       >
         <div
@@ -93,6 +95,6 @@ export default async function Image({
         </div>
       </div>
     ),
-    { ...size }
+    { ...size, fonts }
   );
 }

@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { loadOgFonts } from "@/lib/og";
 
 export const alt = "ESENet — the year-round ESEN talent network";
 export const size = { width: 1200, height: 630 };
@@ -7,10 +8,10 @@ export const contentType = "image/png";
 /**
  * The default link preview for every route (routes with their own
  * generateMetadata can still override `openGraph.images`). Poster gradient,
- * wordmark, one line. No custom font — the built-in sans renders clean at
- * this scale.
+ * wordmark, one line — set in Poppins, the product's display face.
  */
-export default function Image() {
+export default async function Image() {
+  const fonts = await loadOgFonts();
   return new ImageResponse(
     (
       <div
@@ -24,7 +25,7 @@ export default function Image() {
           background:
             "linear-gradient(135deg, #0A0C33 0%, #171048 42%, #3C1560 72%, #641274 100%)",
           color: "#F5F3FC",
-          fontFamily: "sans-serif",
+          fontFamily: "Poppins, sans-serif",
         }}
       >
         <div
@@ -52,6 +53,6 @@ export default function Image() {
         </div>
       </div>
     ),
-    { ...size }
+    { ...size, fonts }
   );
 }
