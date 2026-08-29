@@ -18,18 +18,25 @@ export function ProfileCompleteness({
   const missing = checks.filter((c) => !c.done);
 
   return (
-    <div className="mt-8 rounded-lg border border-accent-2/40 bg-accent2-soft/40 p-5">
+    <div className="mt-8 rounded-card border border-accent-2/40 bg-accent2-soft/40 p-5">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-mono text-xs uppercase tracking-widest text-accent-2">
           Profile {pct}% complete
         </h2>
-        <span className="font-mono text-xs text-text-faint">
+        <span className="font-mono text-xs text-text-muted">
           {done}/{total}
         </span>
       </div>
-      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-alt">
+      <div
+        className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-alt"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuetext={`${done} of ${total} done`}
+      >
         <div
-          className="h-full rounded-full bg-accent-2 transition-all"
+          className="h-full rounded-full bg-accent-2 transition-all motion-reduce:transition-none"
           style={{ width: `${pct}%` }}
         />
       </div>

@@ -22,7 +22,7 @@ export function ProfileMediaUpload({
 
   return (
     <div>
-      <span className="mb-2 block font-mono text-xs uppercase tracking-wide text-text-faint">
+      <span className="mb-2 block font-mono text-xs uppercase tracking-wide text-text-muted">
         {label}
       </span>
       <div className="flex flex-wrap items-center gap-4">
@@ -34,7 +34,7 @@ export function ProfileMediaUpload({
             className={
               isAvatar
                 ? "h-16 w-16 rounded-full object-cover"
-                : "h-16 w-32 rounded-md object-cover"
+                : "h-16 w-32 rounded-ctrl object-cover"
             }
           />
         ) : (
@@ -42,7 +42,7 @@ export function ProfileMediaUpload({
             className={
               isAvatar
                 ? "h-16 w-16 rounded-full bg-surface-alt"
-                : "h-16 w-32 rounded-md bg-surface-alt"
+                : "h-16 w-32 rounded-ctrl bg-surface-alt"
             }
           />
         )}
@@ -54,9 +54,9 @@ export function ProfileMediaUpload({
             name="file"
             accept="image/jpeg,image/png,image/webp"
             required
-            className="text-sm text-text-muted file:mr-3 file:rounded-md file:border-0 file:bg-surface-alt file:px-3 file:py-2 file:font-mono file:text-xs file:text-text-muted"
+            className="text-sm text-text-muted file:mr-3 file:rounded-ctrl file:border-0 file:bg-surface-alt file:px-3 file:py-2 file:font-mono file:text-xs file:text-text-muted"
           />
-          <Button type="submit" disabled={pending} variant="secondary" className="px-4 py-2 text-sm">
+          <Button type="submit" disabled={pending} variant="secondary" size="compact">
             {pending ? "Uploading…" : "Upload"}
           </Button>
         </form>
@@ -65,7 +65,7 @@ export function ProfileMediaUpload({
         <p className="mt-2 text-xs text-magenta">{state.error}</p>
       )}
       {state && "success" in state && (
-        <p className="mt-2 text-xs text-accent-2">Uploaded ✓ (reload to see it everywhere)</p>
+        <p className="mt-2 text-xs text-accent-2">Uploaded.</p>
       )}
     </div>
   );

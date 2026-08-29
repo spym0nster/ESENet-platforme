@@ -43,7 +43,7 @@ export function ProfileItemSection({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           {sectionTitle}
         </h2>
         <button
@@ -51,12 +51,12 @@ export function ProfileItemSection({
           onClick={() => setShowForm((v) => !v)}
           className="py-2 font-mono text-xs text-accent-2 hover:text-text"
         >
-          {showForm ? "Cancel" : "+ Add"}
+          {showForm ? "Cancel" : "Add"}
         </button>
       </div>
 
       {showForm && (
-        <form action={addAction} className="mt-3 space-y-3 rounded-md border border-border p-4">
+        <form action={addAction} className="mt-3 space-y-3 rounded-ctrl border border-border p-4">
           <input type="hidden" name="table" value={table} />
           {fields.map((f) => (
             <Field key={f.name} label={f.label}>
@@ -70,7 +70,7 @@ export function ProfileItemSection({
           {addState && "error" in addState && (
             <p className="text-xs text-magenta">{addState.error}</p>
           )}
-          <Button type="submit" disabled={addPending} className="px-4 py-2 text-xs">
+          <Button type="submit" disabled={addPending} size="compact">
             {addPending ? "Saving…" : "Save"}
           </Button>
         </form>
@@ -111,7 +111,7 @@ function ItemRow({
     <Card className="flex items-center justify-between gap-3 p-3">
       <div>
         <p className="text-sm font-medium">{item.title}</p>
-        {item.subtitle && <p className="text-xs text-text-faint">{item.subtitle}</p>}
+        {item.subtitle && <p className="text-xs text-text-muted">{item.subtitle}</p>}
       </div>
       <form action={action}>
         <input type="hidden" name="table" value={table} />

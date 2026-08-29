@@ -97,7 +97,7 @@ export default async function ProfilePage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           CV
         </h2>
         <div className="mt-3 flex flex-wrap items-center gap-4">
@@ -118,7 +118,7 @@ export default async function ProfilePage() {
 
       {studentDetails && (
         <div className="mt-10">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
             About
           </h2>
           <div className="mt-3">
@@ -210,7 +210,7 @@ export default async function ProfilePage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">Posts</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">Posts</h2>
         <div className="mt-4 space-y-5">
           {myPosts.length === 0 ? (
             <EmptyState title="No posts yet" body="Share a project, a milestone, or something you're working on in the feed." />

@@ -17,16 +17,16 @@ export function CvUploadForm({ hasExistingCv }: { hasExistingCv: boolean }) {
         name="cv"
         accept="application/pdf"
         required
-        className="text-sm text-text-muted file:mr-3 file:rounded-md file:border-0 file:bg-surface-alt file:px-3 file:py-2 file:font-mono file:text-xs file:text-text-muted"
+        className="text-sm text-text-muted file:mr-3 file:rounded-ctrl file:border-0 file:bg-surface-alt file:px-3 file:py-2 file:font-mono file:text-xs file:text-text-muted"
       />
-      <Button type="submit" disabled={pending} variant="secondary" className="px-4 py-2 text-sm">
+      <Button type="submit" disabled={pending} variant="secondary" size="compact">
         {pending ? "Uploading…" : hasExistingCv ? "Replace CV" : "Upload CV"}
       </Button>
       {state && "error" in state && (
         <span className="text-xs text-magenta">{state.error}</span>
       )}
       {state && "success" in state && (
-        <span className="text-xs text-accent-2">Uploaded ✓</span>
+        <span className="text-xs text-accent-2">Uploaded.</span>
       )}
     </form>
   );

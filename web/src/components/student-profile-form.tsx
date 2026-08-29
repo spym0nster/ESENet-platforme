@@ -41,11 +41,11 @@ export function StudentProfileForm({ details }: { details: StudentDetails }) {
       </Field>
 
       <Field label="Skills">
-        <div className="flex flex-wrap gap-2 rounded-md border border-border bg-surface p-2.5">
+        <div className="flex flex-wrap gap-2 rounded-ctrl border border-border-strong bg-surface p-2.5">
           {skills.map((skill) => (
             <span
               key={skill}
-              className="flex items-center gap-1.5 rounded bg-accent2-soft px-2 py-1 font-mono text-xs text-accent-2"
+              className="flex items-center gap-1.5 rounded-chip bg-accent2-soft px-2 py-1 font-mono text-xs text-accent-2"
             >
               {skill}
               <button
@@ -100,10 +100,7 @@ export function StudentProfileForm({ details }: { details: StudentDetails }) {
         <p className="text-sm text-magenta">{state.error}</p>
       )}
       {state && "success" in state && (
-        <p
-          className="rounded-md px-4 py-3 text-sm font-medium"
-          style={{ background: "var(--accent-soft)", color: "var(--accent-on-soft)" }}
-        >
+        <p className="rounded-ctrl border border-accent/30 bg-accent-soft px-4 py-3 text-sm font-medium text-accent-on-soft">
           Profile saved.
         </p>
       )}
