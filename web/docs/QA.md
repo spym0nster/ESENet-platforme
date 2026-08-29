@@ -251,6 +251,18 @@ rules above.
 - [ ] An expired / already-used reset link → `/reset-password` shows "invalid or expired" + "Request a new link"; a bad `code` on `/auth/callback` bounces to `/login?error=…`
 - [ ] **Needs Supabase dashboard:** `<prod-origin>/auth/callback` and `http://localhost:3000/auth/callback` are in Authentication → URL Configuration → Redirect URLs, or the email link errors out
 
+#### Transactional email (Resend via the Send Email Hook)
+Setup (once): Supabase dashboard → Authentication → Hooks → **Send Email Hook** → enable, type HTTPS, URL `<origin>/api/auth/email-hook`, generate the secret; put that secret in `SEND_EMAIL_HOOK_SECRET` and the Resend key in `RESEND_API_KEY` (local `.env.local` + Vercel). `EMAIL_FROM` optional (defaults to `onboarding@resend.dev`, which only delivers to the Resend account owner until a domain is verified).
+- [ ] With the hook enabled: `/forgot-password` → the reset email arrives **from Resend** (check Resend dashboard → Emails), styled (navy header, "Reset your password", button + one-time code), and its button lands on `/auth/callback` → `/reset-password` exactly as before
+- [ ] Signup confirmation and any magic-link email also come from Resend (same hook)
+- [ ] `POST /api/auth/email-hook` with a bad/absent signature → 401; with the secret unset → 500 `"Email hook is not configured."`; a Resend rejection → 502 (Supabase surfaces the error rather than silently dropping). *(All three verified locally against the running route with a hand-signed Standard-Webhooks payload; the `delivered@resend.dev` happy path returned 200.)*
+- [ ] **Not verified:** a real inbox delivery (needs a verified sender domain) and the dashboard hook wiring itself.
+
+#### Notification emails (optional, needs `SUPABASE_SERVICE_ROLE_KEY`)
+- [ ] With both `RESEND_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` set: every in-app notification (`notify()`) also sends the recipient an email (title + body + "View on ESENet" link), fired from `after()` so the triggering action isn't slowed; a send failure only logs
+- [ ] With `SUPABASE_SERVICE_ROLE_KEY` unset: notifications are in-app only, no `after()` work scheduled, nothing breaks
+- [ ] **Not verified end-to-end** (service-role key not available to me); the no-key path (in-app only) is covered by every existing notification test still passing.
+
 ### Company
 - [ ] Company A reaches dashboard
 - [ ] Company B reaches dashboard

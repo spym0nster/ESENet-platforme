@@ -122,7 +122,7 @@ extras. As of this writing:
 - `applications` (+ `application_status_events`) — a student applying to an opportunity, with a status history log. The company applicants view shows headline/skills inline + a signed CV link + a collapsible status history; `0018` widened CV read from owner-only to `is_company_actor`. `0021` adds an optional `note` on each status event — a message the company attaches when changing status, surfaced on the student's `/applications/[id]` timeline and in the status-change notification. Students get a per-application detail page at `/applications/[id]` (opportunity/company links, the seeded "Applied" + logged-events timeline, cover message, withdraw-while-open)
 - `saved_opportunities` — a student's bookmarks
 - `posts` / `post_comments` / `post_likes` / `content_reports` — the LinkedIn-style feed: students and company people (owner or team member) publish posts (optionally as themselves or as the company), one level of comments, simple likes, and a reporting/admin-moderation queue with soft-delete + audit trail. Authors can edit their own post's text/link in place (`editPost`, `PostBody` client component); attribution columns stay frozen by the `protect_post_admin_fields` trigger, which also stamps `updated_at` (→ "edited" marker). Comment authors can likewise edit their own comment (`editComment`, `CommentRow`); `0023` adds `post_comments.edited_at` (set by the action, not a trigger — the comment table has no `updated_at`)
-- `notifications` — per-user in-app feed (header bell dropdown — `NotificationBell`, showing the 5 most recent + auto-mark-read on open — plus the full `/notifications` page). Written best-effort from the server actions that already do the underlying mutation (`notify()` in `src/lib/notifications.ts`), never a trigger; recipient-only read/update. No email/push yet.
+- `notifications` — per-user in-app feed (header bell dropdown — `NotificationBell`, showing the 5 most recent + auto-mark-read on open — plus the full `/notifications` page). Written best-effort from the server actions that already do the underlying mutation (`notify()` in `src/lib/notifications.ts`), never a trigger; recipient-only read/update. `notify()` also mirrors each notification to email (via `after()`, best-effort) when `RESEND_API_KEY` + `SUPABASE_SERVICE_ROLE_KEY` are both set — see the transactional-email note in conventions. No push.
 
 RLS policies are already in every migration: public read for
 directory/browse/feed use cases, owner-only write, company-scoped access via
@@ -177,9 +177,26 @@ App Router under `web/src/app`, path alias `@/*` → `web/src/*`.
 - **Password reset** is `/forgot-password` → `resetPasswordForEmail` (redirect
   to `/auth/callback?next=/reset-password`) → `route.ts` does the PKCE
   `exchangeCodeForSession` → `/reset-password` form calls `updateUser`.
-  `/auth/callback` is the only route handler and the general email-link
-  landing point. **Supabase dashboard must allowlist `<origin>/auth/callback`**
-  (prod + localhost) under Authentication → URL Configuration.
+  `/auth/callback` is the general email-link landing point (the only other
+  route handler is the email hook, below). **Supabase dashboard must allowlist
+  `<origin>/auth/callback`** (prod + localhost) under Authentication → URL
+  Configuration.
+- **Transactional email** is Resend, via the Supabase **Send Email Hook** →
+  `src/app/api/auth/email-hook/route.ts` (Node runtime). Supabase POSTs a
+  Standard-Webhooks-signed payload for every auth email (recovery, signup,
+  magic link, email change, reauth); the route verifies it with
+  `SEND_EMAIL_HOOK_SECRET`, renders a template (`src/lib/email-templates.ts`),
+  and sends via `sendEmail()` (`src/lib/email.ts`, best-effort, never throws).
+  The verify link it builds is
+  `${SUPABASE_URL}/auth/v1/verify?token=<token_hash>&type=<action>&redirect_to=<redirect_to>`
+  — identical to Supabase's built-in template, so the callback flow is
+  unchanged. **Dashboard setup required:** Authentication → Hooks → Send Email
+  Hook → HTTPS → `<origin>/api/auth/email-hook`, generate the secret there and
+  put it in the env. See `web/.env.local.example`.
+  In-app notifications (`notify()`) additionally mirror to email via `after()`
+  **only when `SUPABASE_SERVICE_ROLE_KEY` is also set** (needed to resolve a
+  recipient's address — `profiles` has no email column). Absent that key,
+  notifications stay in-app only; nothing breaks.
 - **`isSupabaseConfigured()`** gates the whole app — with no env vars,
   middleware no-ops and data pages render a "connect Supabase" state instead
   of crashing.

@@ -1,5 +1,9 @@
+import { after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AppNotification, NotificationKind } from "@/types/database";
+import { isEmailConfigured, sendEmail } from "@/lib/email";
+import { renderNotificationEmail } from "@/lib/email-templates";
+import { isAdminConfigured, resolveUserEmails } from "@/lib/supabase/admin";
 
 type NotifyInput = {
   recipientId?: string;
@@ -11,6 +15,9 @@ type NotifyInput = {
   link?: string | null;
 };
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://esenet-platforme.vercel.app";
+
 /**
  * Best-effort notification insert, called from the server actions that
  * already perform the underlying mutation. Never throws and never returns
@@ -18,6 +25,11 @@ type NotifyInput = {
  * that triggered it (an application still submits even if pinging the
  * company fails). Dedups recipients and drops the actor from the list —
  * you're never notified of your own action.
+ *
+ * When email is wired up (RESEND_API_KEY + SUPABASE_SERVICE_ROLE_KEY), each
+ * recipient also gets the same notification as an email — sent via
+ * `after()` so it never adds latency to the triggering action, and still
+ * fully best-effort.
  */
 export async function notify(
   supabase: SupabaseClient,
@@ -29,7 +41,9 @@ export async function notify(
   if (input.actorId) ids.delete(input.actorId);
   if (ids.size === 0) return;
 
-  const rows = [...ids].map((recipient_id) => ({
+  const recipientIds = [...ids];
+
+  const rows = recipientIds.map((recipient_id) => ({
     recipient_id,
     actor_id: input.actorId ?? null,
     kind: input.kind,
@@ -40,6 +54,38 @@ export async function notify(
 
   const { error } = await supabase.from("notifications").insert(rows);
   if (error) console.error("notify failed:", input.kind, error);
+
+  // Email mirror — only if a provider + a way to resolve recipient emails
+  // are both configured. Deferred past the response, never blocks.
+  if (isEmailConfigured() && isAdminConfigured()) {
+    const link = input.link
+      ? `${siteUrl}${input.link.startsWith("/") ? "" : "/"}${input.link}`
+      : null;
+    try {
+      after(async () => {
+        try {
+          const emails = await resolveUserEmails(recipientIds);
+          if (emails.size === 0) return;
+          const { subject, html, text } = renderNotificationEmail({
+            title: input.title,
+            body: input.body ?? null,
+            url: link,
+          });
+          await Promise.all(
+            [...emails.values()].map((to) =>
+              sendEmail({ to, subject, html, text })
+            )
+          );
+        } catch (err) {
+          console.error("notify: email mirror failed:", input.kind, err);
+        }
+      });
+    } catch (err) {
+      // `after()` outside a request scope — shouldn't happen (notify is only
+      // called from server actions), but never let it break the caller.
+      console.error("notify: could not schedule email mirror:", err);
+    }
+  }
 }
 
 /**
