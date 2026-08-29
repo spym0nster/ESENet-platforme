@@ -21,10 +21,10 @@ export default async function NewOpportunityPage() {
         New opportunity
       </p>
       <h1 className="mt-2 font-display text-3xl font-extrabold">
-        Post an Opportunity
+        Post an opportunity
       </h1>
       <p className="mt-2 text-text-muted">
-        Create an opportunity and connect with ESEN talent.
+        Publish a role and reach ESEN students directly.
       </p>
 
       <div className="mt-10">

@@ -127,7 +127,7 @@ export default async function CompanyOnboardingPage({
                     <Card key={r.profile_id} className="p-3">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium">{r.company_name}</p>
-                        {r.verified && <Badge variant="info">Verified</Badge>}
+                        {r.verified && <Badge tone="cyan">Verified</Badge>}
                       </div>
                       <div className="mt-2">
                         <RequestToJoinButton

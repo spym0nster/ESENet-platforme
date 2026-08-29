@@ -40,10 +40,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <p className="text-sm text-magenta">{state.error}</p>
       )}
       {state && "success" in state && (
-        <p
-          className="rounded-md px-4 py-3 text-sm font-medium"
-          style={{ background: "var(--accent-soft)", color: "var(--accent-on-soft)" }}
-        >
+        <p className="rounded-ctrl border border-accent/30 bg-accent-soft px-4 py-3 text-sm font-medium text-accent-on-soft">
           Profile saved.
         </p>
       )}

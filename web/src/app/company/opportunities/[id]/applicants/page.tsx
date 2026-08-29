@@ -165,7 +165,7 @@ export default async function OpportunityApplicantsPage({
                     <div className="min-w-0">
                       <Link
                         href={`/students/${sid}`}
-                        className="font-display font-bold hover:text-accent-2"
+                        className="font-display font-semibold hover:text-accent-2"
                       >
                         {(a.profiles as unknown as { full_name: string } | null)
                           ?.full_name ?? "ESEN student"}

@@ -57,7 +57,7 @@ export default async function CompanyProfilePage() {
             {company.company_name}
           </h1>
         </div>
-        <Badge variant={company.verified ? "info" : "neutral"}>
+        <Badge tone={company.verified ? "cyan" : "neutral"}>
           {company.verified ? "Verified" : "Pending verification"}
         </Badge>
       </div>
@@ -72,7 +72,7 @@ export default async function CompanyProfilePage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Your title at this company
         </h2>
         <p className="mt-1 text-xs text-text-muted">
@@ -84,7 +84,7 @@ export default async function CompanyProfilePage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Company posts
         </h2>
         <div className="mt-4 space-y-5">

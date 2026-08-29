@@ -71,7 +71,7 @@ export default async function CompanyTeamPage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Members
         </h2>
         <ul className="mt-3 space-y-2">
@@ -103,7 +103,7 @@ export default async function CompanyTeamPage() {
 
       {transfer && transfer.from_profile_id === user.id && (
         <div className="mt-10">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
             Ownership transfer
           </h2>
           <div className="mt-3">
@@ -120,7 +120,7 @@ export default async function CompanyTeamPage() {
 
       {joinRequests && joinRequests.length > 0 && (
         <div className="mt-10">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
             Requests to join
           </h2>
           <ul className="mt-3 space-y-2">
@@ -143,7 +143,7 @@ export default async function CompanyTeamPage() {
 
       {invites && invites.length > 0 && (
         <div className="mt-10">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
             Pending invites
           </h2>
           <ul className="mt-3 space-y-2">

@@ -1,12 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
 import {
   createOpportunity,
   updateOpportunity,
   type OpportunityState,
 } from "@/app/actions/opportunities";
+import { Button, LinkButton } from "@/components/ui";
 
 const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "internship", label: "Internship" },
@@ -61,7 +61,7 @@ export function OpportunityForm({
             name="type"
             required
             defaultValue={opportunity?.type ?? ""}
-            className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
+            className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
           >
             <option value="" disabled>
               Select a type
@@ -83,7 +83,7 @@ export function OpportunityForm({
             maxLength={120}
             defaultValue={opportunity?.title ?? ""}
             placeholder="Business Intelligence PFE Intern"
-            className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
+            className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
           />
         </Field>
 
@@ -94,18 +94,18 @@ export function OpportunityForm({
             rows={6}
             defaultValue={opportunity?.description ?? ""}
             placeholder="We are looking for a Business Intelligence student to join our data team for a PFE project..."
-            className="w-full rounded-md border border-border bg-surface p-3 text-sm outline-none focus:border-accent-2"
+            className="w-full rounded-ctrl border border-border-strong bg-surface p-3 text-sm outline-none focus:border-accent-2"
           />
         </Field>
       </Section>
 
       <Section title="Requirements">
         <Field label="Skills">
-          <div className="flex flex-wrap gap-2 rounded-md border border-border bg-surface p-2.5">
+          <div className="flex flex-wrap gap-2 rounded-ctrl border border-border-strong bg-surface p-2.5">
             {skills.map((skill) => (
               <span
                 key={skill}
-                className="flex items-center gap-1.5 rounded bg-accent2-soft px-2 py-1 font-mono text-xs text-accent-2"
+                className="flex items-center gap-1.5 rounded-chip bg-accent2-soft px-2 py-1 font-mono text-xs text-accent-2"
               >
                 {skill}
                 <button
@@ -143,7 +143,7 @@ export function OpportunityForm({
             type="text"
             defaultValue={opportunity?.location ?? ""}
             placeholder="Tunis, Sousse, Hybrid…"
-            className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
+            className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
           />
         </Field>
 
@@ -163,7 +163,7 @@ export function OpportunityForm({
               name="start_date"
               type="date"
               defaultValue={opportunity?.start_date ?? ""}
-              className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
+              className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
             />
           </Field>
           <Field label="End date" error={fieldErrors?.end_date}>
@@ -171,7 +171,7 @@ export function OpportunityForm({
               name="end_date"
               type="date"
               defaultValue={opportunity?.end_date ?? ""}
-              className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
+              className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
             />
           </Field>
         </div>
@@ -184,7 +184,7 @@ export function OpportunityForm({
             name="application_deadline"
             type="date"
             defaultValue={opportunity?.application_deadline ?? ""}
-            className="w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2 sm:w-1/2"
+            className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2 sm:w-1/2"
           />
           <span className="mt-1 block text-xs text-text-faint">
             After this date students can no longer apply. Leave blank for no
@@ -197,26 +197,19 @@ export function OpportunityForm({
         <p className="text-sm text-magenta">{state.error}</p>
       )}
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-accent px-6 py-2.5 font-mono text-sm text-white disabled:opacity-60"
-        >
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" disabled={pending}>
           {pending
             ? isEdit
               ? "Saving…"
               : "Publishing…"
             : isEdit
               ? "Save changes"
-              : "Publish Opportunity"}
-        </button>
-        <Link
-          href="/company/dashboard"
-          className="rounded-md border border-border px-6 py-2.5 font-mono text-sm text-text-muted hover:text-text"
-        >
+              : "Publish opportunity"}
+        </Button>
+        <LinkButton href="/company/dashboard" variant="ghost">
           Cancel
-        </Link>
+        </LinkButton>
       </div>
     </form>
   );
