@@ -53,6 +53,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${poppins.variable} ${manrope.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* The one gradient the product is allowed: shared by every MatchArc
+            (§8 — the arc, the company banner, the active-tab underline, and
+            nowhere else). */}
+        <svg width="0" height="0" aria-hidden className="absolute">
+          <defs>
+            <linearGradient id="esenetArc" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="var(--accent-2)" />
+              <stop offset="55%" stopColor="var(--accent)" />
+              <stop offset="100%" stopColor="var(--magenta)" />
+            </linearGradient>
+          </defs>
+        </svg>
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
