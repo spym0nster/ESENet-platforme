@@ -1,6 +1,15 @@
 import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { Badge, Card } from "@/components/ui";
+
+const TYPE_TONE: Record<string, "neutral" | "cyan" | "violet" | "magenta"> = {
+  internship: "cyan",
+  alternance: "cyan",
+  pfe: "violet",
+  job: "magenta",
+  freelance: "neutral",
+};
 
 // All reads here run as `anon` via a cookie-less client. The route is still
 // rendered per-request today (the shared <SiteHeader> in the root layout
@@ -142,35 +151,43 @@ export default async function Home() {
         </div>
       </section>
 
-      {latest.length > 0 && (
-        <section className="mx-auto max-w-5xl px-6 pt-16">
-          <div className="flex items-baseline justify-between">
-            <h2 className="font-display text-xl font-bold">Latest opportunities</h2>
-            <Link
-              href="/opportunities"
-              className="font-mono text-xs uppercase tracking-wide text-accent-2 hover:text-text"
-            >
-              See all →
-            </Link>
-          </div>
+      <section className="mx-auto max-w-5xl px-6 pt-16">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-display text-xl font-semibold">Latest opportunities</h2>
+          <Link
+            href="/opportunities"
+            className="font-mono text-[11px] uppercase tracking-widest text-accent-2 hover:text-text"
+          >
+            See all
+          </Link>
+        </div>
+        {latest.length > 0 ? (
           <ul className="mt-5 grid gap-3 sm:grid-cols-2">
             {latest.map((o) => (
               <li key={o.id}>
-                <Link
-                  href={`/opportunities/${o.id}`}
-                  className="block rounded-lg border border-border bg-surface p-4 transition hover:border-accent-2/50"
-                >
-                  <span className="font-mono text-[11px] uppercase tracking-wide text-accent-2">
-                    {TYPE_LABEL[o.type] ?? o.type}
-                  </span>
-                  <p className="mt-1 font-display font-bold">{o.title}</p>
-                  <p className="text-sm text-text-muted">{o.company_name}</p>
+                <Link href={`/opportunities/${o.id}`} className="block h-full">
+                  <Card interactive className="h-full">
+                    <Badge tone={TYPE_TONE[o.type] ?? "neutral"}>
+                      {TYPE_LABEL[o.type] ?? o.type}
+                    </Badge>
+                    <p className="mt-2 font-display font-semibold">{o.title}</p>
+                    <p className="text-sm text-text-muted">{o.company_name}</p>
+                  </Card>
                 </Link>
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        ) : (
+          <p className="mt-5 rounded-card border border-border bg-surface px-4 py-3 text-sm text-text-muted [box-shadow:var(--lift)]">
+            No opportunities are open just yet — new postings show up here as
+            companies join. Meanwhile, the{" "}
+            <Link href="/feed" className="text-accent-2 hover:text-text">
+              community feed
+            </Link>{" "}
+            is live.
+          </p>
+        )}
+      </section>
 
       <section className="mx-auto max-w-5xl px-6 py-20">
         <div className="grid gap-8 sm:grid-cols-3">
