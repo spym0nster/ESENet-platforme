@@ -49,6 +49,7 @@ export default async function CompanyProfilePage({
   const { id } = await params;
   const sp = await searchParams;
   const tabParam = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
+  const before = Array.isArray(sp.before) ? sp.before[0] : sp.before;
   const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? "")
     ? (tabParam as Tab)
     : "about";
@@ -62,6 +63,7 @@ export default async function CompanyProfilePage({
   // The Posts tab is the only one that needs the viewer's identity or the
   // (join-heavy) post bodies — fetch them only when it's the active tab.
   let posts: Awaited<ReturnType<typeof fetchPosts>>["posts"] = [];
+  let postsCursor: string | null = null;
   let viewerId: string | null = null;
   let viewerName: string | null = null;
   if (tab === "posts") {
@@ -77,15 +79,18 @@ export default async function CompanyProfilePage({
         .single();
       viewerName = viewer?.full_name ?? null;
     }
+    // company-voice only, soft-deleted rows dropped in-query — matches
+    // `postCount` exactly, so a page of N and the "· N" tab agree and
+    // "Older posts" pages the same set.
     const res = await fetchPosts(supabase, {
       currentUserId: viewerId,
       companyId: id,
+      publishedAs: "company",
+      excludeRemoved: true,
+      before,
     });
-    // company_id is stamped on every post by a member; keep only the ones
-    // actually published in the company's voice.
-    posts = res.posts.filter(
-      (p) => p.published_as === "company" && !p.removed_at
-    );
+    posts = res.posts;
+    postsCursor = res.nextCursor;
   }
 
   const showRolesCta = opportunities.length > 0 && tab !== "roles";
@@ -289,18 +294,32 @@ export default async function CompanyProfilePage({
                 body={`${company.company_name} hasn't posted in the community feed.`}
               />
             ) : (
-              <div className="space-y-5">
-                {posts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    supabase={supabase}
-                    post={post}
-                    currentUserId={viewerId}
-                    currentUserName={viewerName}
-                    isAdmin={false}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="space-y-5">
+                  {posts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      supabase={supabase}
+                      post={post}
+                      currentUserId={viewerId}
+                      currentUserName={viewerName}
+                      isAdmin={false}
+                    />
+                  ))}
+                </div>
+                {postsCursor && (
+                  <div className="mt-8 text-center">
+                    <Link
+                      href={`/companies/${company.id}?tab=posts&before=${encodeURIComponent(
+                        postsCursor
+                      )}`}
+                      className="font-mono text-xs uppercase tracking-widest text-accent-2 hover:text-text"
+                    >
+                      Older posts
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
           </section>
         )}

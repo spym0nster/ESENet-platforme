@@ -37,6 +37,15 @@ export async function fetchPosts(
     currentUserId: string | null;
     authorId?: string;
     companyId?: string;
+    /** restrict to posts published in a given voice — the company page's
+     *  "Posts" tab is company-voice only, and its count must page from the
+     *  same filtered set or the two disagree once a member has also posted
+     *  personally. */
+    publishedAs?: "self" | "company";
+    /** drop soft-deleted rows in the query (not client-side) so a page of
+     *  N and a head-count of N line up. The feed leaves this off — it shows
+     *  tombstones to admins. */
+    excludeRemoved?: boolean;
     before?: string; // ISO created_at cursor, exclusive
   }
 ): Promise<{ posts: PostWithAuthor[]; nextCursor: string | null }> {
@@ -56,6 +65,8 @@ export async function fetchPosts(
 
   if (opts.authorId) query = query.eq("author_id", opts.authorId);
   if (opts.companyId) query = query.eq("company_id", opts.companyId);
+  if (opts.publishedAs) query = query.eq("published_as", opts.publishedAs);
+  if (opts.excludeRemoved) query = query.is("removed_at", null);
   if (opts.before) query = query.lt("created_at", opts.before);
 
   const { data, error } = await query;
