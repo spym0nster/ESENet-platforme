@@ -19,7 +19,7 @@ against seeded data is labelled **traced, not executed**.
 | — | Audit findings F3, F4 | ✅ done — committed |
 | 2 | Signed-in navigation (avatar menu, role-aware) | ✅ done — traced (no signed-in seed) |
 | 3 | Phase 3 item 6 — `/` landing rebuild | ✅ done — verified (public page) |
-| 4 | Phase 3 item 7 — the route sweep | ⏳ in progress |
+| 4 | Phase 3 item 7 — the route sweep | ✅ done (6 commits) — traced |
 
 ---
 
@@ -42,6 +42,32 @@ admin — `requireCompanyUser` bounces them). So the admin **bar** is
 `Opportunities · Companies · Students · Feed · Admin`, and the admin **menu**
 is Admin · Reports · Notifications · Log out. Say if you wanted a literal
 "Dashboard" entry for admins.
+
+### N5 — `/saved` data-select widened (item 7)
+
+Converting `/saved` to `OpportunityCard` + arcs needed the row query to
+select `skills`, `application_deadline`, `logo_url` (additive, same query) and
+one extra `student_details.skills` read for the arc numerator. You explicitly
+asked for arcs on `/saved`, so I took that as authorising the data it needs —
+flagging per the "stop when a design need requires a data change" rule.
+Nothing structural, no new round trip beyond the one skills read.
+
+### N6 — `opportunity-form` inputs not fully migrated (item 7)
+
+The form's action buttons became `Button`/`LinkButton` and its `rounded-md`
+inputs became `rounded-ctrl`, but the `<select>` / `<textarea>` / checkbox
+markup is still hand-rolled rather than the `Select`/`Textarea` primitives.
+DESIGN_SYSTEM.md deferred that form's migration to "next time it's modified,
+rather than a separate sweep that risks a regression" — and I can't test the
+posting flow without seed data. Finish it when the seed lands and the flow
+can be exercised.
+
+### N7 — a few list routes still have no `loading.tsx` (item 7)
+
+`/companies` and `/students` (the two directory list pages) weren't in item
+7's route list and still lack `loading.tsx`. Auth pages (`/login`, `/signup`,
+`/forgot-password`, `/reset-password`) deliberately have none — they're static
+shells around client forms with nothing async to skeleton.
 
 ### N4 — poster-gradient hex still in 3 files (item 3)
 
@@ -70,6 +96,32 @@ un-set trigger, `education.graduation_year smallint` added, `/students`
 switches to `onboarded_at IS NOT NULL` with a heuristic backfill, company that
 skipped steps 2–4 can still post (§14 closed). Migration file is written when
 the feature is built, not now. Spec only — no code.
+
+### Item 7 — The route sweep (6 commits)
+`7a` /saved · `7b` /applications + /applications/[id] + /notifications ·
+`7c` /profile + its form components · `7d` company pages (profile, team,
+opportunity new/edit, applicants) · `7e` /admin/companies + /admin/reports ·
+`7f` auth pages. One commit per area to stay under the ~6-file limit.
+
+Across all of them:
+- **Deprecated `Badge variant=` (info/success/danger) → `tone=`** everywhere —
+  `grep` for the old names now returns nothing in `src/`.
+- **All emoji gone from `src/`** — the notification `KIND_ICON` maps (bell +
+  `/notifications`), the bell's 🔔, "Uploaded ✓". `grep` for emoji ranges in
+  `src/` is now empty.
+- Section eyebrows `text-faint` → `text-muted` (the §3 AA note), `font-bold` →
+  `font-semibold` on titles, `rounded-md`/`rounded-lg` → `rounded-ctrl`/
+  `rounded-card`, inline `style={{ background: var(--accent-soft) }}` success
+  banners → token classes (4 forms).
+- `size="compact"` on the upload / add-item / opportunity-form buttons that
+  had ad-hoc `px-4 py-2 text-xs`.
+- EmptyState CTAs made primary buttons; EmptyState titles lost trailing periods.
+- Auth h1 normalised `text-2xl font-bold` → `text-3xl font-extrabold`.
+- `/saved` folded into `OpportunityCard` with the match arc (cross-company).
+- **19 `loading.tsx` files now** — added for /saved, /applications(+[id]),
+  /notifications, /profile, all 5 company routes, both admin queues.
+- **Traced, not executed** for every signed-in page. `/signup` verified in the
+  browser; lint + build clean at all six commits.
 
 ### Item 3 — Landing page (`/`)
 - Heading gradient **cut** — "From Talent Fair to Talent Network" is now solid
