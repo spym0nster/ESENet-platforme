@@ -20,6 +20,14 @@ const STATUS_LABEL: Record<string, string> = {
   closed: "Closed",
 };
 
+// Posting status is a low-stakes glance — one hue, three opacities (§4),
+// never a colour.
+const STATUS_OPACITY: Record<string, string> = {
+  published: "",
+  pending: "opacity-70",
+  closed: "opacity-50",
+};
+
 export const metadata = {
   title: "Your opportunities",
   robots: { index: false },
@@ -77,6 +85,17 @@ export default async function CompanyDashboardPage({
     }
   }
 
+  const opps = opportunities ?? [];
+  const totalApplicants = [...applicantCounts.values()].reduce((a, b) => a + b, 0);
+  const totalNew = [...newApplicantCounts.values()].reduce((a, b) => a + b, 0);
+  const stats = [
+    { label: "Published", value: opps.filter((o) => o.status === "published").length },
+    { label: "Pending", value: opps.filter((o) => o.status === "pending").length },
+    { label: "Applicants", value: totalApplicants },
+    { label: "Awaiting review", value: totalNew },
+  ];
+  const today = new Date().toISOString().slice(0, 10);
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -93,27 +112,22 @@ export default async function CompanyDashboardPage({
             Team →
           </Link>
           <LinkButton href="/company/opportunities/new" variant="primary">
-            + Post an Opportunity
+            Post an opportunity
           </LinkButton>
         </div>
       </div>
 
       {(published === "1" || updated === "1") && (
-        <p
-          className="mt-6 rounded-md px-4 py-3 text-sm font-medium"
-          style={{ background: "var(--accent-soft)", color: "var(--accent-on-soft)" }}
-        >
-          {published === "1"
-            ? "Opportunity published successfully."
-            : "Changes saved."}
+        <p className="mt-6 rounded-ctrl border border-accent/30 bg-accent-soft px-4 py-3 text-sm font-medium text-accent-on-soft">
+          {published === "1" ? "Opportunity published." : "Changes saved."}
         </p>
       )}
 
       {!company?.verified && (
-        <p className="mt-6 rounded-md border border-border bg-surface-alt px-4 py-3 text-sm text-text-muted">
-          Your company hasn&apos;t been verified by ESENet yet. Published
-          opportunities are saved and will go live for students automatically
-          as soon as verification is complete — no need to repost.
+        <p className="mt-6 rounded-ctrl border border-border bg-surface-alt px-4 py-3 text-sm text-text-muted">
+          ESENet hasn&apos;t verified your company yet. Published opportunities
+          are saved and go live for students automatically once verification
+          completes — no need to repost.
         </p>
       )}
 
@@ -123,85 +137,113 @@ export default async function CompanyDashboardPage({
         </p>
       )}
 
-      <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
-          My opportunities
-        </h2>
+      {!error && opps.length > 0 && (
+        <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-card border border-border bg-border sm:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-surface px-4 py-3">
+              <dd className="font-display text-2xl font-extrabold tabular-nums">
+                {s.value}
+              </dd>
+              <dt className="mt-0.5 font-mono text-[11px] uppercase tracking-wide text-text-faint">
+                {s.label}
+              </dt>
+            </div>
+          ))}
+        </dl>
+      )}
 
-        {!error && (!opportunities || opportunities.length === 0) ? (
+      <div className="mt-10">
+        <h2 className="font-display text-lg font-semibold">Postings</h2>
+
+        {!error && opps.length === 0 ? (
           <div className="mt-4">
             <EmptyState
-              title="You haven't posted any opportunities yet."
-              body="Create your first opportunity and connect with ESEN students."
+              title="No opportunities yet"
+              body="Post your first opportunity and start meeting ESEN students."
               action={
                 <LinkButton href="/company/opportunities/new" variant="primary">
-                  + Post an Opportunity
+                  Post an opportunity
                 </LinkButton>
               }
             />
           </div>
         ) : (
           <ul className="mt-4 space-y-3">
-            {opportunities?.map((o) => (
-              <li key={o.id}>
-                <Card>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="font-display text-base font-bold">{o.title}</h3>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={o.status === "published" ? "info" : "neutral"}>
-                        {STATUS_LABEL[o.status] ?? o.status}
-                      </Badge>
-                      {o.status === "published" && !company?.verified && (
-                        <Badge variant="neutral">Hidden — pending verification</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <p className="mt-1 text-sm text-text-muted">
-                    {TYPE_LABEL[o.type] ?? o.type}
-                    {o.location ? ` · ${o.location}` : ""}
-                    {o.remote ? " · Remote" : ""}
-                    {" · "}
-                    {new Date(o.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
-                  {o.application_deadline && (
-                    <p className="mt-0.5 font-mono text-xs text-text-faint">
-                      {o.application_deadline <
-                      new Date().toISOString().slice(0, 10)
-                        ? "Applications closed "
-                        : "Applications close "}
-                      {new Date(o.application_deadline).toLocaleDateString(
-                        "en-US",
-                        { month: "short", day: "numeric", year: "numeric" }
-                      )}
-                    </p>
-                  )}
-                  <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
-                    <Link
-                      href={`/company/opportunities/${o.id}/applicants`}
-                      className="flex items-center gap-2 py-2 font-mono text-xs text-accent-2 hover:text-text"
-                    >
-                      View applicants ({applicantCounts.get(o.id) ?? 0}) →
-                      {(newApplicantCounts.get(o.id) ?? 0) > 0 && (
-                        <Badge variant="info">
-                          {newApplicantCounts.get(o.id)} new
+            {opps.map((o) => {
+              const count = applicantCounts.get(o.id) ?? 0;
+              const fresh = newApplicantCounts.get(o.id) ?? 0;
+              const past =
+                o.application_deadline && o.application_deadline < today;
+              return (
+                <li key={o.id}>
+                  <Card>
+                    <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+                      <div className="min-w-0">
+                        <h3 className="font-display text-lg font-semibold leading-snug">
+                          {o.title}
+                        </h3>
+                        <p className="mt-1 font-mono text-xs text-text-faint">
+                          {TYPE_LABEL[o.type] ?? o.type}
+                          {o.location ? ` · ${o.location}` : ""}
+                          {o.remote ? " · Remote" : ""}
+                          {" · posted "}
+                          {new Date(o.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                        {o.application_deadline && (
+                          <p className="mt-0.5 font-mono text-xs text-text-faint">
+                            {past ? "Applications closed " : "Applications close "}
+                            {new Date(o.application_deadline).toLocaleDateString(
+                              "en-US",
+                              { month: "short", day: "numeric", year: "numeric" }
+                            )}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <Badge
+                          tone="neutral"
+                          className={STATUS_OPACITY[o.status] ?? ""}
+                        >
+                          {STATUS_LABEL[o.status] ?? o.status}
                         </Badge>
-                      )}
-                    </Link>
-                    <Link
-                      href={`/company/opportunities/${o.id}/edit`}
-                      className="py-2 font-mono text-xs text-text-muted hover:text-text"
-                    >
-                      Edit
-                    </Link>
-                    <OpportunityStatusButton opportunityId={o.id} status={o.status} />
-                  </div>
-                </Card>
-              </li>
-            ))}
+                        {o.status === "published" && !company?.verified && (
+                          <Badge tone="neutral" className="opacity-70">
+                            Hidden — pending verification
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-3">
+                      <LinkButton
+                        href={`/company/opportunities/${o.id}/applicants`}
+                        variant="secondary"
+                        size="compact"
+                      >
+                        View applicants · {count}
+                      </LinkButton>
+                      {fresh > 0 && <Badge tone="cyan">{fresh} new</Badge>}
+                      <span className="ml-auto flex items-center gap-4">
+                        <Link
+                          href={`/company/opportunities/${o.id}/edit`}
+                          className="font-mono text-xs text-text-faint hover:text-text"
+                        >
+                          Edit
+                        </Link>
+                        <OpportunityStatusButton
+                          opportunityId={o.id}
+                          status={o.status}
+                        />
+                      </span>
+                    </div>
+                  </Card>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
