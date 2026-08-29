@@ -52,13 +52,13 @@ export default async function AdminCompaniesPage() {
       )}
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Pending approval
         </h2>
         {pending.length === 0 ? (
           <div className="mt-4">
             <EmptyState
-              title="Nothing pending."
+              title="Nothing pending"
               body="Every registered company is currently verified."
             />
           </div>
@@ -68,7 +68,7 @@ export default async function AdminCompaniesPage() {
               <li key={c.profile_id}>
                 <Card className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-display font-bold">{c.company_name}</p>
+                    <p className="font-display font-semibold">{c.company_name}</p>
                     {c.website && (
                       <p className="text-sm text-text-muted">{c.website}</p>
                     )}
@@ -82,7 +82,7 @@ export default async function AdminCompaniesPage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Verified companies
         </h2>
         {verified.length === 0 ? (
@@ -92,8 +92,8 @@ export default async function AdminCompaniesPage() {
             {verified.map((c) => (
               <li key={c.profile_id}>
                 <Card className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="font-display font-bold">{c.company_name}</p>
-                  <Badge variant="info">Verified</Badge>
+                  <p className="font-display font-semibold">{c.company_name}</p>
+                  <Badge tone="cyan">Verified</Badge>
                 </Card>
               </li>
             ))}

@@ -69,10 +69,10 @@ export default async function AdminReportsPage() {
       {error && <p className="mt-8 text-sm text-magenta">Couldn&apos;t load reports: {error.message}</p>}
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">Open</h2>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">Open</h2>
         {open.length === 0 ? (
           <div className="mt-4">
-            <EmptyState title="Nothing open." body="No unresolved reports right now." />
+            <EmptyState title="Nothing open" body="No unresolved reports right now." />
           </div>
         ) : (
           <ul className="mt-4 space-y-3">
@@ -86,10 +86,10 @@ export default async function AdminReportsPage() {
                         reported by {r.reporter?.full_name ?? "someone"}
                       </span>
                     </p>
-                    <Badge variant="neutral">{r.post ? "Post" : "Comment"}</Badge>
+                    <Badge tone="neutral">{r.post ? "Post" : "Comment"}</Badge>
                   </div>
                   {r.details && <p className="text-sm text-text-muted">&ldquo;{r.details}&rdquo;</p>}
-                  <div className="rounded-md border border-border bg-surface-alt p-3 text-sm text-text-muted">
+                  <div className="rounded-ctrl border border-border bg-surface-alt p-3 text-sm text-text-muted">
                     {r.post?.body ?? r.comment?.body ?? "(content no longer available)"}
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
@@ -112,7 +112,7 @@ export default async function AdminReportsPage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Resolved / dismissed
         </h2>
         {resolved.length === 0 ? (
@@ -125,7 +125,7 @@ export default async function AdminReportsPage() {
                   <p className="text-sm text-text-muted">
                     {REASON_LABEL[r.reason] ?? r.reason} — {r.post ? "post" : "comment"}
                   </p>
-                  <Badge variant={r.status === "resolved" ? "success" : "neutral"}>{r.status}</Badge>
+                  <Badge tone={r.status === "resolved" ? "violet" : "neutral"}>{r.status}</Badge>
                 </Card>
               </li>
             ))}
