@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { EmptyState } from "@/components/ui";
+import { Avatar, Chip, EmptyState } from "@/components/ui";
 import { PostCard } from "@/components/post-card";
 import { fetchPosts } from "@/lib/posts";
 import { fetchStudentProfile, availabilityLabel } from "@/lib/students";
@@ -14,6 +14,8 @@ import type {
   Certification,
 } from "@/types/database";
 
+// Signed-in-only, and never indexed: this page holds more personal data
+// (bio, availability, full history) than anything else in the app.
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 function dateRange(start: string | null, end: string | null): string {
@@ -38,22 +40,7 @@ export default async function StudentProfilePage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return (
-      <div className="mx-auto max-w-2xl px-6 py-24 text-center">
-        <h1 className="font-display text-2xl font-bold">
-          Log in to view this profile
-        </h1>
-        <p className="mt-3 text-text-muted">
-          Student profiles are visible to signed-in members only.
-        </p>
-        <Link
-          href={`/login?next=/students/${id}`}
-          className="mt-8 inline-block rounded-md bg-accent px-6 py-3 font-semibold text-white"
-        >
-          Log in
-        </Link>
-      </div>
-    );
+    redirect(`/login?next=/students/${id}`);
   }
 
   const student = await fetchStudentProfile(supabase, id);
@@ -82,16 +69,18 @@ export default async function StudentProfilePage({
   const { posts } = await fetchPosts(supabase, {
     currentUserId: user.id,
     authorId: id,
+    excludeRemoved: true,
   });
-  const visiblePosts = posts.filter((p) => !p.removed_at);
 
   const edu = (education as Education[] | null) ?? [];
   const exp = (experiences as Experience[] | null) ?? [];
   const proj = (projects as Project[] | null) ?? [];
   const certs = (certifications as Certification[] | null) ?? [];
+  const firstName = student.full_name.split(" ")[0];
+  const isCompanyViewer = viewerProfile?.role === "company";
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-16">
+    <div className="mx-auto max-w-2xl px-6 py-10">
       <Link
         href="/students"
         className="inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
@@ -99,59 +88,66 @@ export default async function StudentProfilePage({
         ← All students
       </Link>
 
-      {student.banner_url && (
-        // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL
-        <img
-          src={student.banner_url}
-          alt=""
-          className="mt-4 h-40 w-full rounded-lg object-cover"
-        />
-      )}
-
-      <div className="mt-6 flex items-start gap-4">
-        {student.avatar_url ? (
+      {/* banner + overlapping avatar — the /companies/[id] header pattern.
+          No brand gradient here: that's the company banner's signature
+          (§8), not a treatment every profile page reuses. */}
+      <div className="mt-2 h-40 w-full overflow-hidden rounded-card bg-surface-alt [box-shadow:var(--lift)]">
+        {student.banner_url && (
           // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL
           <img
-            src={student.avatar_url}
+            src={student.banner_url}
             alt=""
-            className="h-16 w-16 shrink-0 rounded-full object-cover"
+            className="h-full w-full object-cover"
           />
-        ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-surface-alt font-display text-2xl font-bold text-text-faint">
-            {student.full_name.charAt(0).toUpperCase()}
-          </div>
         )}
-        <div className="min-w-0 flex-1">
-          <h1 className="font-display text-3xl font-extrabold">
-            {student.full_name}
-          </h1>
-          {student.headline && (
-            <p className="mt-1 text-text-muted">{student.headline}</p>
-          )}
-          <p className="mt-2 font-mono text-xs uppercase tracking-wide text-accent-2">
-            {availabilityLabel(student.availability)}
-          </p>
-        </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-4 font-mono text-xs">
-        {student.linkedin_url && (
-          <a
-            href={student.linkedin_url}
-            target="_blank"
-            rel="noreferrer"
-            className="py-2 text-accent-2 hover:text-text"
-          >
-            LinkedIn →
-          </a>
+      <div className="-mt-10 px-1">
+        <Avatar
+          name={student.full_name}
+          src={student.avatar_url}
+          size="xl"
+          className="ring-4 ring-[color:var(--bg)]"
+        />
+      </div>
+
+      <div className="mt-4">
+        <h1 className="font-display text-3xl font-extrabold">
+          {student.full_name}
+        </h1>
+        {student.headline && (
+          <p className="mt-1 text-text-muted">{student.headline}</p>
         )}
-        {viewerProfile?.role === "company" && (
-          <Link
-            href="/company/opportunities/new"
-            className="py-2 text-accent-2 hover:text-text"
-          >
-            Post an opportunity →
-          </Link>
+        <p className="mt-2 font-mono text-xs uppercase tracking-wide text-accent-2">
+          {availabilityLabel(student.availability)}
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 font-mono text-xs">
+          {student.linkedin_url && (
+            <a
+              href={student.linkedin_url}
+              target="_blank"
+              rel="noreferrer"
+              className="py-1 text-accent-2 hover:text-text"
+            >
+              LinkedIn →
+            </a>
+          )}
+          {isCompanyViewer && (
+            <Link
+              href="/company/opportunities/new"
+              className="py-1 text-accent-2 hover:text-text"
+            >
+              Post an opportunity →
+            </Link>
+          )}
+        </div>
+
+        {isCompanyViewer && (
+          <p className="mt-3 font-mono text-xs text-text-faint">
+            The CV isn&apos;t shown here — a student attaches it when they apply
+            to one of your roles.
+          </p>
         )}
       </div>
 
@@ -171,12 +167,7 @@ export default async function StudentProfilePage({
         <Section title="Skills">
           <div className="flex flex-wrap gap-2">
             {student.skills.map((skill) => (
-              <span
-                key={skill}
-                className="rounded border border-border bg-surface-alt px-2.5 py-1 font-mono text-xs text-text-muted"
-              >
-                {skill}
-              </span>
+              <Chip key={skill}>{skill}</Chip>
             ))}
           </div>
         </Section>
@@ -248,14 +239,14 @@ export default async function StudentProfilePage({
       )}
 
       <Section title="Posts">
-        {visiblePosts.length === 0 ? (
+        {posts.length === 0 ? (
           <EmptyState
             title="No posts yet"
-            body={`${student.full_name.split(" ")[0]} hasn't posted in the feed.`}
+            body={`${firstName} hasn't posted in the feed.`}
           />
         ) : (
           <div className="space-y-5">
-            {visiblePosts.map((post) => (
+            {posts.map((post) => (
               <PostCard
                 key={post.id}
                 supabase={supabase}
@@ -281,9 +272,7 @@ function Section({
 }) {
   return (
     <div className="mt-10">
-      <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
-        {title}
-      </h2>
+      <h2 className="font-display text-lg font-semibold text-text">{title}</h2>
       <div className="mt-3">{children}</div>
     </div>
   );
@@ -302,7 +291,7 @@ function ItemList({ items }: { items: DisplayItem[] }) {
     <ul className="space-y-4">
       {items.map((item) => (
         <li key={item.id} className="border-l-2 border-border pl-4">
-          <p className="font-display font-bold">{item.title}</p>
+          <p className="font-display font-semibold">{item.title}</p>
           {item.subtitle &&
             (item.subtitleHref ? (
               <a
