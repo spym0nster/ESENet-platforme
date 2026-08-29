@@ -102,6 +102,8 @@
   --color-accent2-soft: var(--accent2-soft);
   --color-magenta: var(--magenta);
   --color-magenta-soft: var(--magenta-soft);
+  --color-accent-on-soft: var(--accent-on-soft);
+  --color-magenta-on-soft: var(--magenta-on-soft);
   --font-display: var(--font-poppins);
   --font-sans: var(--font-manrope);
   --font-mono: var(--font-plex-mono);

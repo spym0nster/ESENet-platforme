@@ -1,9 +1,15 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from "react";
 
+/**
+ * A form field needs a visible edge (`--border-strong`, not the `--border`
+ * hairline that dividers use). Focus lights the border cyan and the global
+ * `:focus-visible` ring lands on top. Radius matches the control scale (10).
+ */
 const controlClass =
-  "w-full rounded-md border border-border bg-surface p-2.5 text-sm outline-none focus:border-accent-2";
+  "w-full rounded-ctrl border border-border-strong bg-surface p-3 text-sm " +
+  "placeholder:text-text-faint focus:border-accent-2";
 
-/** Label + form control + inline error, wrapping any single child control. */
+/** Label + control + inline error, wrapping any single child control. */
 export function Field({
   label,
   error,
@@ -15,11 +21,11 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block font-mono text-xs uppercase tracking-wide text-text-faint">
+      <span className="mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-text-faint">
         {label}
       </span>
       {children}
-      {error && <span className="mt-1 block text-xs text-magenta">{error}</span>}
+      {error && <span className="mt-1.5 block text-xs text-magenta">{error}</span>}
     </label>
   );
 }
@@ -29,9 +35,7 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
 }
 
 export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea {...props} className={`${controlClass} p-3 ${props.className ?? ""}`} />
-  );
+  return <textarea {...props} className={`${controlClass} ${props.className ?? ""}`} />;
 }
 
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
