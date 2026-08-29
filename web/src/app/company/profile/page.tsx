@@ -12,6 +12,11 @@ import { fetchPosts } from "@/lib/posts";
 import { PostCard } from "@/components/post-card";
 import type { Company } from "@/types/database";
 
+export const metadata = {
+  title: "Company profile",
+  robots: { index: false },
+};
+
 export default async function CompanyProfilePage() {
   if (!isSupabaseConfigured()) {
     notFound();

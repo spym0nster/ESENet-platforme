@@ -32,6 +32,11 @@ function badgeVariant(status: ApplicationStatus): "info" | "success" | "danger" 
   return "neutral";
 }
 
+export const metadata = {
+  title: "My applications",
+  robots: { index: false },
+};
+
 export default async function MyApplicationsPage() {
   if (!isSupabaseConfigured()) {
     notFound();

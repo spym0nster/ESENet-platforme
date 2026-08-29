@@ -3,6 +3,11 @@ import { requireCompanyUser } from "@/lib/auth/require-company";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { OpportunityForm } from "@/components/opportunity-form";
 
+export const metadata = {
+  title: "Post an opportunity",
+  robots: { index: false },
+};
+
 export default async function NewOpportunityPage() {
   if (!isSupabaseConfigured()) {
     notFound();

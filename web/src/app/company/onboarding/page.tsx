@@ -12,6 +12,11 @@ function firstParam(v: string | string[] | undefined): string {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
+export const metadata = {
+  title: "Set up your company",
+  robots: { index: false },
+};
+
 export default async function CompanyOnboardingPage({
   searchParams,
 }: PageProps<"/company/onboarding">) {

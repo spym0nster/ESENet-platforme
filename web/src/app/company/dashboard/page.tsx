@@ -20,6 +20,11 @@ const STATUS_LABEL: Record<string, string> = {
   closed: "Closed",
 };
 
+export const metadata = {
+  title: "Your opportunities",
+  robots: { index: false },
+};
+
 export default async function CompanyDashboardPage({
   searchParams,
 }: PageProps<"/company/dashboard">) {

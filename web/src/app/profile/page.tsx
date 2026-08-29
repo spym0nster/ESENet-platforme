@@ -25,6 +25,11 @@ function dateRange(start: string | null, end: string | null): string {
   return `${start ? fmt(start) : "?"} – ${end ? fmt(end) : "Present"}`;
 }
 
+export const metadata = {
+  title: "My profile",
+  robots: { index: false },
+};
+
 export default async function ProfilePage() {
   if (!isSupabaseConfigured()) {
     notFound();

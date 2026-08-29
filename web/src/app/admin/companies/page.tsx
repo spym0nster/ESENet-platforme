@@ -5,6 +5,11 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { Card, Badge, EmptyState } from "@/components/ui";
 import { VerifyCompanyButton } from "@/components/verify-company-button";
 
+export const metadata = {
+  title: "Company verification",
+  robots: { index: false },
+};
+
 export default async function AdminCompaniesPage() {
   if (!isSupabaseConfigured()) {
     notFound();

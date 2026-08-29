@@ -15,6 +15,11 @@ const STATUS_ORDER = [
   "withdrawn",
 ];
 
+export const metadata = {
+  title: "Admin overview",
+  robots: { index: false },
+};
+
 export default async function AdminOverviewPage() {
   if (!isSupabaseConfigured()) notFound();
 

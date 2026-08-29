@@ -13,6 +13,11 @@ const TYPE_LABEL: Record<string, string> = {
   freelance: "Freelance",
 };
 
+export const metadata = {
+  title: "Saved opportunities",
+  robots: { index: false },
+};
+
 export default async function SavedOpportunitiesPage() {
   if (!isSupabaseConfigured()) {
     notFound();

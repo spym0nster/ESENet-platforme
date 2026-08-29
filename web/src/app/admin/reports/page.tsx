@@ -26,6 +26,11 @@ type ReportRow = {
   comment: { id: string; body: string; removed_at: string | null } | null;
 };
 
+export const metadata = {
+  title: "Content reports",
+  robots: { index: false },
+};
+
 export default async function AdminReportsPage() {
   if (!isSupabaseConfigured()) {
     notFound();

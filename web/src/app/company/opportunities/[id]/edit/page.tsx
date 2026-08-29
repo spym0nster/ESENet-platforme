@@ -4,6 +4,11 @@ import { requireCompanyUser } from "@/lib/auth/require-company";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { OpportunityForm } from "@/components/opportunity-form";
 
+export const metadata = {
+  title: "Edit opportunity",
+  robots: { index: false },
+};
+
 export default async function EditOpportunityPage({
   params,
 }: PageProps<"/company/opportunities/[id]/edit">) {

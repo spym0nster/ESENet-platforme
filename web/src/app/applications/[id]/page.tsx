@@ -48,6 +48,11 @@ const OPEN_STATUSES: ApplicationStatus[] = [
   "interview",
 ];
 
+export const metadata = {
+  title: "Application",
+  robots: { index: false },
+};
+
 export default async function ApplicationDetailPage({
   params,
 }: PageProps<"/applications/[id]">) {

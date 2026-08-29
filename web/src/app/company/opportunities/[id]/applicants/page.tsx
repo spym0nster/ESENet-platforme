@@ -24,6 +24,11 @@ function shortDate(iso: string) {
   });
 }
 
+export const metadata = {
+  title: "Applicants",
+  robots: { index: false },
+};
+
 export default async function OpportunityApplicantsPage({
   params,
 }: PageProps<"/company/opportunities/[id]/applicants">) {

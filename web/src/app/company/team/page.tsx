@@ -9,6 +9,11 @@ import {
   IncomingOwnershipTransfer,
 } from "@/components/ownership-transfer";
 
+export const metadata = {
+  title: "Team",
+  robots: { index: false },
+};
+
 export default async function CompanyTeamPage() {
   if (!isSupabaseConfigured()) {
     notFound();
