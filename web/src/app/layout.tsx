@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en",
   },
+  twitter: {
+    card: "summary_large_image",
+  },
   manifest: "/manifest.webmanifest",
 };
 
