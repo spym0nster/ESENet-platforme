@@ -3,18 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { markAllNotificationsRead } from "@/app/actions/notifications";
-import type { AppNotification, NotificationKind } from "@/types/database";
-
-const KIND_ICON: Record<NotificationKind, string> = {
-  application_received: "📥",
-  application_status_changed: "📣",
-  application_withdrawn: "↩️",
-  join_request_received: "🙋",
-  join_request_approved: "✅",
-  join_request_declined: "🚫",
-  ownership_transfer_proposed: "👑",
-  post_comment: "💬",
-};
+import type { AppNotification } from "@/types/database";
 
 function timeAgo(iso: string): string {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -75,29 +64,41 @@ export function NotificationBell({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="py-3 hover:text-white"
+        className="relative flex items-center py-3 text-[color:var(--header-fg)] transition hover:text-white"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={
           unread > 0 ? `Notifications, ${unread} unread` : "Notifications"
         }
       >
-        {unread > 0 ? (
-          <span className="rounded-full bg-accent px-2 py-0.5 text-white">
-            🔔 {unread > 9 ? "9+" : unread}
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+          <path
+            d="M10 3a4 4 0 0 0-4 4c0 2.5-.6 4.2-1.4 5.3-.4.6 0 1.4.8 1.4h9.2c.8 0 1.2-.8.8-1.4C14.6 11.2 14 9.5 14 7a4 4 0 0 0-4-4Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M8.5 16a1.5 1.5 0 0 0 3 0"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+        {unread > 0 && (
+          <span className="absolute -right-1.5 -top-0.5 min-w-4 rounded-full bg-accent px-1 text-center font-sans text-[10px] font-semibold leading-4 text-white">
+            {unread > 9 ? "9+" : unread}
           </span>
-        ) : (
-          <span aria-hidden>🔔</span>
         )}
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-lg border border-border bg-surface text-left normal-case tracking-normal shadow-xl"
+          className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-surface text-left normal-case tracking-normal [box-shadow:var(--lift)]"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-            <span className="font-display text-sm font-bold text-text">
+            <span className="font-display text-sm font-semibold text-text">
               Notifications
             </span>
             <Link
@@ -118,9 +119,6 @@ export function NotificationBell({
               {recent.map((n) => {
                 const body = (
                   <div className="flex gap-2.5 px-4 py-3">
-                    <span className="text-base leading-none" aria-hidden>
-                      {KIND_ICON[n.kind] ?? "•"}
-                    </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-text">{n.title}</p>
                       {n.body && (
