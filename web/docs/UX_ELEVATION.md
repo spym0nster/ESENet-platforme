@@ -96,16 +96,28 @@ skill tags, section eyebrows. Never for prose.
 
 ## 4. Component contracts
 
-**Card** — `--surface`, 1px `--line`, `--lift`, radius 16. Interactive variant
-adds on hover: `translateY(-3px)`, border → `rgba(123,83,253,.45)`, `--glow`,
-and a 2px gradient hairline across the top edge. Static cards get none of it —
-hover lift means "this is clickable".
+**Card** — `--surface`, 1px `--border`, `--lift`, radius 16. Interactive
+variant adds on hover: `translateY(-3px)` and `--glow`. Nothing else — no
+border-colour jump (the glow already says it, and `.09` → `.45` flickers) and
+**no gradient hairline** (§8 caps the gradient at three places; a hover
+hairline on every card would be a fourth, and it's desktop-only decoration
+besides). The reference HTML shows a hairline; the HTML is superseded here.
+Static cards get none of this — hover lift means "this whole thing is a link".
 
 **Button** — three levels, visually distinct at a glance: `primary` (solid
-violet, soft violet shadow), `secondary` (transparent, `--line-strong` border,
-violet border + 10% violet wash on hover), `ghost` (text only). Every button
-gets `:active { translateY(1px) }`. Labels are verbs and stay identical through
-the flow: the button says *Postuler*, the toast says *Candidature envoyée*.
+violet, soft violet shadow), `secondary` (transparent, `--border-strong`
+border, violet border + 10% violet wash on hover), `ghost` (text only).
+
+Every button gets **both** a hover state and `:active { translateY(1px) }`.
+Hover confirms "this is interactive" before you commit; `:active` only fires
+after. Primary's hover is a lift in shadow or a 4–6% lighten — restrained, but
+never nothing. Two sizes: default 44px, and `compact` at 36px for buttons that
+sit inside a dense row (an applicant's status control, a dashboard row action).
+36px with real spacing around it clears the WCAG target-size minimum; a 44px
+button in a table row makes the row look inflated.
+
+Labels are verbs and stay identical through the flow: the button says *Apply*,
+the toast says *Application sent*, the timeline says *Application sent*.
 
 **Badge** — one colour per opportunity type, mapped to the existing accents:
 PFE → violet, Stage/Alternance → cyan, Emploi → magenta, Freelance → neutral.
@@ -151,11 +163,18 @@ use generic grey rectangles.
 5. **Dashboards** — one stat row, then the actual work list. Don't build a
    dashboard of cards-in-cards. On the company dashboard, give each row one
    obvious primary path (view applicants) and demote the rest.
-6. **`/` landing** — last, because it's the page a student sees least and the
+6. **`/` landing** — because it's the page a student sees least and the
    one a *company* sees first. It holds the most raw hex in the app and the
    only gradient-clipped heading text. Rebuild it from tokens, cut the heading
    gradient, and move real opportunities above the feature cards: proof beats
    promise.
+7. **Sweep the rest** — `/saved`, `/applications`, `/applications/[id]`,
+   `/notifications`, `/profile`, `/company/profile`, `/company/team`,
+   `/company/opportunities/new` + `/edit`, `/admin/*`, and the auth pages.
+   Not a redesign: swap in the primitives, drop the emoji icons, fix the
+   `h1` that's a different size on the auth pages, apply `compact` buttons
+   where rows went chunky, and give every route a `loading.tsx`. Without this
+   the app ends up elevated on six routes and untouched on twenty.
 
 ## 6. Quality floor (not negotiable, not announced)
 
