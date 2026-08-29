@@ -1,21 +1,23 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStudentUser } from "@/lib/auth/require-student";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { Badge, EmptyState } from "@/components/ui";
-import { SaveOpportunityButton } from "@/components/save-opportunity-button";
-
-const TYPE_LABEL: Record<string, string> = {
-  internship: "Internship",
-  pfe: "PFE",
-  job: "Job",
-  alternance: "Alternance",
-  freelance: "Freelance",
-};
+import { EmptyState, LinkButton } from "@/components/ui";
+import { OpportunityCard } from "@/components/opportunity-card";
 
 export const metadata = {
   title: "Saved opportunities",
   robots: { index: false },
+};
+
+type SavedRow = {
+  id: string;
+  title: string;
+  type: string;
+  skills: string[] | null;
+  location: string | null;
+  remote: boolean;
+  application_deadline: string | null;
+  companies: { company_name: string; logo_url: string | null } | null;
 };
 
 export default async function SavedOpportunitiesPage() {
@@ -25,13 +27,29 @@ export default async function SavedOpportunitiesPage() {
 
   const { supabase, user } = await requireStudentUser("/saved");
 
-  const { data: saved, error } = await supabase
-    .from("saved_opportunities")
-    .select(
-      "opportunity_id, opportunities(id, title, type, location, remote, companies(company_name))"
-    )
-    .eq("student_id", user.id)
-    .order("created_at", { ascending: false });
+  const [{ data: saved, error }, { data: details }] = await Promise.all([
+    supabase
+      .from("saved_opportunities")
+      .select(
+        "opportunity_id, opportunities(id, title, type, skills, location, remote, application_deadline, companies(company_name, logo_url))"
+      )
+      .eq("student_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("student_details")
+      .select("skills")
+      .eq("profile_id", user.id)
+      .maybeSingle(),
+  ]);
+
+  const studentSkills = (details?.skills as string[] | null) ?? [];
+  const showArc = studentSkills.length >= 3;
+
+  // RLS silently omits the embedded opportunity if it's no longer publicly
+  // visible (closed, or unverified) — drop those rows.
+  const rows = (saved ?? [])
+    .map((r) => r.opportunities as unknown as SavedRow | null)
+    .filter((o): o is SavedRow => Boolean(o));
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -48,54 +66,42 @@ export default async function SavedOpportunitiesPage() {
         </p>
       )}
 
-      {!error && (!saved || saved.length === 0) ? (
+      {!error && rows.length === 0 ? (
         <div className="mt-8">
           <EmptyState
-            title="Nothing saved yet."
-            body="Save opportunities while browsing to come back to them later."
+            title="Nothing saved yet"
+            body="Save opportunities while browsing and they land here for later."
             action={
-              <Link href="/opportunities" className="inline-block py-2 font-mono text-sm text-accent-2">
-                Browse opportunities →
-              </Link>
+              <LinkButton href="/opportunities" variant="primary">
+                Browse opportunities
+              </LinkButton>
             }
           />
         </div>
       ) : (
         <ul className="mt-8 space-y-4">
-          {saved?.map((row) => {
-            // RLS silently omits the embedded opportunity if it's no longer
-            // publicly visible (closed, or unverified) — skip those rows.
-            const o = row.opportunities as unknown as {
-              id: string;
-              title: string;
-              type: string;
-              location: string | null;
-              remote: boolean;
-              companies: { company_name: string } | null;
-            } | null;
-            if (!o) return null;
-            return (
-              <li key={row.opportunity_id}>
-                <div className="rounded-lg border border-border bg-surface p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="info">{TYPE_LABEL[o.type] ?? o.type}</Badge>
-                      {o.location && (
-                        <span className="text-xs text-text-faint">{o.location}</span>
-                      )}
-                    </div>
-                    <SaveOpportunityButton opportunityId={o.id} initiallySaved={true} />
-                  </div>
-                  <Link href={`/opportunities/${o.id}`} className="mt-2 block">
-                    <h2 className="font-display text-lg font-bold">{o.title}</h2>
-                    <p className="mt-1 text-sm text-text-muted">
-                      {o.companies?.company_name ?? "ESEN partner company"}
-                    </p>
-                  </Link>
-                </div>
-              </li>
-            );
-          })}
+          {rows.map((o) => (
+            <li key={o.id}>
+              <OpportunityCard
+                opportunity={{
+                  id: o.id,
+                  type: o.type,
+                  title: o.title,
+                  skills: o.skills,
+                  location: o.location,
+                  remote: o.remote,
+                  application_deadline: o.application_deadline,
+                  company: {
+                    name: o.companies?.company_name ?? "ESEN partner company",
+                    logo_url: o.companies?.logo_url ?? null,
+                  },
+                }}
+                viewerSkills={studentSkills}
+                showArc={showArc}
+                saved
+              />
+            </li>
+          ))}
         </ul>
       )}
     </div>

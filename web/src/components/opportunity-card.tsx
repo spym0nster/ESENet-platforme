@@ -6,12 +6,11 @@ import { SaveOpportunityButton } from "@/components/save-opportunity-button";
  * The opportunity card — one whole-card tap target for a posting. Live on:
  *   - /opportunities              the browse list
  *   - /companies/[id]?tab=roles   a company's open roles
+ *   - /saved                      a student's bookmarks (arcs on — cross-company)
  *
- * Two more surfaces still render their own inline variants and should fold
- * into this component in the §5 item-7 sweep (not before — they need props
- * this doesn't have yet):
- *   - /saved            its own denser card with a remove control
- *   - / (home)          the "Latest opportunities" strip tiles
+ * One surface still renders its own inline variant:
+ *   - / (home)          the "Latest opportunities" strip tiles — a smaller
+ *                       2-up tile, deliberately not this card
  *
  * Viewer personalization (match arc, matched-skill highlight, save toggle)
  * is opt-in through props, so a caller that doesn't have the signed-in
