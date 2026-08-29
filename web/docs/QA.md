@@ -295,6 +295,10 @@ rules above.
 - [ ] "Share on LinkedIn" opens `linkedin.com/sharing/share-offsite/?url=<absolute>` in a new tab
 - [ ] Verified in-browser: buttons render on both pages, LinkedIn URL + origin resolve correctly, clipboard API present in a secure context (the copy toast needs a real user gesture — not reproduced by the automated click, failure path confirmed harmless)
 
+### Accessibility / structured data
+- [ ] Pressing Tab on any page first focuses a "Skip to content" link (top-left, accent bg) that jumps to `<main id="main-content">` (`.skip-link` in globals.css — off-screen until `:focus`). Verified in-browser with a real Tab press (screenshot).
+- [ ] Home page emits an `Organization` JSON-LD block (name, url, logo, description, `parentOrganization` = ESEN / Manouba / TN). Verified in-browser (parsed).
+
 ### Error / not-found pages
 - [ ] A bad URL (unknown route, or `/opportunities/<bad-id>`, `/companies/<bad-id>`) renders the branded 404 (`src/app/not-found.tsx`) — "This page isn't here", Browse opportunities / Go home buttons — not the default Next page
 - [ ] An uncaught render error shows `src/app/error.tsx` ("We hit an unexpected error", Try again / Go home, logs to console with the digest ref) — verified by code review only, not triggered

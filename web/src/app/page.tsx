@@ -6,6 +6,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 // rendered per-request today (the shared <SiteHeader> in the root layout
 // reads auth cookies), but this page adds no auth dependency of its own.
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://esenet-platforme.vercel.app";
+
 const TYPE_LABEL: Record<string, string> = {
   internship: "Internship",
   pfe: "PFE",
@@ -62,11 +65,34 @@ async function getHomeData(): Promise<{
   };
 }
 
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "ESENet",
+  description:
+    "ESENet — the year-round talent network connecting ESEN students, alumni, companies and startups.",
+  url: siteUrl,
+  logo: `${siteUrl}/logo.png`,
+  parentOrganization: {
+    "@type": "CollegeOrUniversity",
+    name: "École Supérieure de l'Économie Numérique (ESEN)",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Manouba",
+      addressCountry: "TN",
+    },
+  },
+};
+
 export default async function Home() {
   const { openRoles, companies, latest } = await getHomeData();
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+      />
       <section className="relative overflow-hidden bg-[linear-gradient(180deg,#0A0C33_0%,#171048_42%,#3C1560_72%,#641274_100%)] px-6 py-28 text-white">
         <div className="mx-auto max-w-3xl text-center">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#A79FD6]">
