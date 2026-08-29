@@ -17,6 +17,13 @@ import { SaveOpportunityButton } from "@/components/save-opportunity-button";
  * is opt-in through props, so a caller that doesn't have the signed-in
  * student's context — e.g. the public company page — renders the card with
  * nothing extra to fetch.
+ *
+ * Match-arc rule (so the item-7 sweep doesn't have to guess): the arc
+ * renders on CROSS-company lists where a student is triaging between
+ * employers — browse (/opportunities), the recommended strip, /saved, and
+ * the detail hero. Never on a SINGLE-company list: on /companies/[id]
+ * every row is the same employer, so the comparison the arc exists for
+ * isn't there. That's why `showArc` is per-call-site, not inferred.
  */
 
 const TYPE_LABEL: Record<string, string> = {

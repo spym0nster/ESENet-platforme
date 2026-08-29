@@ -355,7 +355,7 @@ function TabLink({
       aria-current={active ? "page" : undefined}
       className={`relative -mb-px py-3 transition ${
         active
-          ? "text-text after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:rounded-full after:bg-[linear-gradient(90deg,#7B53FD,#1AA6FC)]"
+          ? "text-text after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:rounded-full after:bg-accent"
           : "text-text-faint hover:text-text"
       }`}
     >
