@@ -5,3 +5,5 @@ export { Badge } from "./badge";
 export { EmptyState } from "./empty-state";
 export { Skeleton } from "./skeleton";
 export { MatchArc } from "./match-arc";
+export { CompanyLogo } from "./company-logo";
+export { Chip } from "./chip";

@@ -25,6 +25,9 @@
   --glow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 30px -12px rgba(123, 83, 253, 0.55);
   /* The soft violet cast under a primary button. */
   --btn-shadow: 0 6px 18px -8px rgba(123, 83, 253, 0.9);
+  /* Company-logo fallback tile. #2a1e6e is the one hex the spec pins that
+     isn't a brand token — the dark end of the poster gradient (§4). */
+  --logo-grad: linear-gradient(140deg, #2a1e6e, var(--accent) 55%, var(--magenta));
   --accent: #7b53fd;
   --accent-2: #1aa6fc;
   --accent-ink: #0b0e36;
