@@ -17,11 +17,14 @@
   --border: rgba(245, 243, 252, 0.09);
   /* A visible edge, for things that need one: inputs, secondary buttons. */
   --border-strong: rgba(245, 243, 252, 0.16);
-  /* Depth on a dark ground is light, not shadow: a 1px top highlight. */
+  /* Depth on a dark ground is light, not shadow: a 1px top highlight.
+     Applied via [box-shadow:var(--lift)] — not Tailwind's --shadow-* keys,
+     whose colored-shadow machinery drops a multi-part inset value. */
   --lift: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  /* Hover only. Carries the lift so it can be swapped in as one value. */
-  --glow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 10px 30px -12px rgba(123, 83, 253, 0.55);
+  /* Hover only. Carries the lift so it swaps in as one value. */
+  --glow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 30px -12px rgba(123, 83, 253, 0.55);
+  /* The soft violet cast under a primary button. */
+  --btn-shadow: 0 6px 18px -8px rgba(123, 83, 253, 0.9);
   --accent: #7b53fd;
   --accent-2: #1aa6fc;
   --accent-ink: #0b0e36;
@@ -46,8 +49,8 @@
     --border: #ddd7f0;
     --border-strong: #cbc2e3;
     --lift: 0 1px 2px rgba(23, 20, 60, 0.05);
-    --glow: 0 1px 2px rgba(23, 20, 60, 0.05),
-      0 12px 30px -12px rgba(106, 62, 224, 0.28);
+    --glow: 0 1px 2px rgba(23, 20, 60, 0.05), 0 12px 30px -12px rgba(106, 62, 224, 0.28);
+    --btn-shadow: 0 6px 18px -8px rgba(106, 62, 224, 0.5);
     --accent: #6a3ee0;
     --accent-2: #08699e;
     --accent-ink: #ffffff;
@@ -70,8 +73,8 @@
   --border: #ddd7f0;
   --border-strong: #cbc2e3;
   --lift: 0 1px 2px rgba(23, 20, 60, 0.05);
-  --glow: 0 1px 2px rgba(23, 20, 60, 0.05),
-    0 12px 30px -12px rgba(106, 62, 224, 0.28);
+  --glow: 0 1px 2px rgba(23, 20, 60, 0.05), 0 12px 30px -12px rgba(106, 62, 224, 0.28);
+  --btn-shadow: 0 6px 18px -8px rgba(106, 62, 224, 0.5);
   --accent: #6a3ee0;
   --accent-2: #08699e;
   --accent-ink: #ffffff;
@@ -102,17 +105,12 @@
   --font-display: var(--font-poppins);
   --font-sans: var(--font-manrope);
   --font-mono: var(--font-plex-mono);
-  /* var() kept live so cards follow the theme swap */
-  --shadow-lift: var(--lift);
-  --shadow-glow: var(--glow);
 }
 
 @theme {
   --radius-card: 16px;
   --radius-ctrl: 10px;
   --radius-chip: 6px;
-  /* the soft violet cast under a primary button */
-  --shadow-button: 0 6px 18px -8px rgba(123, 83, 253, 0.9);
 }
 
 body {
