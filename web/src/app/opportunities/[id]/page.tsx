@@ -8,6 +8,7 @@ import { ApplyForm } from "@/components/apply-form";
 import { SaveOpportunityButton } from "@/components/save-opportunity-button";
 import { ShareButton } from "@/components/share-button";
 import { fetchSimilarOpportunities } from "@/lib/opportunities";
+import { Badge, Card, Chip, CompanyLogo, MatchArc } from "@/components/ui";
 
 const TYPE_LABEL: Record<string, string> = {
   internship: "Internship",
@@ -15,6 +16,14 @@ const TYPE_LABEL: Record<string, string> = {
   job: "Job",
   alternance: "Alternance",
   freelance: "Freelance",
+};
+
+const TYPE_TONE: Record<string, "neutral" | "cyan" | "violet" | "magenta"> = {
+  internship: "cyan",
+  alternance: "cyan",
+  pfe: "violet",
+  job: "magenta",
+  freelance: "neutral",
 };
 
 // schema.org JobPosting employmentType values
@@ -75,10 +84,7 @@ function jobPostingJsonLd(o: {
   }
   if (o.remote) {
     data.jobLocationType = "TELECOMMUTE";
-    data.applicantLocationRequirements = {
-      "@type": "Country",
-      name: "Tunisia",
-    };
+    data.applicantLocationRequirements = { "@type": "Country", name: "Tunisia" };
   }
 
   return data;
@@ -114,14 +120,39 @@ export async function generateMetadata({
   };
 }
 
+function fmtDate(iso: string | null): string | null {
+  return iso
+    ? new Date(iso).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+}
+
+/** case-insensitive overlap */
+function overlap(a: string[], b: string[]): string[] {
+  const set = new Set(b.map((s) => s.toLowerCase()));
+  return a.filter((s) => set.has(s.toLowerCase()));
+}
+
+function Fact({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="font-mono text-[10px] uppercase tracking-widest text-text-faint">
+        {label}
+      </p>
+      <p className="mt-1 font-display text-sm font-medium">{children}</p>
+    </div>
+  );
+}
+
 export default async function OpportunityPage({
   params,
 }: PageProps<"/opportunities/[id]">) {
   const { id } = await params;
 
-  if (!isSupabaseConfigured()) {
-    notFound();
-  }
+  if (!isSupabaseConfigured()) notFound();
 
   const supabase = await createClient();
 
@@ -133,9 +164,7 @@ export default async function OpportunityPage({
     .eq("id", id)
     .single();
 
-  if (!opportunity) {
-    notFound();
-  }
+  if (!opportunity) notFound();
 
   const {
     data: { user },
@@ -144,6 +173,7 @@ export default async function OpportunityPage({
   let alreadyApplied = false;
   let isStudent = false;
   let isSaved = false;
+  let studentSkills: string[] = [];
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -161,6 +191,13 @@ export default async function OpportunityPage({
     alreadyApplied = Boolean(existing);
 
     if (isStudent) {
+      const { data: details } = await supabase
+        .from("student_details")
+        .select("skills")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+      studentSkills = details?.skills ?? [];
+
       const { data: saved } = await supabase
         .from("saved_opportunities")
         .select("opportunity_id")
@@ -176,18 +213,25 @@ export default async function OpportunityPage({
     website: string | null;
     logo_url: string | null;
   } | null;
+  const companyName = company?.company_name ?? "ESEN partner company";
 
   const todayIso = new Date().toISOString().slice(0, 10);
   const deadlinePassed =
     Boolean(opportunity.application_deadline) &&
     opportunity.application_deadline! < todayIso;
-  const applicationsClosed = opportunity.status !== "published" || deadlinePassed;
+  const applicationsClosed =
+    opportunity.status !== "published" || deadlinePassed;
+
+  const oppSkills = (opportunity.skills as string[] | null) ?? [];
+  const showArc = isStudent && studentSkills.length >= 3 && oppSkills.length > 0;
+  const matched = showArc ? overlap(oppSkills, studentSkills) : [];
+  const matchedSet = new Set(matched.map((s) => s.toLowerCase()));
 
   const similar =
     opportunity.status === "published"
       ? await fetchSimilarOpportunities(supabase, {
           opportunityId: opportunity.id,
-          skills: opportunity.skills ?? [],
+          skills: oppSkills,
         })
       : [];
 
@@ -202,155 +246,128 @@ export default async function OpportunityPage({
           remote: opportunity.remote,
           application_deadline: opportunity.application_deadline,
           created_at: opportunity.created_at,
-          companyName: company?.company_name ?? "ESEN partner company",
+          companyName,
           companyWebsite: company?.website ?? null,
         })
       : null;
-  const dateLabel = (iso: string | null) =>
-    iso
-      ? new Date(iso).toLocaleDateString(undefined, {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
+
+  const durationLabel =
+    opportunity.start_date && opportunity.end_date
+      ? monthsBetween(opportunity.start_date, opportunity.end_date)
       : null;
-  const deadlineLabel = dateLabel(opportunity.application_deadline);
-  const startLabel = dateLabel(opportunity.start_date);
-  const endLabel = dateLabel(opportunity.end_date);
+  const deadlineLabel = fmtDate(opportunity.application_deadline);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       {jsonLd && (
         <script
           type="application/ld+json"
-          // Company-authored fields (title/description) can contain "<" — escape
-          // it so a literal "</script>" in the text can't break out of the tag.
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
           }}
         />
       )}
-      <div className="flex items-center justify-between gap-4">
-        <span className="rounded bg-accent2-soft px-2 py-0.5 font-mono text-xs uppercase tracking-wide text-accent-2">
-          {TYPE_LABEL[opportunity.type] ?? opportunity.type}
-        </span>
-        <div className="flex items-center gap-4">
-          <ShareButton path={`/opportunities/${opportunity.id}`} />
-          {isStudent && (
-            <SaveOpportunityButton
-              opportunityId={opportunity.id}
-              initiallySaved={isSaved}
-            />
+
+      <Link
+        href="/opportunities"
+        className="font-mono text-[11px] uppercase tracking-widest text-accent-2 hover:text-text"
+      >
+        ← All opportunities
+      </Link>
+
+      <Card className="mt-4 p-6">
+        <div className="flex gap-4">
+          <CompanyLogo name={companyName} src={company?.logo_url} size="lg" />
+          <div className="min-w-0 flex-1">
+            <Link
+              href={`/companies/${opportunity.company_id}`}
+              className="text-sm font-semibold text-accent-2 hover:text-text"
+            >
+              {companyName}
+            </Link>
+            <h1 className="mt-1 font-display text-[26px] font-semibold leading-tight tracking-tight">
+              {opportunity.title}
+            </h1>
+          </div>
+          {showArc && (
+            <MatchArc matched={matched.length} required={oppSkills.length} />
           )}
         </div>
-      </div>
-      <div className="mt-3 flex items-center gap-3">
-        {company?.logo_url && (
-          // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL
-          <img
-            src={company.logo_url}
-            alt=""
-            className="h-10 w-10 rounded-full object-cover"
-          />
-        )}
-        <h1 className="font-display text-3xl font-extrabold">
-          {opportunity.title}
-        </h1>
-      </div>
-      <p className="mt-1 text-text-muted">
-        <Link
-          href={`/companies/${opportunity.company_id}`}
-          className="text-accent-2 hover:text-text"
-        >
-          {company?.company_name ?? "ESEN partner company"}
-        </Link>
-        {opportunity.location ? ` · ${opportunity.location}` : ""}
-        {opportunity.remote ? " · Remote" : ""}
-        {company?.website && (
-          <>
-            {" · "}
-            <a
-              href={company.website}
-              target="_blank"
-              rel="noreferrer"
-              className="text-accent-2 hover:text-text"
-            >
-              Website
-            </a>
-          </>
-        )}
-      </p>
 
-      {(startLabel || endLabel) && (
-        <p className="mt-4 font-mono text-xs text-text-muted">
-          {startLabel && endLabel
-            ? `${startLabel} → ${endLabel}`
-            : startLabel
-              ? `Starts ${startLabel}`
-              : `Until ${endLabel}`}
-        </p>
-      )}
+        <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">
+          <Fact label="Type">
+            {TYPE_LABEL[opportunity.type] ?? opportunity.type}
+            {durationLabel ? ` · ${durationLabel}` : ""}
+          </Fact>
+          <Fact label="Location">
+            {opportunity.location ?? (opportunity.remote ? "Remote" : "—")}
+          </Fact>
+          <Fact label="Starts">{fmtDate(opportunity.start_date) ?? "—"}</Fact>
+          <Fact label="Closes">
+            {deadlineLabel ? (
+              <span className={deadlinePassed ? "text-text-faint" : "text-magenta-on-soft"}>
+                {deadlineLabel}
+              </span>
+            ) : (
+              "No deadline"
+            )}
+          </Fact>
+        </div>
 
-      {deadlineLabel && (
-        <p
-          className={`mt-2 font-mono text-xs ${
-            deadlinePassed ? "text-text-faint" : "text-accent-2"
-          }`}
-        >
-          {deadlinePassed
-            ? `Applications closed on ${deadlineLabel}`
-            : `Apply by ${deadlineLabel}`}
-        </p>
-      )}
+        <div className="mt-6">
+          {alreadyApplied || !applicationsClosed ? (
+            <ApplyForm
+              opportunityId={opportunity.id}
+              alreadyApplied={alreadyApplied}
+              saveButton={
+                isStudent && !alreadyApplied ? (
+                  <SaveOpportunityButton
+                    opportunityId={opportunity.id}
+                    initiallySaved={isSaved}
+                  />
+                ) : undefined
+              }
+            />
+          ) : (
+            <p className="rounded-ctrl border border-border bg-surface-alt px-4 py-3 text-sm text-text-muted">
+              {deadlinePassed
+                ? "The application deadline for this opportunity has passed."
+                : "This opportunity isn't accepting applications right now."}
+            </p>
+          )}
+        </div>
+      </Card>
 
-      <p className="mt-8 whitespace-pre-wrap text-text">
+      <div className="mt-8 whitespace-pre-wrap leading-relaxed text-text">
         {opportunity.description}
-      </p>
+      </div>
 
-      {opportunity.skills?.length > 0 && (
+      {oppSkills.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">
-          {opportunity.skills.map((skill: string) => (
-            <span
-              key={skill}
-              className="rounded border border-border bg-surface-alt px-2.5 py-1 font-mono text-xs text-text-muted"
-            >
-              {skill}
-            </span>
+          {oppSkills.map((s) => (
+            <Chip key={s} match={matchedSet.has(s.toLowerCase())}>
+              {s}
+            </Chip>
           ))}
         </div>
       )}
 
-      <div className="mt-10 border-t border-border pt-8">
-        {alreadyApplied || !applicationsClosed ? (
-          <ApplyForm
-            opportunityId={opportunity.id}
-            alreadyApplied={alreadyApplied}
-          />
-        ) : (
-          <p className="rounded-md border border-border bg-surface-alt px-4 py-3 text-sm text-text-muted">
-            {deadlinePassed
-              ? "The application deadline for this opportunity has passed."
-              : "This opportunity isn't accepting applications right now."}
-          </p>
-        )}
-      </div>
-
       {similar.length > 0 && (
         <div className="mt-12 border-t border-border pt-8">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+          <p className="font-mono text-[11px] uppercase tracking-widest text-text-faint">
             Similar opportunities
-          </h2>
+          </p>
           <ul className="mt-4 space-y-2">
             {similar.map((o) => (
               <li key={o.id}>
                 <Link
                   href={`/opportunities/${o.id}`}
-                  className="flex flex-wrap items-baseline gap-x-2 rounded-md px-3 py-2 hover:bg-surface-alt"
+                  className="flex flex-wrap items-baseline gap-x-2 rounded-ctrl px-3 py-2 hover:bg-surface"
                 >
-                  <span className="font-mono text-[11px] uppercase tracking-wide text-accent-2">
+                  <Badge tone={TYPE_TONE[o.type] ?? "neutral"}>
                     {TYPE_LABEL[o.type] ?? o.type}
-                  </span>
-                  <span className="font-display text-sm font-bold">{o.title}</span>
+                  </Badge>
+                  <span className="font-display text-sm font-semibold">{o.title}</span>
                   <span className="text-sm text-text-muted">{o.company_name}</span>
                 </Link>
               </li>
@@ -358,6 +375,20 @@ export default async function OpportunityPage({
           </ul>
         </div>
       )}
+
+      <div className="mt-10 border-t border-border pt-6">
+        <ShareButton path={`/opportunities/${opportunity.id}`} />
+      </div>
     </div>
   );
+}
+
+function monthsBetween(start: string, end: string): string {
+  const s = new Date(start);
+  const e = new Date(end);
+  const months = Math.max(
+    1,
+    Math.round((e.getTime() - s.getTime()) / (30.4 * 864e5))
+  );
+  return `${months} month${months === 1 ? "" : "s"}`;
 }
