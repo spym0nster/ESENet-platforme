@@ -28,6 +28,11 @@
   /* Company-logo fallback tile. #2a1e6e is the one hex the spec pins that
      isn't a brand token — the dark end of the poster gradient (§4). */
   --logo-grad: linear-gradient(140deg, #2a1e6e, var(--accent) 55%, var(--magenta));
+  /* The marketing hero band. §8 allows a gradient on the landing page (never
+     behind a signed-in screen). Same four stops as the OG cards and the
+     company banner — defined once here instead of re-inlined. Theme-fixed:
+     the hero is dark in both themes, like --header-bg. */
+  --poster-grad: linear-gradient(180deg, #0a0c33 0%, #171048 42%, #3c1560 72%, #641274 100%);
   /* The header sits on a fixed dark ground in both themes — the wordmark's
      near-white glyphs only read there — so its colours don't follow the
      theme swap. Defined once, never overridden in the light blocks. */

@@ -18,8 +18,8 @@ against seeded data is labelled **traced, not executed**.
 | 1 | Onboarding spec (`ONBOARDING.md`) | ✅ done — rulings baked in, committed |
 | — | Audit findings F3, F4 | ✅ done — committed |
 | 2 | Signed-in navigation (avatar menu, role-aware) | ✅ done — traced (no signed-in seed) |
-| 3 | Phase 3 item 6 — `/` landing rebuild | ⏳ in progress |
-| 4 | Phase 3 item 7 — the route sweep | ◻ not started |
+| 3 | Phase 3 item 6 — `/` landing rebuild | ✅ done — verified (public page) |
+| 4 | Phase 3 item 7 — the route sweep | ⏳ in progress |
 
 ---
 
@@ -43,6 +43,14 @@ admin — `requireCompanyUser` bounces them). So the admin **bar** is
 is Admin · Reports · Notifications · Log out. Say if you wanted a literal
 "Dashboard" entry for admins.
 
+### N4 — poster-gradient hex still in 3 files (item 3)
+
+`--poster-grad` now tokenises the hero. The same four-stop gradient is still
+raw hex in `companies/[id]/page.tsx` (as a **135°** diagonal, not 180°) and in
+both `opengraph-image.tsx` routes. The OG routes genuinely can't use the token
+(`next/og` / Satori runs with no stylesheet). The company banner could adopt
+`--poster-grad` if you're fine standardising it to one angle. Low priority.
+
 ### N3 — mobile section links still wrap (item 2)
 
 The account menu collapses to a bottom sheet at <640px as specced. The four
@@ -62,6 +70,27 @@ un-set trigger, `education.graduation_year smallint` added, `/students`
 switches to `onboarded_at IS NOT NULL` with a heuristic backfill, company that
 skipped steps 2–4 can still post (§14 closed). Migration file is written when
 the feature is built, not now. Spec only — no code.
+
+### Item 3 — Landing page (`/`)
+- Heading gradient **cut** — "From Talent Fair to Talent Network" is now solid
+  white (§8, and the item asked for it).
+- All raw hex gone from `page.tsx`. The hero band's four-stop gradient moved
+  into a new CSS token `--poster-grad` in `globals.css` (same pattern as the
+  existing `--logo-grad`; §8 permits a gradient on the marketing page). Hero
+  text colours are now `text-white/60|70|80` instead of `#A79FD6` / `#D8D4F0`
+  / `#B3ADD9`.
+- Hero CTAs: `rounded-md` → `rounded-ctrl`, 44px min height, `:active` press,
+  `motion-reduce` guard. Feature cards now compose the `Card` primitive
+  (`rounded-lg` → `rounded-card`), `font-bold` → `font-semibold`.
+- `py-28` (off-scale) → `py-24 sm:py-32`; `mt-5` → `mt-6`.
+- Real opportunities already sat above the feature cards (added in an earlier
+  commit) — order kept, section tidied.
+- Verified in the browser at desktop + mobile: solid heading, gradient band,
+  n=1 opportunity tile renders, no console errors. lint + build clean.
+- **Still carrying poster-gradient hex inline** (out of scope for item 6, not
+  touched): `companies/[id]` `BANNER_GRADIENT` (a 135° variant), and the two
+  `opengraph-image.tsx` routes (the `next/og` runtime can't read CSS custom
+  properties). See Needs Bilel N4.
 
 ### Item 2 — Signed-in navigation
 - New `AvatarMenu` client component (`src/components/avatar-menu.tsx`): click to
