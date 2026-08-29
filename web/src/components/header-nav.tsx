@@ -84,15 +84,20 @@ export function HeaderNav({
           </button>
         </form>
       ) : (
-        <>
-          <NavItem href="/login">Log in</NavItem>
+        <span className="flex items-center gap-2 sm:ml-2 sm:border-l sm:border-white/15 sm:pl-4">
+          <Link
+            href="/login"
+            className="inline-flex min-h-9 items-center rounded-ctrl border border-border-strong px-4 font-sans text-xs font-semibold normal-case tracking-normal text-[color:var(--header-fg)] transition hover:border-white/40 hover:text-white active:translate-y-px"
+          >
+            Log in
+          </Link>
           <Link
             href="/signup"
             className="inline-flex min-h-9 items-center rounded-ctrl bg-accent px-4 font-sans text-xs font-semibold normal-case tracking-normal text-white transition hover:brightness-105 active:translate-y-px"
           >
             Sign up
           </Link>
-        </>
+        </span>
       )}
     </nav>
   );
