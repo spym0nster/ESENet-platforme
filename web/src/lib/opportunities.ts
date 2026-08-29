@@ -10,6 +10,8 @@ export type RecommendedOpportunity = {
   remote: boolean;
   matchCount: number;
   matchedSkills: string[];
+  /** the opportunity's own skill count — the arc's denominator */
+  requiredCount: number;
 };
 
 /**
@@ -57,9 +59,8 @@ export async function fetchRecommendedOpportunities(
         (o.application_deadline as string) >= todayIso
     )
     .map((o) => {
-      const matched = ((o.skills as string[] | null) ?? []).filter((s) =>
-        wanted.has(s.toLowerCase())
-      );
+      const required = (o.skills as string[] | null) ?? [];
+      const matched = required.filter((s) => wanted.has(s.toLowerCase()));
       return {
         id: o.id as string,
         type: o.type as OpportunityType,
@@ -71,6 +72,7 @@ export async function fetchRecommendedOpportunities(
         remote: Boolean(o.remote),
         matchCount: matched.length,
         matchedSkills: matched,
+        requiredCount: required.length,
       };
     })
     .filter((o) => o.matchCount > 0)

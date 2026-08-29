@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { Badge, EmptyState, Input, Select } from "@/components/ui";
+import {
+  Badge,
+  Card,
+  Chip,
+  CompanyLogo,
+  EmptyState,
+  Input,
+  MatchArc,
+  Select,
+} from "@/components/ui";
 import { SaveOpportunityButton } from "@/components/save-opportunity-button";
 import { fetchRecommendedOpportunities } from "@/lib/opportunities";
 import type { OpportunityType } from "@/types/database";
@@ -12,6 +21,14 @@ const TYPE_LABEL: Record<string, string> = {
   job: "Job",
   alternance: "Alternance",
   freelance: "Freelance",
+};
+
+const TYPE_TONE: Record<string, "neutral" | "cyan" | "violet" | "magenta"> = {
+  internship: "cyan",
+  alternance: "cyan",
+  pfe: "violet",
+  job: "magenta",
+  freelance: "neutral",
 };
 
 const TYPE_OPTIONS: OpportunityType[] = [
@@ -32,30 +49,22 @@ type SortKey = keyof typeof SORT_OPTIONS;
 
 const PAGE_SIZE = 20;
 
+/** case-insensitive overlap of two skill lists */
+function overlap(a: string[], b: string[]): string[] {
+  const set = new Set(b.map((s) => s.toLowerCase()));
+  return a.filter((s) => set.has(s.toLowerCase()));
+}
+
 export default async function OpportunitiesPage({
   searchParams,
 }: PageProps<"/opportunities">) {
   if (!isSupabaseConfigured()) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-24 text-center">
-        <h1 className="font-display text-2xl font-bold">
-          Connect Supabase to see opportunities
-        </h1>
-        <p className="mt-3 text-text-muted">
-          Add your project URL and anon key to{" "}
-          <code className="rounded bg-surface-alt px-1.5 py-0.5 font-mono text-sm">
-            .env.local
-          </code>{" "}
-          (see{" "}
-          <code className="rounded bg-surface-alt px-1.5 py-0.5 font-mono text-sm">
-            .env.local.example
-          </code>
-          ) and run{" "}
-          <code className="rounded bg-surface-alt px-1.5 py-0.5 font-mono text-sm">
-            supabase/schema.sql
-          </code>{" "}
-          in the Supabase SQL editor.
-        </p>
+      <div className="mx-auto max-w-md px-6 py-24">
+        <EmptyState
+          title="Connect Supabase to see opportunities"
+          body="Add your project URL and anon key to .env.local, then run the SQL in supabase/."
+        />
       </div>
     );
   }
@@ -67,12 +76,12 @@ export default async function OpportunitiesPage({
   const company = firstParam(sp.company);
   const skill = firstParam(sp.skill);
   const sort: SortKey =
-    sp.sort === "starting_soon" || sp.sort === "deadline"
-      ? sp.sort
-      : "newest";
+    sp.sort === "starting_soon" || sp.sort === "deadline" ? sp.sort : "newest";
   const page = Math.max(1, parseInt(firstParam(sp.page), 10) || 1);
 
   const hasFilters = Boolean(q || type || location || company || skill);
+  // "More filters" opens on its own when one of the hidden ones is in use
+  const advancedActive = Boolean(q || location || company || sort !== "newest");
 
   const supabase = await createClient();
   let query = supabase
@@ -89,32 +98,18 @@ export default async function OpportunitiesPage({
   if (type && TYPE_OPTIONS.includes(type as OpportunityType)) {
     query = query.eq("type", type);
   }
-  if (location) {
-    query = query.ilike("location", `%${location}%`);
-  }
-  if (company) {
-    query = query.ilike("companies.company_name", `%${company}%`);
-  }
-  if (skill) {
-    query = query.contains("skills", [skill]);
-  }
+  if (location) query = query.ilike("location", `%${location}%`);
+  if (company) query = query.ilike("companies.company_name", `%${company}%`);
+  if (skill) query = query.contains("skills", [skill]);
 
   if (sort === "starting_soon") {
     query = query.order("start_date", { ascending: true, nullsFirst: false });
   } else if (sort === "deadline") {
-    query = query.order("application_deadline", {
-      ascending: true,
-      nullsFirst: false,
-    });
+    query = query.order("application_deadline", { ascending: true, nullsFirst: false });
   } else {
     query = query.order("created_at", { ascending: false });
   }
 
-  // Fetch one extra row past the page size instead of a separate COUNT
-  // query — its presence alone tells us whether a next page exists, no
-  // second round trip needed. Was previously unbounded (every published,
-  // verified opportunity in one query) — fine at QA scale, not at real
-  // volume.
   const offset = (page - 1) * PAGE_SIZE;
   query = query.range(offset, offset + PAGE_SIZE);
 
@@ -151,49 +146,51 @@ export default async function OpportunitiesPage({
         .from("saved_opportunities")
         .select("opportunity_id")
         .eq("student_id", user.id)
-        .in(
-          "opportunity_id",
-          opportunities.map((o) => o.id)
-        );
+        .in("opportunity_id", opportunities.map((o) => o.id));
       for (const row of saved ?? []) savedIds.add(row.opportunity_id);
     }
   }
 
   const now = new Date();
   const todayIso = now.toISOString().slice(0, 10);
-  const soonIso = new Date(now.getTime() + 7 * 864e5)
-    .toISOString()
-    .slice(0, 10);
+  const soonIso = new Date(now.getTime() + 7 * 864e5).toISOString().slice(0, 10);
+  const showArcs = isStudent && studentSkills.length >= 3;
 
-  // Skill-overlap recommendations — only worth showing on the unfiltered
-  // first page (once a student is searching, that intent wins).
   const recommended =
     isStudent && !hasFilters && page === 1 && studentSkills.length > 0
-      ? await fetchRecommendedOpportunities(supabase, studentSkills, {
-          limit: 4,
-        })
+      ? await fetchRecommendedOpportunities(supabase, studentSkills, { limit: 4 })
       : [];
+
+  // A real number for the "nothing matched your filters" state.
+  let openCount: number | null = null;
+  if (hasFilters && (!opportunities || opportunities.length === 0)) {
+    const { count } = await supabase
+      .from("opportunities")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published");
+    openCount = count ?? null;
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
-      <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
+      <p className="font-mono text-[11px] uppercase tracking-widest text-accent-2">
         Opportunities
       </p>
-      <h1 className="mt-3 font-display text-3xl font-extrabold">
-        Internships &amp; PFE, published by real companies
+      <h1 className="mt-2 font-display text-[29px] font-semibold tracking-tight">
+        Internships, PFE and jobs from ESEN companies
       </h1>
 
-      <form className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" action="/opportunities">
+      <form
+        className="mt-8 grid gap-3 sm:grid-cols-[1fr_auto_auto]"
+        action="/opportunities"
+      >
         <Input
-          name="q"
-          defaultValue={q}
-          placeholder="Keyword…"
-          className="lg:col-span-2"
-          aria-label="Keyword"
+          name="skill"
+          defaultValue={skill}
+          placeholder="Skill — e.g. SQL, React"
+          aria-label="Skill"
         />
-        <Input name="company" defaultValue={company} placeholder="Company" aria-label="Company" />
-        <Input name="location" defaultValue={location} placeholder="Location" aria-label="Location" />
-        <Select name="type" defaultValue={type ?? ""} aria-label="Type">
+        <Select name="type" defaultValue={type ?? ""} aria-label="Type" className="sm:w-44">
           <option value="">Any type</option>
           {TYPE_OPTIONS.map((t) => (
             <option key={t} value={t}>
@@ -201,55 +198,67 @@ export default async function OpportunitiesPage({
             </option>
           ))}
         </Select>
-        <Input name="skill" defaultValue={skill} placeholder="Skill (e.g. SQL)" aria-label="Skill" />
-        <Select name="sort" defaultValue={sort} aria-label="Sort by">
-          {Object.entries(SORT_OPTIONS).map(([value, label]) => (
-            <option key={value} value={value}>
-              Sort: {label}
-            </option>
-          ))}
-        </Select>
-        <div className="flex items-center gap-3 lg:col-span-2">
-          <button
-            type="submit"
-            className="rounded-md bg-accent px-5 py-2.5 font-mono text-sm text-white"
+        <button
+          type="submit"
+          className="inline-flex min-h-11 items-center justify-center rounded-ctrl bg-accent px-5 font-sans text-sm font-semibold text-white transition duration-150 hover:brightness-105 active:translate-y-px"
+        >
+          Search
+        </button>
+
+        <details open={advancedActive} className="group sm:col-span-3">
+          <summary className="cursor-pointer list-none py-2 font-mono text-[11px] uppercase tracking-widest text-text-faint hover:text-text">
+            <span className="group-open:hidden">More filters</span>
+            <span className="hidden group-open:inline">Fewer filters</span>
+          </summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Input name="q" defaultValue={q} placeholder="Keyword" aria-label="Keyword" className="lg:col-span-2" />
+            <Input name="company" defaultValue={company} placeholder="Company" aria-label="Company" />
+            <Input name="location" defaultValue={location} placeholder="Location" aria-label="Location" />
+            <Select name="sort" defaultValue={sort} aria-label="Sort by" className="sm:col-span-2 lg:col-span-1">
+              {Object.entries(SORT_OPTIONS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  Sort: {label}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </details>
+
+        {hasFilters && (
+          <Link
+            href="/opportunities"
+            className="font-mono text-[11px] uppercase tracking-widest text-text-muted hover:text-text sm:col-span-3"
           >
-            Search
-          </button>
-          {hasFilters && (
-            <Link href="/opportunities" className="py-2 font-mono text-xs text-text-muted hover:text-text">
-              Clear filters
-            </Link>
-          )}
-        </div>
+            Clear filters
+          </Link>
+        )}
       </form>
 
       {recommended.length > 0 && (
-        <section className="mt-10 rounded-lg border border-accent-2/30 bg-accent2-soft/40 p-5">
-          <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
+        <section className="mt-10">
+          <p className="font-mono text-[11px] uppercase tracking-widest text-accent-2">
             Recommended for you
-          </p>
-          <p className="mt-1 text-sm text-text-muted">
-            Based on the skills on your profile.
           </p>
           <ul className="mt-4 space-y-2">
             {recommended.map((o) => (
               <li key={o.id}>
                 <Link
                   href={`/opportunities/${o.id}`}
-                  className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-md px-3 py-2 hover:bg-surface"
+                  className="flex items-center gap-3 rounded-ctrl px-3 py-2 hover:bg-surface"
                 >
-                  <span className="font-display text-sm font-bold">
-                    {o.title}
-                    <span className="ml-2 font-sans font-normal text-text-muted">
-                      {o.company_name}
+                  {o.requiredCount > 0 ? (
+                    <MatchArc matched={o.matchCount} required={o.requiredCount} className="scale-[0.78]" />
+                  ) : null}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-display text-sm font-semibold">
+                      {o.title}
                     </span>
-                  </span>
-                  <span className="font-mono text-xs text-accent-2">
-                    {o.matchCount} skill{o.matchCount === 1 ? "" : "s"} match
-                    {o.matchedSkills.length > 0
-                      ? ` · ${o.matchedSkills.slice(0, 3).join(", ")}`
-                      : ""}
+                    <span className="block truncate text-xs text-text-muted">
+                      {o.company_name}
+                      {o.matchedSkills.length > 0
+                        ? ` · ${o.matchedSkills.slice(0, 3).join(", ")}`
+                        : ""}
+                    </span>
                   </span>
                 </Link>
               </li>
@@ -267,16 +276,21 @@ export default async function OpportunitiesPage({
       {!error && (!opportunities || opportunities.length === 0) && (
         <div className="mt-8">
           <EmptyState
-            title={hasFilters ? "No opportunities match your filters." : "No opportunities published yet."}
+            title={hasFilters ? "Nothing matches these filters" : "No opportunities yet"}
             body={
               hasFilters
-                ? "Try clearing a filter or searching a broader term."
+                ? openCount
+                  ? `${openCount} ${openCount === 1 ? "opportunity is" : "opportunities are"} open right now — try a broader skill or clear a filter.`
+                  : "Try a broader skill, or clear a filter."
                 : "Once a verified company posts one, it shows up here."
             }
             action={
               hasFilters ? (
-                <Link href="/opportunities" className="inline-block py-2 font-mono text-sm text-accent-2">
-                  Clear filters →
+                <Link
+                  href="/opportunities"
+                  className="font-mono text-xs uppercase tracking-widest text-accent-2 hover:text-text"
+                >
+                  Clear filters
                 </Link>
               ) : undefined
             }
@@ -285,60 +299,92 @@ export default async function OpportunitiesPage({
       )}
 
       <ul className="mt-8 space-y-4">
-        {opportunities?.map((o) => (
-          <li key={o.id}>
-            <div className="rounded-lg border border-border bg-surface p-6 transition hover:border-accent-2/50">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="info">{TYPE_LABEL[o.type] ?? o.type}</Badge>
-                  {o.location && (
-                    <span className="text-xs text-text-faint">{o.location}</span>
+        {opportunities?.map((o) => {
+          const oppSkills = (o.skills as string[] | null) ?? [];
+          const matched = showArcs ? overlap(oppSkills, studentSkills) : [];
+          const matchedSet = new Set(matched.map((s) => s.toLowerCase()));
+          const companyName =
+            (o.companies as unknown as { company_name: string } | null)
+              ?.company_name ?? "ESEN partner company";
+          const deadline = o.application_deadline as string | null;
+
+          return (
+            <li key={o.id}>
+              <Card interactive className="relative">
+                <Link
+                  href={`/opportunities/${o.id}`}
+                  className="absolute inset-0 rounded-card"
+                  aria-label={`${o.title} at ${companyName}`}
+                />
+
+                <div className="flex gap-3">
+                  <CompanyLogo name={companyName} />
+
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-2 text-xs text-text-faint">
+                      <span className="truncate text-text-muted">{companyName}</span>
+                      {o.location && <span className="font-mono">· {o.location}</span>}
+                      {o.remote && <span className="font-mono">· Remote</span>}
+                    </p>
+                    <h2 className="mt-0.5 font-display text-lg font-semibold leading-snug">
+                      {o.title}
+                    </h2>
+                  </div>
+
+                  {showArcs && oppSkills.length > 0 && (
+                    <MatchArc matched={matched.length} required={oppSkills.length} />
                   )}
-                  {o.remote && (
-                    <span className="text-xs text-text-faint">Remote</span>
-                  )}
-                  {o.application_deadline &&
-                    o.application_deadline < todayIso && (
-                      <span className="font-mono text-xs text-text-faint">
-                        Applications closed
-                      </span>
-                    )}
-                  {o.application_deadline &&
-                    o.application_deadline >= todayIso &&
-                    o.application_deadline <= soonIso && (
-                      <Badge variant="danger">
-                        Closes{" "}
-                        {new Date(o.application_deadline).toLocaleDateString(
-                          undefined,
-                          { day: "numeric", month: "short" }
-                        )}
-                      </Badge>
-                    )}
                 </div>
-                {isStudent && (
-                  <SaveOpportunityButton
-                    opportunityId={o.id}
-                    initiallySaved={savedIds.has(o.id)}
-                  />
+
+                {oppSkills.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {oppSkills.slice(0, 5).map((s) => (
+                      <Chip key={s} match={matchedSet.has(s.toLowerCase())}>
+                        {s}
+                      </Chip>
+                    ))}
+                    {oppSkills.length > 5 && (
+                      <Chip>+{oppSkills.length - 5}</Chip>
+                    )}
+                  </div>
                 )}
-              </div>
-              <Link href={`/opportunities/${o.id}`} className="mt-2 block">
-                <h2 className="font-display text-lg font-bold">{o.title}</h2>
-                <p className="mt-1 text-sm text-text-muted">
-                  {(o.companies as unknown as { company_name: string } | null)
-                    ?.company_name ?? "ESEN partner company"}
-                </p>
-              </Link>
-            </div>
-          </li>
-        ))}
+
+                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-3 text-xs text-text-faint">
+                  <Badge tone={TYPE_TONE[o.type] ?? "neutral"}>
+                    {TYPE_LABEL[o.type] ?? o.type}
+                  </Badge>
+                  {deadline && deadline < todayIso && (
+                    <span className="font-mono">Applications closed</span>
+                  )}
+                  {deadline && deadline >= todayIso && deadline <= soonIso && (
+                    <span className="font-mono text-magenta-on-soft">
+                      Closes{" "}
+                      {new Date(deadline).toLocaleDateString(undefined, {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </span>
+                  )}
+                  {isStudent && (
+                    <span className="relative z-10 ml-auto">
+                      <SaveOpportunityButton
+                        opportunityId={o.id}
+                        initiallySaved={savedIds.has(o.id)}
+                      />
+                    </span>
+                  )}
+                </div>
+              </Card>
+            </li>
+          );
+        })}
       </ul>
 
       {(page > 1 || hasNextPage) && (
-        <div className="mt-8 flex items-center justify-between font-mono text-sm">
+        <div className="mt-8 flex items-center justify-between font-mono text-xs uppercase tracking-widest">
           {page > 1 ? (
             <Link href={pageHref(sp, page - 1)} className="text-accent-2 hover:text-text">
-              ← Previous
+              Previous
             </Link>
           ) : (
             <span />
@@ -346,7 +392,7 @@ export default async function OpportunitiesPage({
           <span className="text-text-faint">Page {page}</span>
           {hasNextPage ? (
             <Link href={pageHref(sp, page + 1)} className="text-accent-2 hover:text-text">
-              Next →
+              Next
             </Link>
           ) : (
             <span />
