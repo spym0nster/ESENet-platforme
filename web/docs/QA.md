@@ -298,6 +298,7 @@ rules above.
 ### Accessibility / structured data
 - [ ] Pressing Tab on any page first focuses a "Skip to content" link (top-left, accent bg) that jumps to `<main id="main-content">` (`.skip-link` in globals.css — off-screen until `:focus`). Verified in-browser with a real Tab press (screenshot).
 - [ ] Home page emits an `Organization` JSON-LD block (name, url, logo, description, `parentOrganization` = ESEN / Manouba / TN). Verified in-browser (parsed).
+- [ ] `/manifest.webmanifest` serves (name/short_name/description/display standalone/`#0B0E36` colors); `<link rel="manifest">` + `<meta name="theme-color" content="#0B0E36">` present on every page. Icon is the wordmark `logo.png` as a placeholder — **a dedicated square/maskable app icon is still to be produced**. Verified in-browser.
 
 ### Error / not-found pages
 - [ ] A bad URL (unknown route, or `/opportunities/<bad-id>`, `/companies/<bad-id>`) renders the branded 404 (`src/app/not-found.tsx`) — "This page isn't here", Browse opportunities / Go home buttons — not the default Next page

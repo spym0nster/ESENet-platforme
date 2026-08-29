@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -38,6 +38,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en",
   },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  // The dark navy the header and hero sit on — tints mobile browser chrome.
+  themeColor: "#0B0E36",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
