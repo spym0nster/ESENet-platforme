@@ -431,6 +431,8 @@ rules above.
 - [ ] Owner proposes an ownership transfer → only the named member gets `ownership_transfer_proposed`
 - [ ] Someone comments on a post → the post author (only, and not if it's their own comment) gets `post_comment`
 - [ ] The header bell shows the unread count; opening `/notifications` clears it (marks all read) but the list keeps highlighting what was unread for that view
+- [ ] The header bell is a **dropdown**: clicking it opens a panel with the 5 most recent notifications (icon per kind, title, 2-line body, relative time, unread ones highlighted + blue dot), a "See all →" link to `/notifications`, and an empty "Nothing yet." state. Opening the panel marks everything read (bell count clears on next render) while the open panel keeps its highlighting. Closes on outside-click or Escape; each notification navigates to its `link` and closes the panel.
+- [ ] Verified in-browser via a temporary mock (real bell is auth-only, no QA password): panel opens/positions/closes-on-outside-click correctly in dark theme, unread vs read rows styled differently. The auto-mark-read-on-open and real notification data were **not** exercised with a live session.
 - [ ] A user can only ever see their own notifications (direct REST as another user returns `[]`)
 - [ ] Direct REST: an authenticated user can create a notification for *another* user (known, documented — see below) but NOT for themselves, NOT with a forged `actor_id`, and cannot read anyone else's back
 - [ ] Header + `/notifications` still render (as "0" / empty) before `0015` is applied — the read helpers degrade, they don't throw

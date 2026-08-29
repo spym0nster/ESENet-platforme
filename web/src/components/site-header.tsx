@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { unreadNotificationCount } from "@/lib/notifications";
+import { unreadNotificationCount, fetchNotifications } from "@/lib/notifications";
+import { NotificationBell } from "@/components/notification-bell";
 import { signOut } from "@/app/actions/auth";
 
 export async function SiteHeader() {
@@ -14,15 +15,18 @@ export async function SiteHeader() {
   let isAdmin = false;
   let isStudent = false;
   let unread = 0;
+  let recentNotifications: Awaited<ReturnType<typeof fetchNotifications>> = [];
   if (supabase && user) {
-    const [{ data: profile }, unreadCount] = await Promise.all([
+    const [{ data: profile }, unreadCount, recent] = await Promise.all([
       supabase.from("profiles").select("role").eq("id", user.id).single(),
       unreadNotificationCount(supabase, user.id),
+      fetchNotifications(supabase, user.id, 5),
     ]);
     isCompany = profile?.role === "company";
     isAdmin = profile?.role === "admin";
     isStudent = profile?.role === "student";
     unread = unreadCount;
+    recentNotifications = recent;
   }
 
   return (
@@ -88,19 +92,7 @@ export async function SiteHeader() {
             </>
           )}
           {user && (
-            <Link
-              href="/notifications"
-              className="py-3 hover:text-white"
-              aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
-            >
-              {unread > 0 ? (
-                <span className="rounded-full bg-accent px-2 py-0.5 text-white">
-                  🔔 {unread > 9 ? "9+" : unread}
-                </span>
-              ) : (
-                <span aria-hidden>🔔</span>
-              )}
-            </Link>
+            <NotificationBell unread={unread} recent={recentNotifications} />
           )}
           {user ? (
             <form action={signOut}>
