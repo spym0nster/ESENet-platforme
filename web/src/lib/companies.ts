@@ -15,8 +15,10 @@ export type CompanyOpportunity = {
   id: string;
   type: OpportunityType;
   title: string;
+  skills: string[] | null;
   location: string | null;
   remote: boolean;
+  application_deadline: string | null;
 };
 
 export type CompanyTeamMember = {
@@ -90,11 +92,13 @@ export async function fetchCompanyDirectory(
 
 /**
  * A company's public page: the company row (public-read), its currently
- * published opportunities, and its team (public since `0008`, so the
- * "Name · Title" line renders for anyone). Returns null when the id isn't a
- * company. An unverified company still has a page — the row is public
- * anyway — it just shows the unverified state and no opportunities (RLS
- * hides those until an admin verifies).
+ * published opportunities, its team (public since `0008`, so the
+ * "Name · Title" line renders for anyone), and a count of the posts it has
+ * published *as the company* (the bodies are fetched separately, only when
+ * the Posts tab is open). Returns null when the id isn't a company. An
+ * unverified company still has a page — the row is public anyway — it just
+ * shows the unverified state and no opportunities (RLS hides those until an
+ * admin verifies).
  */
 export async function fetchCompanyProfile(
   supabase: SupabaseClient,
@@ -104,6 +108,7 @@ export async function fetchCompanyProfile(
       company: PublicCompany;
       opportunities: CompanyOpportunity[];
       team: CompanyTeamMember[];
+      postCount: number;
     }
   | null
 > {
@@ -115,19 +120,26 @@ export async function fetchCompanyProfile(
 
   if (!company) return null;
 
-  const [{ data: opportunities }, { data: members }] = await Promise.all([
-    supabase
-      .from("opportunities")
-      .select("id, type, title, location, remote")
-      .eq("company_id", id)
-      .eq("status", "published")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("company_members")
-      .select("profile_id, role, title, profiles!inner(full_name)")
-      .eq("company_id", id)
-      .order("role", { ascending: true }),
-  ]);
+  const [{ data: opportunities }, { data: members }, { count: postCount }] =
+    await Promise.all([
+      supabase
+        .from("opportunities")
+        .select("id, type, title, skills, location, remote, application_deadline")
+        .eq("company_id", id)
+        .eq("status", "published")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("company_members")
+        .select("profile_id, role, title, profiles!inner(full_name)")
+        .eq("company_id", id)
+        .order("role", { ascending: true }),
+      supabase
+        .from("posts")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", id)
+        .eq("published_as", "company")
+        .is("removed_at", null),
+    ]);
 
   return {
     company: {
@@ -140,6 +152,7 @@ export async function fetchCompanyProfile(
       verified: company.verified,
     },
     opportunities: (opportunities ?? []) as CompanyOpportunity[],
+    postCount: postCount ?? 0,
     team: ((members ?? []) as unknown as {
       profile_id: string;
       role: "owner" | "member";

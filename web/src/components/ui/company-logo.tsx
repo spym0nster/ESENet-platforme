@@ -7,6 +7,7 @@ const SIZES = {
   sm: "size-9 rounded-[10px] text-xs",
   md: "size-11 rounded-xl text-sm",
   lg: "size-16 rounded-2xl text-xl",
+  xl: "size-20 rounded-2xl text-2xl",
 } as const;
 
 export function CompanyLogo({

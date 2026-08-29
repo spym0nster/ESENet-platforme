@@ -4,17 +4,18 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { Badge, EmptyState } from "@/components/ui";
+import { Avatar, Badge, CompanyLogo, EmptyState, LinkButton } from "@/components/ui";
 import { ShareButton } from "@/components/share-button";
+import { OpportunityCard } from "@/components/opportunity-card";
+import { PostCard } from "@/components/post-card";
 import { fetchCompanyProfile } from "@/lib/companies";
+import { fetchPosts } from "@/lib/posts";
 
-const TYPE_LABEL: Record<string, string> = {
-  internship: "Internship",
-  pfe: "PFE",
-  job: "Job",
-  alternance: "Alternance",
-  freelance: "Freelance",
-};
+const BANNER_GRADIENT =
+  "linear-gradient(135deg, #0A0C33 0%, #171048 42%, #3C1560 72%, #641274 100%)";
+
+const TABS = ["about", "roles", "team", "posts"] as const;
+type Tab = (typeof TABS)[number];
 
 export async function generateMetadata({
   params,
@@ -30,7 +31,7 @@ export async function generateMetadata({
   if (!data) return { title: "Company" };
   const description =
     (data.description as string | null)?.slice(0, 200) ??
-    `${data.company_name} on ESENet — opportunities and team.`;
+    `${data.company_name} on ESENet — open roles and team.`;
 
   return {
     title: data.company_name as string,
@@ -41,56 +42,97 @@ export async function generateMetadata({
 
 export default async function CompanyProfilePage({
   params,
+  searchParams,
 }: PageProps<"/companies/[id]">) {
   if (!isSupabaseConfigured()) notFound();
 
   const { id } = await params;
+  const sp = await searchParams;
+  const tabParam = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
+  const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? "")
+    ? (tabParam as Tab)
+    : "about";
+
   const supabase = await createClient();
   const data = await fetchCompanyProfile(supabase, id);
   if (!data) notFound();
 
-  const { company, opportunities, team } = data;
+  const { company, opportunities, team, postCount } = data;
+
+  // The Posts tab is the only one that needs the viewer's identity or the
+  // (join-heavy) post bodies — fetch them only when it's the active tab.
+  let posts: Awaited<ReturnType<typeof fetchPosts>>["posts"] = [];
+  let viewerId: string | null = null;
+  let viewerName: string | null = null;
+  if (tab === "posts") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    viewerId = user?.id ?? null;
+    if (user) {
+      const { data: viewer } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+      viewerName = viewer?.full_name ?? null;
+    }
+    const res = await fetchPosts(supabase, {
+      currentUserId: viewerId,
+      companyId: id,
+    });
+    // company_id is stamped on every post by a member; keep only the ones
+    // actually published in the company's voice.
+    posts = res.posts.filter(
+      (p) => p.published_as === "company" && !p.removed_at
+    );
+  }
+
+  const showRolesCta = opportunities.length > 0 && tab !== "roles";
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
+    <div className="mx-auto max-w-3xl px-6 py-10">
       <Link
-        href="/opportunities"
+        href="/companies"
         className="inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
       >
-        ← All opportunities
+        ← All companies
       </Link>
 
-      {company.banner_url && (
-        // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL
-        <img
-          src={company.banner_url}
-          alt=""
-          className="mt-4 h-40 w-full rounded-lg object-cover"
-        />
-      )}
-
-      <div className="mt-6 flex items-start gap-4">
-        {company.logo_url ? (
+      {/* banner + overlapping logo */}
+      <div
+        className="mt-2 h-40 w-full overflow-hidden rounded-card [box-shadow:var(--lift)]"
+        style={{ background: BANNER_GRADIENT }}
+      >
+        {company.banner_url && (
           // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL
           <img
-            src={company.logo_url}
+            src={company.banner_url}
             alt=""
-            className="h-16 w-16 shrink-0 rounded-lg object-cover"
+            className="h-full w-full object-cover"
           />
-        ) : (
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-surface-alt font-display text-2xl font-bold text-text-faint">
-            {company.company_name.charAt(0).toUpperCase()}
-          </div>
         )}
-        <div className="min-w-0 flex-1">
+      </div>
+
+      <div className="-mt-10 px-1">
+        <CompanyLogo
+          name={company.company_name}
+          src={company.logo_url}
+          size="xl"
+          className="ring-4 ring-[color:var(--bg)]"
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-display text-3xl font-extrabold">
               {company.company_name}
             </h1>
             {company.verified ? (
-              <Badge variant="info">Verified</Badge>
+              <Badge tone="cyan">Verified</Badge>
             ) : (
-              <Badge variant="neutral">Not yet verified</Badge>
+              <Badge tone="neutral">Not yet verified</Badge>
             )}
           </div>
           {company.website && (
@@ -103,91 +145,205 @@ export default async function CompanyProfilePage({
               {company.website.replace(/^https?:\/\//, "")} →
             </a>
           )}
-          <div className="mt-2">
-            <ShareButton path={`/companies/${company.id}`} label="Share profile" />
-          </div>
         </div>
+
+        {showRolesCta && (
+          <LinkButton
+            href={`/companies/${company.id}?tab=roles`}
+            variant="primary"
+          >
+            See open roles
+          </LinkButton>
+        )}
       </div>
 
-      {company.description && (
-        <p className="mt-8 whitespace-pre-wrap text-text">{company.description}</p>
-      )}
+      {/* tabs — driven by ?tab= so a link to a company's roles is shareable */}
+      <nav
+        aria-label="Company sections"
+        className="mt-8 flex flex-wrap gap-x-6 border-b border-border font-mono text-xs uppercase tracking-wider"
+      >
+        <TabLink id={company.id} tab="about" current={tab}>
+          About
+        </TabLink>
+        <TabLink
+          id={company.id}
+          tab="roles"
+          current={tab}
+          count={opportunities.length}
+        >
+          Roles
+        </TabLink>
+        <TabLink id={company.id} tab="team" current={tab} count={team.length}>
+          Team
+        </TabLink>
+        <TabLink id={company.id} tab="posts" current={tab} count={postCount}>
+          Posts
+        </TabLink>
+      </nav>
 
-      <Section title="Open opportunities">
-        {opportunities.length === 0 ? (
-          <EmptyState
-            title={
-              company.verified
-                ? "No open opportunities right now"
-                : "Nothing published yet"
-            }
-            body={
-              company.verified
-                ? "Check back later, or browse other companies."
-                : "This company's opportunities go live once ESENet verifies it."
-            }
-          />
-        ) : (
-          <ul className="space-y-3">
-            {opportunities.map((o) => (
-              <li key={o.id}>
-                <Link
-                  href={`/opportunities/${o.id}`}
-                  className="block rounded-lg border border-border bg-surface p-4 transition hover:border-accent-2/50"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="info">{TYPE_LABEL[o.type] ?? o.type}</Badge>
-                    {o.location && (
-                      <span className="text-xs text-text-faint">{o.location}</span>
-                    )}
-                    {o.remote && (
-                      <span className="text-xs text-text-faint">Remote</span>
-                    )}
-                  </div>
-                  <p className="mt-2 font-display font-bold">{o.title}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+      <div className="mt-8">
+        {tab === "about" && (
+          <section aria-label="About">
+            {company.description ? (
+              <p className="whitespace-pre-wrap leading-relaxed text-text">
+                {company.description}
+              </p>
+            ) : (
+              <EmptyState
+                title="No description yet"
+                body={`${company.company_name} hasn't written an "about" section.`}
+              />
+            )}
+          </section>
         )}
-      </Section>
 
-      {team.length > 0 && (
-        <Section title="Team on ESENet">
-          <ul className="space-y-2">
-            {team.map((m) => (
-              <li key={m.profile_id} className="text-sm">
-                <span className="font-semibold text-text">{m.full_name}</span>
-                {m.title && (
-                  <span className="text-text-muted"> · {m.title}</span>
-                )}
-                {m.role === "owner" && (
-                  <span className="ml-2 font-mono text-xs text-text-faint">
-                    owner
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
+        {tab === "roles" && (
+          <section aria-label="Open roles">
+            {opportunities.length === 0 ? (
+              <EmptyState
+                title={
+                  company.verified
+                    ? "No open roles right now"
+                    : "Nothing published yet"
+                }
+                body={
+                  company.verified
+                    ? "Check back later, or browse roles from other companies."
+                    : "This company's roles go live once ESENet verifies it."
+                }
+                action={
+                  <Link
+                    href="/opportunities"
+                    className="font-mono text-xs uppercase tracking-widest text-accent-2 hover:text-text"
+                  >
+                    Browse all opportunities
+                  </Link>
+                }
+              />
+            ) : (
+              <ul className="space-y-4">
+                {opportunities.map((o) => (
+                  <li key={o.id}>
+                    <OpportunityCard
+                      opportunity={{
+                        id: o.id,
+                        type: o.type,
+                        title: o.title,
+                        skills: o.skills,
+                        location: o.location,
+                        remote: o.remote,
+                        application_deadline: o.application_deadline,
+                        company: {
+                          name: company.company_name,
+                          logo_url: company.logo_url,
+                        },
+                      }}
+                      hideCompany
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {tab === "team" && (
+          <section aria-label="Team">
+            {team.length === 0 ? (
+              <EmptyState
+                title="No team members listed"
+                body={`Nobody from ${company.company_name} has joined ESENet yet.`}
+              />
+            ) : (
+              <ul className="divide-y divide-border">
+                {team.map((m) => {
+                  const meta =
+                    [m.title, m.role === "owner" ? "Owner" : null]
+                      .filter(Boolean)
+                      .join(" · ") || "Team member";
+                  return (
+                    <li
+                      key={m.profile_id}
+                      className="flex items-center gap-3 py-3"
+                    >
+                      <Avatar name={m.full_name} />
+                      <div className="min-w-0">
+                        <p className="font-display font-semibold text-text">
+                          {m.full_name}
+                        </p>
+                        <p className="text-xs text-text-faint">{meta}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {tab === "posts" && (
+          <section aria-label="Posts">
+            {posts.length === 0 ? (
+              <EmptyState
+                title="No posts yet"
+                body={`${company.company_name} hasn't posted in the community feed.`}
+              />
+            ) : (
+              <div className="space-y-5">
+                {posts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    supabase={supabase}
+                    post={post}
+                    currentUserId={viewerId}
+                    currentUserName={viewerName}
+                    isAdmin={false}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+
+      <div className="mt-12 border-t border-border pt-6">
+        <ShareButton path={`/companies/${company.id}`} label="Share profile" />
+      </div>
     </div>
   );
 }
 
-function Section({
-  title,
+function TabLink({
+  id,
+  tab,
+  current,
+  count,
   children,
 }: {
-  title: string;
+  id: string;
+  tab: Tab;
+  current: Tab;
+  count?: number;
   children: React.ReactNode;
 }) {
+  const active = tab === current;
+  const href = tab === "about" ? `/companies/${id}` : `/companies/${id}?tab=${tab}`;
+
   return (
-    <div className="mt-10">
-      <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
-        {title}
-      </h2>
-      <div className="mt-4">{children}</div>
-    </div>
+    <Link
+      href={href}
+      scroll={false}
+      aria-current={active ? "page" : undefined}
+      className={`relative -mb-px py-3 transition ${
+        active
+          ? "text-text after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:rounded-full after:bg-[linear-gradient(90deg,#7B53FD,#1AA6FC)]"
+          : "text-text-faint hover:text-text"
+      }`}
+    >
+      {children}
+      {count !== undefined && (
+        <span className="ml-1.5 font-normal text-text-faint">· {count}</span>
+      )}
+    </Link>
   );
 }

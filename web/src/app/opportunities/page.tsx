@@ -1,17 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import {
-  Badge,
-  Card,
-  Chip,
-  CompanyLogo,
-  EmptyState,
-  Input,
-  MatchArc,
-  Select,
-} from "@/components/ui";
-import { SaveOpportunityButton } from "@/components/save-opportunity-button";
+import { EmptyState, Input, MatchArc, Select } from "@/components/ui";
+import { OpportunityCard } from "@/components/opportunity-card";
 import { fetchRecommendedOpportunities } from "@/lib/opportunities";
 import type { OpportunityType } from "@/types/database";
 
@@ -27,14 +18,6 @@ const TYPE_LABEL: Record<string, string> = {
   job: "Job",
   alternance: "Alternance",
   freelance: "Freelance",
-};
-
-const TYPE_TONE: Record<string, "neutral" | "cyan" | "violet" | "magenta"> = {
-  internship: "cyan",
-  alternance: "cyan",
-  pfe: "violet",
-  job: "magenta",
-  freelance: "neutral",
 };
 
 const TYPE_OPTIONS: OpportunityType[] = [
@@ -54,12 +37,6 @@ const SORT_OPTIONS = {
 type SortKey = keyof typeof SORT_OPTIONS;
 
 const PAGE_SIZE = 20;
-
-/** case-insensitive overlap of two skill lists */
-function overlap(a: string[], b: string[]): string[] {
-  const set = new Set(b.map((s) => s.toLowerCase()));
-  return a.filter((s) => set.has(s.toLowerCase()));
-}
 
 export default async function OpportunitiesPage({
   searchParams,
@@ -157,9 +134,6 @@ export default async function OpportunitiesPage({
     }
   }
 
-  const now = new Date();
-  const todayIso = now.toISOString().slice(0, 10);
-  const soonIso = new Date(now.getTime() + 7 * 864e5).toISOString().slice(0, 10);
   const showArcs = isStudent && studentSkills.length >= 3;
 
   const recommended =
@@ -306,89 +280,31 @@ export default async function OpportunitiesPage({
 
       <ul className="mt-8 space-y-4">
         {opportunities?.map((o) => {
-          const oppSkills = (o.skills as string[] | null) ?? [];
-          const matched = showArcs ? overlap(oppSkills, studentSkills) : [];
-          const matchedSet = new Set(matched.map((s) => s.toLowerCase()));
           const companyRow = o.companies as unknown as {
             company_name: string;
             logo_url: string | null;
           } | null;
-          const companyName = companyRow?.company_name ?? "ESEN partner company";
-          const deadline = o.application_deadline as string | null;
-
           return (
             <li key={o.id}>
-              <Card interactive className="relative">
-                <Link
-                  href={`/opportunities/${o.id}`}
-                  className="absolute inset-0 rounded-card"
-                  aria-label={`${o.title} at ${companyName}`}
-                />
-
-                <div className="flex gap-3">
-                  <CompanyLogo name={companyName} src={companyRow?.logo_url} />
-
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 text-xs text-text-faint">
-                      <span className="truncate text-text-muted">{companyName}</span>
-                      {o.location && <span className="font-mono">· {o.location}</span>}
-                      {o.remote && <span className="font-mono">· Remote</span>}
-                    </p>
-                    <h2 className="mt-0.5 font-display text-lg font-semibold leading-snug">
-                      {o.title}
-                    </h2>
-                  </div>
-
-                  {/* Reserve the arc's slot for every card once arcs are on
-                      for this viewer, so titles wrap at the same width
-                      whether or not a given opportunity lists skills. */}
-                  {showArcs &&
-                    (oppSkills.length > 0 ? (
-                      <MatchArc matched={matched.length} required={oppSkills.length} />
-                    ) : (
-                      <div className="size-[46px] shrink-0" aria-hidden />
-                    ))}
-                </div>
-
-                {oppSkills.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {oppSkills.slice(0, 5).map((s) => (
-                      <Chip key={s} match={matchedSet.has(s.toLowerCase())}>
-                        {s}
-                      </Chip>
-                    ))}
-                    {oppSkills.length > 5 && (
-                      <Chip>+{oppSkills.length - 5}</Chip>
-                    )}
-                  </div>
-                )}
-
-                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-3 text-xs text-text-faint">
-                  <Badge tone={TYPE_TONE[o.type] ?? "neutral"}>
-                    {TYPE_LABEL[o.type] ?? o.type}
-                  </Badge>
-                  {deadline && deadline < todayIso && (
-                    <span className="font-mono">Applications closed</span>
-                  )}
-                  {deadline && deadline >= todayIso && deadline <= soonIso && (
-                    <span className="font-mono text-magenta-on-soft">
-                      Closes{" "}
-                      {new Date(deadline).toLocaleDateString(undefined, {
-                        day: "numeric",
-                        month: "short",
-                      })}
-                    </span>
-                  )}
-                  {isStudent && (
-                    <span className="relative z-10 ml-auto">
-                      <SaveOpportunityButton
-                        opportunityId={o.id}
-                        initiallySaved={savedIds.has(o.id)}
-                      />
-                    </span>
-                  )}
-                </div>
-              </Card>
+              <OpportunityCard
+                opportunity={{
+                  id: o.id,
+                  type: o.type,
+                  title: o.title,
+                  skills: (o.skills as string[] | null) ?? null,
+                  location: o.location,
+                  remote: o.remote,
+                  application_deadline:
+                    (o.application_deadline as string | null) ?? null,
+                  company: {
+                    name: companyRow?.company_name ?? "ESEN partner company",
+                    logo_url: companyRow?.logo_url ?? null,
+                  },
+                }}
+                viewerSkills={studentSkills}
+                showArc={showArcs}
+                saved={isStudent ? savedIds.has(o.id) : undefined}
+              />
             </li>
           );
         })}
