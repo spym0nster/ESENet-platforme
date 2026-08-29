@@ -7,20 +7,8 @@ import { EmptyState } from "@/components/ui";
 import { fetchNotifications } from "@/lib/notifications";
 import { markAllNotificationsRead } from "@/app/actions/notifications";
 import { MarkNotificationsRead } from "@/components/mark-notifications-read";
-import type { NotificationKind } from "@/types/database";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
-
-const KIND_ICON: Record<NotificationKind, string> = {
-  application_received: "📥",
-  application_status_changed: "📣",
-  application_withdrawn: "↩️",
-  join_request_received: "🙋",
-  join_request_approved: "✅",
-  join_request_declined: "🚫",
-  ownership_transfer_proposed: "👑",
-  post_comment: "💬",
-};
 
 function timeAgo(iso: string): string {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -83,15 +71,12 @@ export default async function NotificationsPage() {
           {notifications.map((n) => {
             const inner = (
               <div
-                className={`flex gap-3 rounded-lg border p-4 ${
+                className={`flex gap-3 rounded-card border p-4 [box-shadow:var(--lift)] ${
                   n.read_at
                     ? "border-border bg-surface"
                     : "border-accent-2/40 bg-accent2-soft/40"
                 }`}
               >
-                <span className="text-lg leading-none" aria-hidden>
-                  {KIND_ICON[n.kind] ?? "•"}
-                </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-text">{n.title}</p>
                   {n.body && (

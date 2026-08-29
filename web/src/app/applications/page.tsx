@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { Card, Badge, EmptyState } from "@/components/ui";
+import { Card, Badge, EmptyState, LinkButton } from "@/components/ui";
 import { WithdrawApplicationButton } from "@/components/withdraw-application-button";
 import type { ApplicationStatus } from "@/types/database";
 
@@ -25,10 +25,10 @@ const TYPE_LABEL: Record<string, string> = {
   freelance: "Freelance",
 };
 
-function badgeVariant(status: ApplicationStatus): "info" | "success" | "danger" | "neutral" {
-  if (status === "accepted") return "success";
-  if (status === "rejected" || status === "withdrawn") return "danger";
-  if (status === "shortlisted" || status === "interview") return "info";
+function badgeTone(status: ApplicationStatus): "violet" | "cyan" | "magenta" | "neutral" {
+  if (status === "accepted") return "violet";
+  if (status === "rejected" || status === "withdrawn") return "magenta";
+  if (status === "shortlisted" || status === "interview") return "cyan";
   return "neutral";
 }
 
@@ -77,12 +77,12 @@ export default async function MyApplicationsPage() {
       {!error && (!applications || applications.length === 0) ? (
         <div className="mt-8">
           <EmptyState
-            title="You haven't applied to anything yet."
-            body="Browse opportunities and apply — your applications will show up here."
+            title="No applications yet"
+            body="Browse opportunities and apply — everything you send lands here."
             action={
-              <Link href="/opportunities" className="inline-block py-2 font-mono text-sm text-accent-2">
-                Browse opportunities →
-              </Link>
+              <LinkButton href="/opportunities" variant="primary">
+                Browse opportunities
+              </LinkButton>
             }
           />
         </div>
@@ -103,7 +103,7 @@ export default async function MyApplicationsPage() {
                     <div>
                       <Link
                         href={`/opportunities/${opportunity?.id}`}
-                        className="inline-block py-1 font-display font-bold hover:text-accent-2"
+                        className="inline-block py-1 font-display font-semibold hover:text-accent-2"
                       >
                         {opportunity?.title ?? "Opportunity"}
                       </Link>
@@ -113,7 +113,7 @@ export default async function MyApplicationsPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={badgeVariant(status)}>
+                      <Badge tone={badgeTone(status)}>
                         {STUDENT_STATUS_LABEL[status] ?? status}
                       </Badge>
                       {status !== "withdrawn" &&

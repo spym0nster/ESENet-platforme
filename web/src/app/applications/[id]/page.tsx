@@ -24,12 +24,12 @@ const TYPE_LABEL: Record<string, string> = {
   freelance: "Freelance",
 };
 
-function badgeVariant(
+function badgeTone(
   status: ApplicationStatus
-): "info" | "success" | "danger" | "neutral" {
-  if (status === "accepted") return "success";
-  if (status === "rejected" || status === "withdrawn") return "danger";
-  if (status === "shortlisted" || status === "interview") return "info";
+): "violet" | "cyan" | "magenta" | "neutral" {
+  if (status === "accepted") return "violet";
+  if (status === "rejected" || status === "withdrawn") return "magenta";
+  if (status === "shortlisted" || status === "interview") return "cyan";
   return "neutral";
 }
 
@@ -170,13 +170,13 @@ export default async function ApplicationDetailPage({
             {opportunity?.remote ? " · Remote" : ""}
           </p>
         </div>
-        <Badge variant={badgeVariant(status)}>
+        <Badge tone={badgeTone(status)}>
           {STATUS_LABEL[status] ?? status}
         </Badge>
       </div>
 
       <Card className="mt-8">
-        <h2 className="font-display text-sm font-bold uppercase tracking-wide text-text-faint">
+        <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-text-muted">
           Status history
         </h2>
         <ol className="mt-4 space-y-4">
@@ -192,7 +192,7 @@ export default async function ApplicationDetailPage({
                   {entry.byYou ? "by you" : "by the company"}
                 </p>
                 {entry.note && (
-                  <p className="mt-1 whitespace-pre-wrap rounded-md bg-surface-alt px-3 py-2 text-sm text-text-muted">
+                  <p className="mt-1 whitespace-pre-wrap rounded-ctrl bg-surface-alt px-3 py-2 text-sm text-text-muted">
                     {entry.note}
                   </p>
                 )}
@@ -204,7 +204,7 @@ export default async function ApplicationDetailPage({
 
       {application.message && (
         <Card className="mt-4">
-          <h2 className="font-display text-sm font-bold uppercase tracking-wide text-text-faint">
+          <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-text-muted">
             Your cover message
           </h2>
           <p className="mt-3 whitespace-pre-wrap text-sm text-text">
