@@ -116,6 +116,114 @@ order of effort:
 
 ---
 
+## F3 · `student_details` is fully public-read, with no visibility control
+
+**Severity:** high (personal data of every student, no opt-out, no gate on read)
+**Area:** RLS / privacy / student data
+**Found:** 2026-08-29, while speccing onboarding
+
+### What
+
+`student_details` and its four child tables (`education`, `experiences`,
+`projects`, `certifications`) each carry a `SELECT using (true)` policy — from
+`schema.sql:86` and `0002_platform_phase2.sql` §6. Every row is readable by
+anyone with a valid anon/authed key. There is **no `visible` / `discoverable` /
+`is_public` column anywhere**, so a student has no way to opt out of being
+listed and read.
+
+The app layer softens this a little — `/students` and `/students/[id]` gate on
+`auth.getUser()` and won't render for anonymous visitors — but that is a UI
+convention, not a policy. A logged-in user (any role, including a freshly
+self-signed-up one) can read every student's headline, bio, skills,
+availability, LinkedIn, and full education/experience/project history straight
+from PostgREST, `/students` page or not.
+
+Onboarding does **not** change this and is not the place to fix it: I told
+Bilel a visibility control already existed when speccing the flow — it does
+not. The onboarding spec (`ONBOARDING.md` §2) now says plainly that profiles
+are simply public-read once onboarded.
+
+### Why it matters
+
+Before real students (not QA fixtures) are on the platform, someone has to
+decide: is a student profile public to all signed-in users by default, opt-in,
+or opt-out? Right now it's "public to all signed-in users, no choice", which is
+a defensible product decision for a talent marketplace but has never actually
+been *decided* — it's just the default `using (true)` nobody revisited. The CV
+is correctly private (separate bucket, applicant-scoped policy); the rest of
+the profile is wide open.
+
+### Where
+
+- `schema.sql:86` — `"student details are publicly readable"`
+- `0002_platform_phase2.sql` §6 — the same policy on `education` /
+  `experiences` / `projects` / `certifications`
+- `src/lib/students.ts` — the app-layer `auth.getUser()` gate that is doing all
+  the actual access control today
+
+### Suggested direction
+
+A product decision first, then a policy. If "opt-out": add
+`student_details.listed boolean not null default true`, tighten the SELECT
+policy to `listed = true or auth.uid() = profile_id`, and give onboarding +
+`/profile` the toggle. If "signed-in only is fine": at minimum change the
+policies from `using (true)` to `using (auth.role() = 'authenticated')` so the
+app-layer gate is backed by RLS. Not onboarding's job either way.
+
+---
+
+## F4 · `updateStudentProfile` nulls every column it doesn't receive
+
+**Severity:** medium (live data-loss bug in `/profile` today, not hypothetical)
+**Area:** server actions / data integrity
+**Found:** 2026-08-29, while speccing onboarding
+
+### What
+
+`updateStudentProfile` (`src/app/actions/student-profile.ts:34`) reads
+`headline`, `bio`, `looking_for`, `availability`, `linkedin_url`, and `skills`
+from the FormData and writes **all six** on every call:
+
+```ts
+.update({
+  headline: headline || null,
+  bio: bio || null,
+  looking_for: lookingFor || null,
+  availability: availability || null,
+  linkedin_url: linkedinUrl || null,
+  skills,
+})
+```
+
+Any caller that submits a subset silently blanks the rest. Today only
+`StudentProfileForm` calls it, and that form does post all six fields — so the
+bug is latent. But it is one partial `<form>`, one `fetch`, or one future
+caller away from wiping a student's bio because the request only carried a new
+headline. The onboarding spec has to route around it (`ONBOARDING.md` §2, §10).
+
+### Why it matters
+
+It makes the action unsafe to reuse, which is why the onboarding spec proposes
+refactoring it to a partial update. Independent of onboarding, it's a
+data-integrity landmine: the function's contract ("update the profile") does
+not match its behaviour ("replace the profile with whatever fields this request
+happened to include").
+
+### Where
+
+- `src/app/actions/student-profile.ts:34-77` — `updateStudentProfile`
+- `src/components/student-profile-form.tsx` — the only current caller
+
+### Suggested direction
+
+Write only keys present in the FormData: build the update object dynamically,
+`if (formData.has('headline')) patch.headline = …`, etc. `StudentProfileForm`
+is unaffected (it always sends every field). This is the refactor
+`ONBOARDING.md` §10 already calls for; doing it as a standalone fix first would
+de-risk the onboarding work.
+
+---
+
 ## Also tracked (not yet written up)
 
 - **Every route renders dynamically because the root layout's `SiteHeader`
