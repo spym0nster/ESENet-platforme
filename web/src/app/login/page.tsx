@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/login-form";
 
+export const metadata = {
+  title: "Log in",
+  description: "Log in to ESENet.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: PageProps<"/login">) {

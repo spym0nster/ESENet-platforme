@@ -6,6 +6,12 @@ import { PostComposer } from "@/components/post-composer";
 import { PostCard } from "@/components/post-card";
 import { EmptyState, LinkButton } from "@/components/ui";
 
+export const metadata = {
+  title: "Feed",
+  description:
+    "What ESEN students, alumni and companies are building, sharing and hiring for.",
+};
+
 export default async function FeedPage({
   searchParams,
 }: {

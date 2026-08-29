@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { SignupForm } from "@/components/signup-form";
 
+export const metadata = {
+  title: "Sign up",
+  description: "Create your ESENet profile — for ESEN students and for companies.",
+};
+
 export default function SignupPage() {
   return (
     <div className="mx-auto max-w-sm px-6 py-20">

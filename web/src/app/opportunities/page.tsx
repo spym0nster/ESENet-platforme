@@ -15,6 +15,12 @@ import { SaveOpportunityButton } from "@/components/save-opportunity-button";
 import { fetchRecommendedOpportunities } from "@/lib/opportunities";
 import type { OpportunityType } from "@/types/database";
 
+export const metadata = {
+  title: "Opportunities",
+  description:
+    "Internships, PFE projects and jobs from verified ESEN partner companies — filter by skill and type.",
+};
+
 const TYPE_LABEL: Record<string, string> = {
   internship: "Internship",
   pfe: "PFE",

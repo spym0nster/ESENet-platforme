@@ -7,7 +7,12 @@ import { fetchStudents, availabilityLabel } from "@/lib/students";
 
 // Student profiles are personal data — visible to signed-in members
 // (companies are the audience), never to anonymous crawlers.
-export const metadata: Metadata = { robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  title: "Students",
+  description:
+    "Search ESEN students and recent graduates by skill, availability and what they're looking for.",
+  robots: { index: false, follow: false },
+};
 
 export default async function StudentsPage({
   searchParams,

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { ForgotPasswordForm } from "@/components/forgot-password-form";
 
+export const metadata = {
+  title: "Reset your password",
+  description: "Request a link to set a new ESENet password.",
+  robots: { index: false, follow: false },
+};
+
 export default function ForgotPasswordPage() {
   return (
     <div className="mx-auto max-w-sm px-6 py-20">

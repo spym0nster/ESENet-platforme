@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { ResetPasswordForm } from "@/components/reset-password-form";
 
+export const metadata = {
+  title: "Set a new password",
+  robots: { index: false, follow: false },
+};
+
 export default async function ResetPasswordPage() {
   const configured = isSupabaseConfigured();
   const supabase = configured ? await createClient() : null;
