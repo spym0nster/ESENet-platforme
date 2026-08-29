@@ -28,6 +28,11 @@
   /* Company-logo fallback tile. #2a1e6e is the one hex the spec pins that
      isn't a brand token — the dark end of the poster gradient (§4). */
   --logo-grad: linear-gradient(140deg, #2a1e6e, var(--accent) 55%, var(--magenta));
+  /* The header sits on a fixed dark ground in both themes — the wordmark's
+     near-white glyphs only read there — so its colours don't follow the
+     theme swap. Defined once, never overridden in the light blocks. */
+  --header-bg: #0b0e36;
+  --header-fg: #b3add9;
   --accent: #7b53fd;
   --accent-2: #1aa6fc;
   --accent-ink: #0b0e36;

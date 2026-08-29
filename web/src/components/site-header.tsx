@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { NavLink } from "@/components/nav-link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { unreadNotificationCount, fetchNotifications } from "@/lib/notifications";
 import { NotificationBell } from "@/components/notification-bell";
 import { signOut } from "@/app/actions/auth";
 
+/**
+ * The one header, rendered once in the root layout for every route. On a
+ * fixed dark ground in both themes (`--header-bg`) — the wordmark only
+ * reads there.
+ */
 export async function SiteHeader() {
   const configured = isSupabaseConfigured();
   const supabase = configured ? await createClient() : null;
@@ -30,84 +36,56 @@ export async function SiteHeader() {
   }
 
   return (
-    // Fixed dark ground on purpose: the wordmark's "ESE" / "Talent Fair"
-    // glyphs are near-white and only read on a dark surface, regardless of
-    // whether the rest of the page is in light or dark mode.
-    <header className="bg-[#0B0E36]">
+    <header className="bg-[color:var(--header-bg)]">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-6 w-auto" />
         </Link>
-        {/* py-3 on every link/button below isn't visual padding — text
-            size and header height look about the same either way, since
-            the row was already taller than the text alone. It exists
-            purely to grow each link's own tap target to the ~40px
-            minimum (confirmed live at 16px without it: text-xs with no
-            padding of its own, relying entirely on the row's height
-            around it, which a touch target doesn't get credit for). */}
-        <nav className="flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-xs uppercase tracking-wider text-[#B3ADD9]">
-          <Link href="/opportunities" className="py-3 hover:text-white">
-            Opportunities
-          </Link>
-          <Link href="/companies" className="py-3 hover:text-white">
-            Companies
-          </Link>
-          <Link href="/students" className="py-3 hover:text-white">
-            Students
-          </Link>
-          <Link href="/feed" className="py-3 hover:text-white">
-            Feed
-          </Link>
+
+        <nav className="flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-xs uppercase tracking-wider">
+          <NavLink href="/opportunities">Opportunities</NavLink>
+          <NavLink href="/companies">Companies</NavLink>
+          <NavLink href="/students">Students</NavLink>
+          <NavLink href="/feed">Feed</NavLink>
+
           {isStudent && (
             <>
-              <Link href="/profile" className="py-3 hover:text-white">
-                My profile
-              </Link>
-              <Link href="/applications" className="py-3 hover:text-white">
-                My applications
-              </Link>
-              <Link href="/saved" className="py-3 hover:text-white">
-                Saved
-              </Link>
+              <NavLink href="/profile">My profile</NavLink>
+              <NavLink href="/applications">My applications</NavLink>
+              <NavLink href="/saved">Saved</NavLink>
             </>
           )}
           {isCompany && (
             <>
-              <Link href="/company/profile" className="py-3 hover:text-white">
-                My profile
-              </Link>
-              <Link href="/company/dashboard" className="py-3 hover:text-white">
-                My company
-              </Link>
+              <NavLink href="/company/profile">My profile</NavLink>
+              <NavLink href="/company/dashboard">My company</NavLink>
             </>
           )}
           {isAdmin && (
             <>
-              <Link href="/admin" className="py-3 hover:text-white">
-                Admin
-              </Link>
-              <Link href="/admin/reports" className="py-3 hover:text-white">
-                Reports
-              </Link>
+              <NavLink href="/admin">Admin</NavLink>
+              <NavLink href="/admin/reports">Reports</NavLink>
             </>
           )}
+
           {user && (
             <NotificationBell unread={unread} recent={recentNotifications} />
           )}
           {user ? (
             <form action={signOut}>
-              <button type="submit" className="py-3 hover:text-white">
+              <button
+                type="submit"
+                className="py-3 text-[color:var(--header-fg)] transition hover:text-white"
+              >
                 Sign out
               </button>
             </form>
           ) : (
             <>
-              <Link href="/login" className="py-3 hover:text-white">
-                Log in
-              </Link>
+              <NavLink href="/login">Log in</NavLink>
               <Link
                 href="/signup"
-                className="rounded-md bg-accent px-4 py-3 text-white normal-case tracking-normal"
+                className="inline-flex min-h-9 items-center rounded-ctrl bg-accent px-4 font-sans text-xs font-semibold normal-case tracking-normal text-white transition hover:brightness-105 active:translate-y-px"
               >
                 Sign up
               </Link>
