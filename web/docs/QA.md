@@ -289,6 +289,12 @@ rules above.
 - [ ] Server guard: a direct POST to `applyToOpportunity` for a past-deadline or non-published opportunity returns a friendly error and writes no row (verified via stale page / direct call — cannot be exercised through the UI once the form is hidden)
 - [ ] **Not verified with a real login** (no QA student password available to me): the end-to-end "student clicks Apply before/after deadline" path. Backing SQL + the detail-page render for null / past / soon deadlines were checked directly against the dev DB.
 
+### Share buttons
+- [ ] `/opportunities/[id]` (top row, next to Save) and `/companies/[id]` (under the website link) show a "Share" / "Share profile" + "Share on LinkedIn" pair (`ShareButton`, public — shows for anon too)
+- [ ] "Share" copies the absolute URL (`window.location.origin` + path) to the clipboard and flips to "Link copied" for 2s; clipboard failure is a silent no-op
+- [ ] "Share on LinkedIn" opens `linkedin.com/sharing/share-offsite/?url=<absolute>` in a new tab
+- [ ] Verified in-browser: buttons render on both pages, LinkedIn URL + origin resolve correctly, clipboard API present in a secure context (the copy toast needs a real user gesture — not reproduced by the automated click, failure path confirmed harmless)
+
 ### Error / not-found pages
 - [ ] A bad URL (unknown route, or `/opportunities/<bad-id>`, `/companies/<bad-id>`) renders the branded 404 (`src/app/not-found.tsx`) — "This page isn't here", Browse opportunities / Go home buttons — not the default Next page
 - [ ] An uncaught render error shows `src/app/error.tsx` ("We hit an unexpected error", Try again / Go home, logs to console with the digest ref) — verified by code review only, not triggered

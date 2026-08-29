@@ -6,6 +6,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { ApplyForm } from "@/components/apply-form";
 import { SaveOpportunityButton } from "@/components/save-opportunity-button";
+import { ShareButton } from "@/components/share-button";
 import { fetchSimilarOpportunities } from "@/lib/opportunities";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -233,9 +234,15 @@ export default async function OpportunityPage({
         <span className="rounded bg-accent2-soft px-2 py-0.5 font-mono text-xs uppercase tracking-wide text-accent-2">
           {TYPE_LABEL[opportunity.type] ?? opportunity.type}
         </span>
-        {isStudent && (
-          <SaveOpportunityButton opportunityId={opportunity.id} initiallySaved={isSaved} />
-        )}
+        <div className="flex items-center gap-4">
+          <ShareButton path={`/opportunities/${opportunity.id}`} />
+          {isStudent && (
+            <SaveOpportunityButton
+              opportunityId={opportunity.id}
+              initiallySaved={isSaved}
+            />
+          )}
+        </div>
       </div>
       <div className="mt-3 flex items-center gap-3">
         {company?.logo_url && (

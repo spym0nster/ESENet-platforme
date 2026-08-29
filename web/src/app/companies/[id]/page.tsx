@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { Badge, EmptyState } from "@/components/ui";
+import { ShareButton } from "@/components/share-button";
 import { fetchCompanyProfile } from "@/lib/companies";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -102,6 +103,9 @@ export default async function CompanyProfilePage({
               {company.website.replace(/^https?:\/\//, "")} →
             </a>
           )}
+          <div className="mt-2">
+            <ShareButton path={`/companies/${company.id}`} label="Share profile" />
+          </div>
         </div>
       </div>
 
