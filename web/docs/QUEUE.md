@@ -23,37 +23,65 @@ against seeded data is labelled **traced, not executed**.
 | N3–N7 | Follow-ups from the first review | ✅ done (N3 verified, N4 verified) |
 | A | Keyboard pass on the signed-in nav | ✅ done — report below |
 | B | Consistency sweep | ✅ **swept** — B1–B7 done, 8 commits |
-| O | Onboarding | ⏸ **migration + shell built; steps paused for your migration review** |
+| O | Onboarding | ✅ **built end to end** — 0024 applied, all steps + gating |
+| N8 | Sweep /students + /companies directory pages | ✅ done — /companies verified |
 
-### Onboarding — where it stands
+### Onboarding — built (per the new "work continuously" rule)
 
-- `0024_student_onboarding.sql` — **written, committed, NOT applied.** goal_types
-  + onboarded_at (student_details), graduation_year (education), a BEFORE
-  UPDATE trigger freezing onboarded_at, the /students backfill. Additive,
-  re-runnable, no new RLS policy. **This is your review gate — the 9 step
-  pages hard-depend on its exact column names / types / trigger behaviour, so
-  I stopped here rather than build them against an unreviewed data change.**
-- Shell built (`cea3f2b`): `OnboardingShell` (poster-gradient panel + wordmark
-  + one line — a deliberate §8 exception for the funnel), `OnboardingProgress`
-  (solid --accent, `role="progressbar"` + `aria-valuetext` + visible "Step N
-  of M"), `src/lib/onboarding.ts` (CV flag off, step-order helpers),
-  `/onboarding/layout.tsx`. No step pages yet — `/onboarding` isn't a live
-  route.
-- `src/types/database.ts` NOT touched — the new-column types land with the
-  first step that reads them.
+- **`0024` applied to production** (`qgcvcqwsprqyzbdrxegb`) via
+  `apply_migration`. Additive: `student_details.goal_types text[] NOT NULL
+  DEFAULT '{}'`, `student_details.onboarded_at timestamptz`,
+  `education.graduation_year smallint`, the `student_details_freeze_onboarded_at`
+  BEFORE UPDATE trigger, and the one-row backfill (the single existing started
+  profile is stamped, so `/students` still lists it). Verified with a
+  follow-up query. The `.sql` file in `supabase/migrations/` matches.
+- **Student flow**: `/onboarding` (resume redirect, no UI) → `goals`
+  (max-3 cards + optional interests → `looking_for`) → `identity` (name +
+  headline + skippable photo) → `skills` (suggested chips from the
+  marketplace, free-text add, min 1) → `education` (one entry, ESEN
+  prefilled, year select → `graduation_year`; last step while CV is off, its
+  submit stamps `onboarded_at`). `/onboarding/cv` is built but
+  `ONBOARDING_CV_ENABLED=false` so it redirects out; total shows 4.
+- **Company flow**: `/company/onboarding` (create-or-join, now in the shell,
+  redirects an attached user to `/company/dashboard`) → `details` → `logo` →
+  `opportunity`, each skippable. `/company/onboarding` URL unchanged;
+  `createCompany` redirects into `details`.
+- **Gating**: `fetchStudents` → `onboarded_at IS NOT NULL`;
+  `fetchStudentProfile` → `notFound` if not onboarded; `applyToOpportunity`
+  → `redirect('/onboarding?next=…')` for a non-onboarded student, and the
+  detail page shows a "Finish your profile" prompt instead of the apply
+  form; `signIn`/`signUp` route a not-yet-onboarded student to `/onboarding`
+  carrying `?next=`. No public browse route is gated.
+- `updateStudentProfile` refactored to a **partial update** (audit F4) via a
+  new shared `patchStudentDetails`; `updateProfileItem` added to
+  `profile-items.ts`.
 
-**Next, once you've ok'd the migration:** student steps in flow order
-(Goals → Identity → Skills → Education → CV-behind-flag), then company steps,
-then the gating wiring (fetchStudents filter, applyToOpportunity gate,
-post-signup redirect) — that last part only lands after the migration is
-actually applied, since it would break /students against a DB without the
-column.
+**Traced, not executed** — there's no student or company session available,
+so the walk-throughs (goals→…→finish, the resume redirect, the company
+steps) are reasoned, not clicked. `/companies` and the `/students` /
+`/onboarding` login gates are verified in the browser. `0024`'s effect on
+prod is verified by SQL.
+
+### Decisions logged (per the standing rule)
+
+- Search buttons (`/students`, `/companies`, `/company/onboarding`) →
+  `Button variant="secondary"` — search is an auxiliary filter, not a page's
+  primary action.
+- `OnboardingShell` content width `max-w-lg` (not `md`) so the company
+  first-opportunity form fits; still narrow enough for one-question student
+  screens.
+- Company details step reuses `updateCompanyProfile` + a client-side redirect
+  on success rather than a parallel action (keeps one write path; the
+  concern about "two paths to set X" was about student headline).
+- `Avatar` gained a `lg` size (`size-12`) for the student directory card.
+- The onboarding panel keeps the poster gradient — a deliberate §8 exception
+  for the conversion funnel, per the original brief. Commented in the shell.
 
 ---
 
-**The elevation is code-complete.** One gap surfaced during the B sweep —
-see N8. Onboarding is starting now (migration first, shown before it's
-applied).
+**The elevation is code-complete. Onboarding is built.** Remaining open item:
+N6 (opportunity-form `<select>`/`<textarea>` → primitives) — still parked, it
+needs the posting flow exercised and there's no test account.
 
 ---
 

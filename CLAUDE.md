@@ -115,7 +115,7 @@ layers everything after it — read both, the migrations are not optional
 extras. As of this writing:
 
 - `profiles` — one row per authenticated user (`role`: student/company/admin)
-- `student_details` — 1:1 with a student profile (skills, bio, availability, CV), plus `education`/`experiences`/`projects`/`certifications` child tables. All public-read ("for company search") — surfaced at `/students` (signed-in-only directory + filters) and `/students/[id]` (read-only public profile; CV deliberately excluded, it stays in its applicant-scoped private bucket)
+- `student_details` — 1:1 with a student profile (skills, bio, availability, CV), plus `education`/`experiences`/`projects`/`certifications` child tables. All public-read ("for company search") — surfaced at `/students` (signed-in-only directory + filters) and `/students/[id]` (read-only public profile; CV deliberately excluded, it stays in its applicant-scoped private bucket). `0024` adds `goal_types text[]` (opportunity types a student wants — Goals step), `education.graduation_year smallint`, and `onboarded_at timestamptz` — the **onboarding finish-line marker**: a `BEFORE UPDATE` trigger freezes it once set (can't un-onboard), it gates appearing in `/students` (`fetchStudents` / `fetchStudentProfile`) and applying (`applyToOpportunity` redirects a non-onboarded student to `/onboarding`), and existing started profiles were backfilled so nobody dropped. The stepped flow lives at `/onboarding/*` (Goals → Identity → Skills → Education → CV-behind-`ONBOARDING_CV_ENABLED`), server-rendered per step with the resume redirect in `src/lib/onboarding.ts`; `/company/onboarding/*` (create-or-join → details → logo → first opportunity) shares the `OnboardingShell`. Write path for `student_details` is the shared `patchStudentDetails` (partial update — `updateStudentProfile` uses it too now).
 - `companies` — 1:1 with a company profile (name, website, verified flag, logo/banner). Public directory at `/companies` (verified companies + open-role counts, name search) and public page at `/companies/[id]` (logo/banner/description, published opportunities, team) — the company-side mirror of `/students` + `/students/[id]`
 - `company_members` / `company_invites` — multi-user company accounts: an owner plus invited team members (each with their own login and an optional `title` shown in the feed), invite-by-email with accept-your-own-invite RLS
 - `opportunities` — posted by a company (`type`: internship/pfe/job/alternance/freelance; `status`: pending/published/closed). Any company actor can edit (`/company/opportunities/[id]/edit`) or close/reopen it from the dashboard; a `closed` row leaves the marketplace but a student who already applied keeps read access via `has_application_to()` (`0017`). `0022` adds an optional `application_deadline date` — the row stays visible past it but the apply form is replaced with a closed notice and `applyToOpportunity` rejects late submissions server-side (no RLS involved).
@@ -174,6 +174,9 @@ App Router under `web/src/app`, path alias `@/*` → `web/src/*`.
   metadata on first successful login. Don't "fix" this by disabling email
   confirmation. A company-role signup with no pending invite is left
   unattached and routed to `/company/onboarding` (create vs. request-to-join).
+  After provisioning, `signIn()`/`signUp()` send a **student who hasn't
+  finished onboarding** (`student_details.onboarded_at is null`) to
+  `/onboarding` first, carrying their intended destination as `?next=`.
 - **Password reset** is `/forgot-password` → `resetPasswordForEmail` (redirect
   to `/auth/callback?next=/reset-password`) → `route.ts` does the PKCE
   `exchangeCodeForSession` → `/reset-password` form calls `updateUser`.
