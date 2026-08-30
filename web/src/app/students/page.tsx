@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { Badge, EmptyState, Input } from "@/components/ui";
+import { Badge, EmptyState, Input, LinkButton } from "@/components/ui";
 import { fetchStudents, availabilityLabel } from "@/lib/students";
 
 // Student profiles are personal data — visible to signed-in members
@@ -173,12 +173,9 @@ export default async function StudentsPage({
             }
             action={
               hasFilters ? (
-                <Link
-                  href="/students"
-                  className="inline-block py-2 font-mono text-sm text-accent-2"
-                >
-                  Clear filters →
-                </Link>
+                <LinkButton href="/students" variant="primary">
+                  Clear filters
+                </LinkButton>
               ) : undefined
             }
           />

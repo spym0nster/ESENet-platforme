@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { EmptyState, Input } from "@/components/ui";
+import { EmptyState, Input, LinkButton } from "@/components/ui";
 import { fetchCompanyDirectory } from "@/lib/companies";
 
 export const metadata = {
@@ -87,12 +87,9 @@ export default async function CompaniesPage({
             }
             action={
               q ? (
-                <Link
-                  href="/companies"
-                  className="inline-block py-2 font-mono text-sm text-accent-2"
-                >
-                  Clear search →
-                </Link>
+                <LinkButton href="/companies" variant="primary">
+                  Clear search
+                </LinkButton>
               ) : undefined
             }
           />

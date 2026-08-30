@@ -217,12 +217,9 @@ export default async function CompanyProfilePage({
                     : "This company's roles go live once ESENet verifies it."
                 }
                 action={
-                  <Link
-                    href="/opportunities"
-                    className="font-mono text-xs uppercase tracking-widest text-accent-2 hover:text-text"
-                  >
-                    Browse all opportunities
-                  </Link>
+                  <LinkButton href="/opportunities" variant="primary">
+                    Browse opportunities
+                  </LinkButton>
                 }
               />
             ) : (
