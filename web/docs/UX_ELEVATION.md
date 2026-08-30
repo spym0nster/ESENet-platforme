@@ -165,8 +165,9 @@ use generic grey rectangles.
    opacity, linked opportunity as a bordered preview block, engagement bar as a
    quiet footer above a hairline. Comments indented once, never twice.
 3. **`/companies/[id]`** — gradient banner, logo overlapping it by ~26px, tabs
-   (À propos / Offres·n / Équipe / Publications) with a gradient underline on the
-   active tab.
+   (À propos / Offres·n / Équipe / Publications) with a **solid `--accent`**
+   underline on the active tab (see §8 — the amendment moved this off the
+   gradient).
 4. **`/students/[id]`** — same header pattern as company; skills as mono chips;
    education/experience/projects as a hairline-separated list, not nested cards.
 5. **Dashboards** — one stat row, then the actual work list. Don't build a
@@ -239,9 +240,16 @@ accent colour on a single card, and **any full-viewport ambient gradient wash
 behind the app**. (The reference HTML has one; that file is a showcase page, not
 the product. A permanent violet haze behind `/admin` is exactly the AI-designed
 look this section exists to prevent. The marketing landing page may keep a
-gradient; nothing behind a signed-in screen may.) The gradient appears in exactly three places in
-the whole product: the match arc, the company banner, and the active-tab
-underline. Anywhere else, it's a mistake.
+gradient; nothing behind a signed-in screen may.)
+
+**The gradient count (Bilel's amendment, 2026):** the brand gradient appears in
+exactly **two** places in the signed-in product — the **match arc** and the
+**company banner**. The active-tab underline is a **solid `--accent`** bar, not
+the gradient. Outside the signed-in product there are three sanctioned
+exceptions, each a conversion or off-screen surface, each commented at its call
+site: the **marketing landing hero** band (`--poster-grad`), the **onboarding
+shell panel** (the funnel, not product chrome), and the **OG image routes**
+(Satori can't read CSS vars). Anywhere else, it's a mistake.
 
 ---
 

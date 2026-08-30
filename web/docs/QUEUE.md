@@ -28,8 +28,22 @@ against seeded data is labelled **traced, not executed**.
 | F5 | Signup 3-day outage — diagnose + fix email hook | ✅ hook fails open now; env vars → **N9** |
 | — | Straggler sweep (404, error boundary, legal, apply-form banner) | ✅ done — 404 verified |
 
-**Open:** N9 (prod env vars — Bilel). N6 done (`… commit`) — form migrated to
-the ui primitives, verified by posting + editing an opportunity live.
+**Open:** N9 → narrowed to just `EMAIL_FROM` (needs a verified Resend domain
+from Bilel). N10 → French-vs-English spec conflict, needs an (a)/(b) ruling.
+Everything else resolved.
+
+**Deployed 2026-08-30:** `git push origin main` (71-commit backlog) → Vercel
+auto-deploy, build Ready, production alias. `/onboarding` + steps now 200
+(were 404); `/api/auth/email-hook` now 405-on-GET (healthy; was 500). Guarded
+routes serve the same 200 + `<meta refresh>` → `/login` pattern the
+pre-existing routes do — not a regression. Test accounts deleted (above).
+
+**N1 / N2 / N5 — resolved under the "decide for yourself … props, data
+selects" rule (2026-08-30):** N1 (HeaderNav gained 4 props, one caller edited
+same commit) — kept, it's the right shape. N2 (admin bar = 4 public links +
+Admin, no dead Dashboard entry) — kept. N5 (`/saved` query widened by 3
+additive columns + one skills read for the arc) — kept, you asked for the
+arcs. Flags cleared.
 
 ### Task D — onboarding walked end to end (2026-08-30)
 
@@ -297,6 +311,31 @@ visible.
 ---
 
 ## Needs Bilel
+
+### N10 — spec conflict: `UX_ELEVATION.md` §7 says French, the app is English
+
+`UX_ELEVATION.md` §7 ("Voice: French, *tutoiement*…") and its §5 examples
+(`Type · Lieu · Candidatures · Clôture`, `Plus de filtres`, `Postuler`,
+`À propos / Offres / Équipe / Publications`) call for a French UI. **The
+entire shipped product is English** (`<html lang="en">`, every string), and
+`ONBOARDING.md` line 624 — which you reviewed and ruled on — explicitly says
+*"Copy: English, sentence case, plain verbs"*.
+
+So the two specs disagree and the newer, ruled one (plus all shipped code)
+says English. I did **not** touch §7 — per "where the two disagree, say so
+and stop." Options:
+
+- **(a) English wins** — I edit §7's Voice paragraph and the §5 French labels
+  to English, cite the `ONBOARDING.md` precedent, done. ~1 doc commit, zero
+  code change. Recommended — it just aligns the spec with reality.
+- **(b) French wins** — a product-wide i18n pass: every string, a
+  terminology glossary, `lang="fr"`, `tutoiement` throughout. Large, not
+  presentation-polish, not something I'll start without your word. Would also
+  need a call on whether it's French-only or bilingual (ESEN teaches in
+  French; the Talent Fair materials are French; but a lot of Tunisian tech
+  hiring copy is English).
+
+Tell me (a) or (b).
 
 ### N9 — env vars on Vercel Production (signup / email) — F5
 
