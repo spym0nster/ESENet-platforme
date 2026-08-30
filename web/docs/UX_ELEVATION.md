@@ -85,14 +85,23 @@ Type scale (roles, not sizes-in-components):
 
 | Role | Face | Size / weight |
 |---|---|---|
-| Page title | Poppins | 29 / 600, `-0.015em` |
+| Page title (`h1`) | Poppins | `text-3xl font-extrabold` (30 / 800) |
+| Section heading (`h2` inside a page) | Poppins | `text-lg font-semibold` (18 / 600) |
 | Card title | Poppins | 18 / 600 |
 | Body | Manrope | 15 / 400 |
 | Secondary | Manrope | 13.5 / 400, `--muted` |
-| Data label | IBM Plex Mono | 11 / 500, uppercase, `.09em` |
+| Data label / eyebrow | IBM Plex Mono | `text-xs`, uppercase, `tracking-widest`, `--text-muted` |
+
+> The page title was spec'd at 29 / 600 in the first draft. That was a
+> mis-diagnosis: nothing read as loud *by contrast* because every heading in
+> the app was 800, and the fix was to quiet the things around the h1 (which
+> happened — section labels dropped to the mono eyebrow, card meta stepped
+> down in weight and opacity), not to shrink the h1. The whole app settled on
+> `text-3xl font-extrabold` for page titles; this row now matches it.
 
 Mono is reserved for things that are *data*: opportunity type, dates, counts,
-skill tags, section eyebrows. Never for prose.
+skill tags, and the eyebrow/data label above a title. Never for prose, and not
+for a real section heading — that's Poppins `text-lg font-semibold`.
 
 ## 4. Component contracts
 

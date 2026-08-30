@@ -140,7 +140,7 @@ export default async function ApplicationDetailPage({
 
       <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-extrabold">
+          <h1 className="font-display text-3xl font-extrabold">
             {opportunity ? (
               <Link
                 href={`/opportunities/${opportunity.id}`}

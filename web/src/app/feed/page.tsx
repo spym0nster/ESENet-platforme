@@ -88,10 +88,10 @@ export default async function FeedPage({
   return (
     <div className="mx-auto max-w-2xl px-6 py-12">
       <div className="mb-8">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-accent-2">
+        <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
           Community
         </p>
-        <h1 className="mt-2 font-display text-[29px] font-semibold tracking-tight">
+        <h1 className="mt-2 font-display text-3xl font-extrabold">
           Feed
         </h1>
         <p className="mt-2 text-sm text-text-muted">
@@ -145,7 +145,7 @@ export default async function FeedPage({
         <div className="mt-8 text-center">
           <a
             href={`/feed?before=${encodeURIComponent(nextCursor)}`}
-            className="font-mono text-[11px] uppercase tracking-widest text-accent-2 hover:text-text"
+            className="font-mono text-xs uppercase tracking-widest text-accent-2 hover:text-text"
           >
             Older posts
           </a>

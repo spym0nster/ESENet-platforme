@@ -20,7 +20,7 @@ export default async function StudentsPage({
   if (!isSupabaseConfigured()) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-24 text-center">
-        <h1 className="font-display text-2xl font-bold">
+        <h1 className="font-display text-3xl font-extrabold">
           Connect Supabase to see student profiles
         </h1>
         <p className="mt-3 text-text-muted">

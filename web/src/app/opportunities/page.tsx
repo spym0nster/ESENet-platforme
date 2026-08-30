@@ -153,10 +153,10 @@ export default async function OpportunitiesPage({
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
-      <p className="font-mono text-[11px] uppercase tracking-widest text-accent-2">
+      <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
         Opportunities
       </p>
-      <h1 className="mt-2 font-display text-[29px] font-semibold tracking-tight">
+      <h1 className="mt-2 font-display text-3xl font-extrabold">
         Internships, PFE and jobs from ESEN companies
       </h1>
 
@@ -216,7 +216,7 @@ export default async function OpportunitiesPage({
 
       {recommended.length > 0 && (
         <section className="mt-10">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-accent-2">
+          <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
             Recommended for you
           </p>
           <ul className="mt-4 space-y-2">
