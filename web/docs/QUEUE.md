@@ -23,6 +23,33 @@ against seeded data is labelled **traced, not executed**.
 | N3–N7 | Follow-ups from the first review | ✅ done (N3 verified, N4 verified) |
 | A | Keyboard pass on the signed-in nav | ✅ done — report below |
 | B | Consistency sweep | ✅ **swept** — B1–B7 done, 8 commits |
+| O | Onboarding | ⏸ **migration + shell built; steps paused for your migration review** |
+
+### Onboarding — where it stands
+
+- `0024_student_onboarding.sql` — **written, committed, NOT applied.** goal_types
+  + onboarded_at (student_details), graduation_year (education), a BEFORE
+  UPDATE trigger freezing onboarded_at, the /students backfill. Additive,
+  re-runnable, no new RLS policy. **This is your review gate — the 9 step
+  pages hard-depend on its exact column names / types / trigger behaviour, so
+  I stopped here rather than build them against an unreviewed data change.**
+- Shell built (`cea3f2b`): `OnboardingShell` (poster-gradient panel + wordmark
+  + one line — a deliberate §8 exception for the funnel), `OnboardingProgress`
+  (solid --accent, `role="progressbar"` + `aria-valuetext` + visible "Step N
+  of M"), `src/lib/onboarding.ts` (CV flag off, step-order helpers),
+  `/onboarding/layout.tsx`. No step pages yet — `/onboarding` isn't a live
+  route.
+- `src/types/database.ts` NOT touched — the new-column types land with the
+  first step that reads them.
+
+**Next, once you've ok'd the migration:** student steps in flow order
+(Goals → Identity → Skills → Education → CV-behind-flag), then company steps,
+then the gating wiring (fetchStudents filter, applyToOpportunity gate,
+post-signup redirect) — that last part only lands after the migration is
+actually applied, since it would break /students against a DB without the
+column.
+
+---
 
 **The elevation is code-complete.** One gap surfaced during the B sweep —
 see N8. Onboarding is starting now (migration first, shown before it's
