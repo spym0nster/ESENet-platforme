@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESENet — state of the project, 2026-08-30</title>
+<style>
+  :root{
+    --bg:#0B0E36; --surface:#161350; --surface-2:#1E1A63;
+    --text:#F5F3FC; --muted:#B3ADD9; --faint:#7A74A8;
+    --accent:#7B53FD; --accent-2:#1AA6FC; --magenta:#C13584;
+    --line:rgba(245,243,252,.13); --line-strong:rgba(245,243,252,.22);
+    --blocker:#C13584; --important:#7B53FD; --nice:#7A74A8;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6; font-size:16px;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:32px 20px 96px}
+  h1{font-size:1.7rem; line-height:1.25; margin:0 0 4px; font-weight:800; letter-spacing:-.01em}
+  .sub{color:var(--muted); margin:0 0 8px}
+  .note{
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; padding:14px 16px; margin:20px 0 8px; color:var(--muted); font-size:.95rem;
+  }
+  .note strong{color:var(--text)}
+  h2{
+    font-size:1.3rem; margin:44px 0 12px; padding-top:16px;
+    border-top:1px solid var(--line-strong); font-weight:700; letter-spacing:-.01em;
+    scroll-margin-top:16px;
+  }
+  h3{font-size:1.02rem; margin:26px 0 8px; font-weight:700; color:var(--text)}
+  h4{font-size:.95rem; margin:18px 0 6px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em}
+  p{margin:10px 0}
+  a{color:var(--accent-2); text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--surface-2); padding:1px 5px; border-radius:5px; font-size:.86em;
+    word-break:break-word;
+  }
+  ul,ol{padding-left:22px; margin:10px 0}
+  li{margin:5px 0}
+  strong{color:var(--text)}
+
+  /* contents */
+  .toc{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin:22px 0}
+  .toc ol{margin:0; padding-left:20px}
+  .toc li{margin:6px 0}
+  .toc a{color:var(--text)}
+
+  /* generic stacked "table" → blocks */
+  .rows{margin:14px 0; display:flex; flex-direction:column; gap:10px}
+  .row{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+  }
+  .row .k{color:var(--accent-2); font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; font-weight:700}
+  .row .v{margin-top:3px}
+  .row .v.small{font-size:.93rem; color:var(--muted)}
+
+  /* finding cards */
+  .finding{
+    background:var(--surface); border:1px solid var(--line);
+    border-left:4px solid var(--nice);
+    border-radius:12px; padding:14px 16px; margin:14px 0;
+  }
+  .finding.blocker{border-left-color:var(--blocker)}
+  .finding.important{border-left-color:var(--important)}
+  .finding.nice{border-left-color:var(--nice)}
+  .finding .id{
+    display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.8rem; font-weight:700; color:var(--text);
+    background:var(--surface-2); padding:2px 8px; border-radius:6px; margin-right:8px;
+  }
+  .finding .sev{
+    display:inline-block; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
+    padding:2px 8px; border-radius:6px; vertical-align:middle;
+  }
+  .sev.blocker{background:rgba(193,53,132,.18); color:#F0A6D0}
+  .sev.important{background:rgba(123,83,253,.18); color:#C6B3FF}
+  .sev.nice{background:rgba(122,116,168,.2); color:var(--muted)}
+  .finding h4{margin:10px 0 4px; color:var(--text); text-transform:none; letter-spacing:0; font-size:1rem}
+  .finding dl{margin:8px 0 0; display:flex; flex-direction:column; gap:6px}
+  .finding dt{font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); font-weight:700}
+  .finding dd{margin:0 0 4px}
+  .sevbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:2px}
+
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin:10px 0 4px; font-size:.85rem; color:var(--muted)}
+  .legend span{display:inline-flex; align-items:center; gap:6px}
+  .dot{width:10px; height:10px; border-radius:3px; display:inline-block}
+  .dot.b{background:var(--blocker)} .dot.i{background:var(--important)} .dot.n{background:var(--nice)}
+
+  hr{border:0; border-top:1px solid var(--line); margin:28px 0}
+  .closer{background:var(--surface); border:1px solid var(--line-strong); border-radius:14px; padding:16px 18px; margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>ESENet — state of the project, 2026-08-30</h1>
+<p class="sub">Full audit. No fixes were made for this report; the only change is this file and its Markdown twin (<code>STATE-2026-08-30.md</code>, the source of truth). Written against <code>main</code> @ <code>1ebc765</code>, production in sync.</p>
+
+<div class="note">
+<strong>Honesty note:</strong> "verified" below means I executed it and saw the result. "Traced" means I read the code path and believe it works but did not run it. The database facts come from live <code>SELECT</code>s against the production Supabase project (<code>qgcvcqwsprqyzbdrxegb</code>) today. The deployed <em>build</em> behaviour is mostly traced, not verified — see &sect;4 and the closing section.
+</div>
+
+<div class="toc">
+<ol>
+<li><a href="#s1">Where we are</a></li>
+<li><a href="#s2">What was built</a></li>
+<li><a href="#s3">What is broken or open</a></li>
+<li><a href="#s4">What was never verified</a></li>
+<li><a href="#s5">Risk before the fair</a></li>
+<li><a href="#s6">What's next</a></li>
+<li><a href="#s7">What we could explore</a></li>
+<li><a href="#s8">What I'd do differently</a></li>
+<li><a href="#s9">What I could not verify and why</a></li>
+</ol>
+</div>
+
+<!-- ===================== 1 ===================== -->
+<h2 id="s1">1. Where we are</h2>
+
+<p><strong>Phase, per <code>CLAUDE.md</code>:</strong> Phase 1 (student profile, company posting, browse + filter, apply, admin approval, <code>/students</code>) is built. Phase 2 (multi-user company accounts, the community feed) is built on top. A "Phase 3" UX-elevation pass (not a roadmap phase — a polish workstream from <code>UX_ELEVATION.md</code>) is code-complete. Stepped onboarding (Phase 1 polish) is built. Nothing from the deferred roadmap (alumni network, scored matching engine, QR/event-day companion, freelance/hackathon modules) has been started.</p>
+
+<p><strong>Deploy sync:</strong> <code>main</code> @ <code>1ebc765</code> == <code>origin/main</code> == the current Vercel production deployment. In sync <strong>as of today, 2026-08-30</strong>. Before today's deploy, production was running commit <code>6ad46ed</code> (2026-08-29) and was <strong>71 commits behind</strong> — the entire B-consistency sweep, the whole onboarding feature, the directory-page sweep, the straggler sweep, and the fail-open email-hook fix existed only locally. Production ran the <em>broken</em> email hook the whole time.</p>
+
+<p><strong>Migrations:</strong> 24 files (<code>0002</code>–<code>0024</code>) plus <code>schema.sql</code>. All applied to production — confirmed today: 20 public tables, RLS enabled on all 20, <code>student_details.goal_types</code> + <code>onboarded_at</code> present, the <code>student_details_freeze_onboarded_at</code> trigger present. Only <code>0017</code>–<code>0024</code> are recorded in <code>supabase_migrations.schema_migrations</code>; <code>schema.sql</code>–<code>0016</code> were applied by hand in the SQL editor and aren't tracked, but their objects exist.</p>
+
+<p><strong>Accounts in production right now (6):</strong> the 4 documented QA fixtures plus <strong>two undocumented student accounts created 2026-08-30</strong> — <code>ismail.ammar@esen.tn</code> (started, <em>not</em> onboarded) and <code>ismailammar202@gmail.com</code> (onboarded). Not in <code>QA.md</code>; they appear to be your own signup tests. One completed the real onboarding flow — but not through the deployed build (it wasn't deployed yet at that timestamp) and not by me, so I can't attest to how it went. <code>ismail.ammar@esen.tn</code> is a live example of the stuck state in finding <strong>R1</strong>.</p>
+
+<h4>What a real user can do on esenet-platforme.vercel.app today</h4>
+<div class="rows">
+  <div class="row"><div class="k">Browse opportunities / companies / feed</div><div class="v small">Works. Public, no auth. Verified in-browser today.</div></div>
+  <div class="row"><div class="k">Read a shared opportunity / company link</div><div class="v small">Works. Public.</div></div>
+  <div class="row"><div class="k">Sign up with their own email</div><div class="v small"><strong>Half-broken.</strong> The account row is created (the hook fails open now), but the confirmation email only sends to the Resend account owner's address (<code>EMAIL_FROM</code> unset). Any other address: no email, and with confirmation ON they cannot log in. See B1.</div></div>
+  <div class="row"><div class="k">Log in (existing account)</div><div class="v small">Works for the 6 accounts that exist.</div></div>
+  <div class="row"><div class="k">Onboard / edit profile / apply / save / post</div><div class="v small">Code deployed. <strong>Not verified on the deployed build.</strong> Walked once against the prod database via a local dev server on 2026-08-30, with accounts since deleted.</div></div>
+  <div class="row"><div class="k">Company: onboard / post / manage team</div><div class="v small">Same — deployed, traced. A posted opportunity is <code>pending</code> until an admin verifies the company.</div></div>
+  <div class="row"><div class="k">Receive a notification email</div><div class="v small"><code>SUPABASE_SERVICE_ROLE_KEY</code> is now set in Production. Whether the value is valid and whether a send goes out is <strong>not verified</strong> (F1/F2).</div></div>
+  <div class="row"><div class="k">Receive an auth email at a non-owner address</div><div class="v small">No. See B1.</div></div>
+</div>
+
+<!-- ===================== 2 ===================== -->
+<h2 id="s2">2. What was built</h2>
+
+<h3>Routes (41 <code>page.tsx</code> + 2 route handlers)</h3>
+<ul>
+<li><strong>Public marketplace:</strong> <code>/</code>, <code>/opportunities</code>, <code>/opportunities/[id]</code>, <code>/companies</code>, <code>/companies/[id]</code>, <code>/feed</code>.</li>
+<li><strong>Student:</strong> <code>/onboarding</code> + 5 steps, <code>/profile</code>, <code>/students</code>, <code>/students/[id]</code>, <code>/applications</code>, <code>/applications/[id]</code>, <code>/saved</code>, <code>/notifications</code>.</li>
+<li><strong>Company:</strong> <code>/company/onboarding</code> + 3 steps, <code>/company/dashboard</code>, <code>/company/profile</code>, <code>/company/team</code>, <code>/company/opportunities/new</code>, <code>/company/opportunities/[id]/edit</code>, <code>/company/opportunities/[id]/applicants</code>.</li>
+<li><strong>Admin:</strong> <code>/admin</code>, <code>/admin/companies</code>, <code>/admin/reports</code>.</li>
+<li><strong>Auth:</strong> <code>/login</code>, <code>/signup</code>, <code>/forgot-password</code>, <code>/reset-password</code>, <code>/account-deleted</code>, <code>/auth/callback</code>, <code>/api/auth/email-hook</code>.</li>
+<li><strong>Legal / meta:</strong> <code>/privacy</code>, <code>/terms</code>, <code>/cookies</code>, <code>robots.txt</code>, <code>sitemap.xml</code>, default + per-opportunity <code>opengraph-image</code>, <code>manifest.webmanifest</code>.</li>
+</ul>
+
+<h3>Data model (20 tables)</h3>
+<p><code>profiles</code>, <code>student_details</code> (+ <code>education</code>, <code>experiences</code>, <code>projects</code>, <code>certifications</code>), <code>companies</code>, <code>company_members</code>, <code>company_invites</code>, <code>company_join_requests</code>, <code>company_ownership_transfers</code>, <code>opportunities</code>, <code>applications</code>, <code>application_status_events</code>, <code>saved_opportunities</code>, <code>posts</code>, <code>post_comments</code>, <code>post_likes</code>, <code>content_reports</code>, <code>notifications</code>. RLS on every one. Column-level rules enforced by <code>BEFORE UPDATE</code> triggers because RLS can't gate columns.</p>
+
+<h3>Design system</h3>
+<ul>
+<li>Tokens retuned in <code>globals.css</code>; derived tokens (<code>--line</code>, <code>--muted</code>, <code>--faint</code>, <code>--lift</code>, <code>--glow</code>, radius + spacing scale) wired as Tailwind v4 utilities.</li>
+<li><code>src/components/ui/*</code>: <code>Button</code>/<code>LinkButton</code>, <code>Field</code>/<code>Input</code>/<code>Textarea</code>/<code>Select</code>, <code>Card</code>, <code>Badge</code>, <code>EmptyState</code>, <code>Skeleton</code>, <code>MatchArc</code>, <code>Avatar</code>, <code>CompanyLogo</code>, <code>Chip</code>, <code>Section</code>.</li>
+<li><code>MatchArc</code> — the signature element: a ring stroked with the shared <code>esenetArc</code> gradient, filled to skill-overlap. Renders on "Recommended for you", <code>/opportunities/[id]</code>, and <code>/saved</code>. No arc for signed-out or &lt;3-skill viewers.</li>
+<li>Brand gradient confined to the match arc + company banner in signed-in product; active-tab underline is solid <code>--accent</code>. Sanctioned exceptions: marketing hero, onboarding shell panel, OG images.</li>
+<li><code>useDisclosure</code> hook shared by the account menu, mobile nav sheet, notification bell (Escape + focus return, arrow cycling, focus trap).</li>
+</ul>
+
+<h3>Onboarding (built 2026-08-30, migration <code>0024</code>)</h3>
+<ul>
+<li>Shared <code>OnboardingShell</code> + <code>OnboardingProgress</code>, used by both flows.</li>
+<li><strong>Student:</strong> <code>/onboarding</code> (resume redirect) &rarr; Goals (<code>goal_types text[]</code>, max 3, + interests folded into <code>looking_for</code>) &rarr; Identity (<code>full_name</code> + <code>headline</code> + skippable photo) &rarr; Skills (marketplace suggestions + seed fallback, min 1) &rarr; Education (one entry, ESEN pre-filled, <code>graduation_year smallint</code>). Education stamps <code>onboarded_at</code> while CV is disabled.</li>
+<li><strong>Company:</strong> <code>/company/onboarding</code> (create-or-join, unchanged URL) &rarr; Details &rarr; Logo &rarr; First opportunity. All three added steps skippable.</li>
+<li><strong>Gating:</strong> <code>fetchStudents</code>/<code>fetchStudentProfile</code> require <code>onboarded_at IS NOT NULL</code> (backfilled); <code>applyToOpportunity</code> redirects a non-onboarded student to <code>/onboarding</code>; <code>signIn</code>/<code>signUp</code> route them there. No public browse route is gated.</li>
+<li><code>onboarded_at</code> frozen once set by a <code>BEFORE UPDATE</code> trigger. Verified today: column, trigger, backfill live; 2 students carry a non-null <code>onboarded_at</code>.</li>
+</ul>
+
+<h3>Built and then disabled / parked</h3>
+<div class="rows">
+  <div class="row"><div class="k">/onboarding/cv step</div><div class="v small">Fully built, gated behind <code>ONBOARDING_CV_ENABLED = false</code>. Route redirects out; progress total is 4. <strong>Why:</strong> the <code>cvs</code> bucket + policies have never had a security review. Flip the constant after the review.</div></div>
+  <div class="row"><div class="k">Notification &rarr; email mirror</div><div class="v small">Code complete. Dark in production until ~4h ago (F1). Service-role key now set; an actual send is unverified.</div></div>
+  <div class="row"><div class="k">interests as its own column</div><div class="v small">Cut before it was built — no consumer; <code>looking_for</code> covers it.</div></div>
+  <div class="row"><div class="k">Scored matching engine</div><div class="v small">Not built (deferred). Stand-in is <code>fetchRecommendedOpportunities</code> — tag-overlap, no scoring.</div></div>
+  <div class="row"><div class="k">NEXT_PUBLIC_SITE_URL in production</div><div class="v small">Not set. Code falls back to the Vercel URL. Affects canonical/OG/sitemap/email absolute URLs — see R6.</div></div>
+</div>
+
+<!-- ===================== 3 ===================== -->
+<h2 id="s3">3. What is broken or open</h2>
+<p>Ranked. IDs: <code>F*</code> from <code>SECURITY_PERFORMANCE_AUDIT.md</code>, <code>N*</code> from <code>QUEUE.md</code>, <code>R*</code> new here.</p>
+<div class="legend">
+  <span><span class="dot b"></span>BLOCKER</span>
+  <span><span class="dot i"></span>IMPORTANT</span>
+  <span><span class="dot n"></span>NICE-TO-HAVE</span>
+</div>
+
+<h3>Blocker</h3>
+
+<div class="finding blocker">
+  <div class="sevbar"><span class="id">B1</span><span class="sev blocker">Blocker</span></div>
+  <h4>Signup email fails for every address except the Resend account owner</h4>
+  <dl>
+    <dt>What</dt><dd><code>EMAIL_FROM</code> is unset in Vercel Production (confirmed via <code>vercel env ls</code> — 5 vars, no <code>EMAIL_FROM</code>). The sender defaults to Resend's shared <code>onboarding@resend.dev</code>, which only delivers to the Resend account owner until a domain is verified. With the fail-open hook now deployed, a real signup <em>creates the account row</em> and then the confirmation email silently fails. Confirmation is ON, so the user is stuck at "check your inbox" forever.</dd>
+    <dt>Who it affects</dt><dd>Every prospective real user. The top of the funnel, broken right now.</dd>
+    <dt>Fix</dt><dd>Register/choose a domain, verify it in Resend (SPF + DKIM + MX), set <code>EMAIL_FROM=ESENet &lt;no-reply@that-domain&gt;</code> in Production, redeploy. Interim: turn confirmation OFF in Supabase (stopgap only, against <code>CLAUDE.md</code>).</dd>
+    <dt>Cost</dt><dd>~1h once a domain exists. Blocked on domain acquisition (external). DNS guidance is in <code>QUEUE.md</code> N9.</dd>
+    <dt>Dependency</dt><dd>You own <code>esenet-platforme.vercel.app</code> but no custom domain. A <code>*.vercel.app</code> subdomain <strong>cannot</strong> be a Resend sending domain (you don't control its DNS). A real domain is required.</dd>
+  </dl>
+</div>
+
+<div class="finding blocker">
+  <div class="sevbar"><span class="id">B2 / F5</span><span class="sev blocker">Blocker (historical + ongoing)</span></div>
+  <h4>Production ran the broken email hook for ~3 days — now fixed in code, deployed today</h4>
+  <dl>
+    <dt>What</dt><dd><code>SEND_EMAIL_HOOK_SECRET</code> was Preview-only; the prod route's guard returned 500; GoTrue rolled back every signup. Then, with the secret added, the non-fail-open route returned 502 on non-owner addresses. Zero real accounts were created between 2026-08-27 and today.</dd>
+    <dt>Status</dt><dd>The fail-open rewrite (<code>223c592</code>) is now deployed. The route no longer blocks signup. <strong>B1 is the remaining half</strong> — account created, email still not delivered.</dd>
+    <dt>Cost</dt><dd>Code fix done. A monitored alert on "auth email send failed" (currently a <code>console.error</code> nobody watches) — ~2h, not done.</dd>
+  </dl>
+</div>
+
+<h3>Important</h3>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">F3</span><span class="sev important">Important</span></div>
+  <h4><code>student_details</code> is fully public-read, no opt-out</h4>
+  <dl>
+    <dt>What</dt><dd><code>student_details</code> + its 4 child tables carry <code>SELECT using (true)</code>. Any authenticated user — including a company that self-signed-up seconds ago and isn't verified — can read every student's headline, bio, skills, availability, LinkedIn, and full education/experience/project history straight from PostgREST. The <code>/students</code> UI gates on <code>auth.getUser()</code>; that is a convention, not a policy. No <code>visible</code>/<code>listed</code> column, so a student cannot opt out.</dd>
+    <dt>Who it affects</dt><dd>Every real student, the moment they onboard. The CV is correctly private; the rest is open.</dd>
+    <dt>Fix</dt><dd>Product decision first (public-to-signed-in / opt-in / opt-out), then a policy. If opt-out: <code>student_details.listed boolean default true</code>, tighten SELECT to <code>listed OR auth.uid() = profile_id</code>, add the toggle. Minimum: <code>using (true)</code> &rarr; <code>using (auth.role() = 'authenticated')</code>.</dd>
+    <dt>Cost</dt><dd>Decision — yours. Migration + toggle UI — ~half a day. <strong>Needs an RLS policy change &rarr; your sign-off.</strong></dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">F1</span><span class="sev important">Important</span></div>
+  <h4>Notification emails were silently off in production</h4>
+  <dl>
+    <dt>What</dt><dd>The <code>notify()</code> &rarr; email path needs <code>SUPABASE_SERVICE_ROLE_KEY</code>, which was Preview-only until ~4h before today's deploy. It is now set in Production.</dd>
+    <dt>Status</dt><dd>Likely resolved, <strong>not verified</strong>. I have not seen a notification email send. F2 means "the var is set" is not proof.</dd>
+    <dt>Fix</dt><dd>Send one real end-to-end notification and confirm it arrives. ~30 min with a seeded account pair.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">F2</span><span class="sev important">Important</span></div>
+  <h4><code>isAdminConfigured()</code> can't distinguish a service-role key from an anon key</h4>
+  <dl>
+    <dt>What</dt><dd><code>Boolean(SUPABASE_SERVICE_ROLE_KEY &amp;&amp; url)</code> — a presence check. Returns <code>true</code> for any non-empty string, including the anon key (exactly how <code>.env.local</code> sat misconfigured unnoticed). A wrong key &rarr; every admin call 401s, caught and logged, zero emails, nothing thrown.</dd>
+    <dt>Who it affects</dt><dd>Whoever configures the env. Converts a loud failure into silent rot.</dd>
+    <dt>Fix</dt><dd>Reject a value starting <code>sb_publishable_</code> or decoding to a JWT with <code>"role":"anon"</code>; log a hard error at boot. Or a one-shot probe call on first use. ~2h.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R1</span><span class="sev important">Important</span></div>
+  <h4>A student who abandons onboarding is invisible and can't apply, with no recovery prompt</h4>
+  <dl>
+    <dt>What</dt><dd>Onboarding gates both <code>/students</code> listing and <code>applyToOpportunity</code> on <code>onboarded_at</code>. A student who signs up, starts, and drops off is in limbo — not in the directory, apply button replaced by "Finish your profile". <code>ismail.ammar@esen.tn</code> is in this state in production now. The only nudge back is if they themselves return to a gated action. No email, no banner.</dd>
+    <dt>Who it affects</dt><dd>Every student who doesn't finish in one sitting — for a 4-step phone flow, a meaningful fraction.</dd>
+    <dt>Fix</dt><dd>(a) a persistent "finish your profile" banner on every signed-in page while <code>onboarded_at</code> is null (~2h, presentation-layer); (b) optionally a 24h reminder email (needs B1).</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R2</span><span class="sev important">Important</span></div>
+  <h4><code>/companies</code> directory does an unbounded fetch + client-side sort</h4>
+  <dl>
+    <dt>What</dt><dd><code>fetchCompanyDirectory</code> selects <em>all</em> verified companies, then a second query for <em>all</em> their published opportunities, then sorts in JS. No <code>.range</code>, no <code>.limit</code>, no pagination UI. <code>/opportunities</code> and <code>/students</code> both paginate at 20; <code>/companies</code> was never given the same treatment (not in the item-7 route list; N7/N8 only added <code>loading.tsx</code> and swept primitives).</dd>
+    <dt>Who it affects</dt><dd>Everyone browsing companies once there are &gt;50–100 verified. Same class of bug as the pre-<code>0011</code> <code>/opportunities</code> query. Slow, not broken.</dd>
+    <dt>Fix</dt><dd>Paginate like <code>/students</code>. Push the open-role count into one grouped query or a view. ~3h.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R3</span><span class="sev important">Important</span></div>
+  <h4>50 RLS policies re-evaluate <code>auth.uid()</code> per row (<code>auth_rls_initplan</code>)</h4>
+  <dl>
+    <dt>What</dt><dd>Supabase's performance advisor flags 50 policies that call <code>auth.uid()</code> / <code>current_setting()</code> once per row instead of once per query. Wrapping as <code>(select auth.uid())</code> makes Postgres evaluate them once. The biggest DB-side perf item.</dd>
+    <dt>Who it affects</dt><dd>Every query against a table with 100s+ rows once real data lands — <code>opportunities</code>, <code>applications</code>, <code>student_details</code>, <code>notifications</code>, <code>posts</code>. Invisible at 6 rows.</dd>
+    <dt>Fix</dt><dd>One mechanical migration rewriting <code>auth.uid()</code> &rarr; <code>(select auth.uid())</code> across every policy. Semantically identical.</dd>
+    <dt>Cost</dt><dd>~half a day. <strong>Touches RLS policies &rarr; your sign-off</strong>, though it changes performance only, not behaviour.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R4</span><span class="sev important">Important</span></div>
+  <h4>No rate limiting anywhere</h4>
+  <dl>
+    <dt>What</dt><dd><code>grep</code> for <code>rate.?limit|throttle|ratelimit</code> in <code>src/</code> returns nothing. Signup, <code>applyToOpportunity</code>, <code>createPost</code>, <code>createComment</code>, <code>reportContent</code>, <code>inviteTeamMember</code>, password reset — none throttled at the app layer. Supabase Auth has coarse limits; the app actions have none.</dd>
+    <dt>Who it affects</dt><dd>The platform during a public launch. Signup bombing spends Supabase's low transactional-email quota (<code>QA.md</code> warns it's low); post/report spam floods the feed and the admin queue; application spam floods companies.</dd>
+    <dt>Fix</dt><dd>A lightweight per-user / per-IP limiter on the mutating actions. Upstash Redis (free tier) + a helper, or Vercel firewall rules for the auth routes. ~half a day.</dd>
+    <dt>Cost</dt><dd>~4h. New dependency (Redis client) unless done with Vercel WAF.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R5</span><span class="sev important">Important</span></div>
+  <h4><code>DESIGN_SYSTEM.md</code> is now actively wrong and was never reconciled with <code>UX_ELEVATION.md</code></h4>
+  <dl>
+    <dt>What</dt><dd><code>DESIGN_SYSTEM.md</code> says forms use <code>rounded-md</code>, cards <code>rounded-lg</code>, and <code>Badge</code> has <code>info/neutral/success/danger</code> variants. The B-sweep changed all of that to <code>rounded-ctrl</code>/<code>rounded-card</code> and <code>tone=</code>. The file's header promises a reconcile "as the last commit of the elevation work" — that commit never happened.</dd>
+    <dt>Who it affects</dt><dd>Anyone onboarding onto the codebase; future-me. A contributor following <code>DESIGN_SYSTEM.md</code> writes wrong code.</dd>
+    <dt>Fix</dt><dd>Reconcile the two docs — fold the still-true parts into <code>UX_ELEVATION.md</code> or update in place, delete the stale rows. ~2h, docs only.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R6</span><span class="sev important">Important</span></div>
+  <h4><code>NEXT_PUBLIC_SITE_URL</code> is unset in production</h4>
+  <dl>
+    <dt>What</dt><dd>The env var feeding <code>metadataBase</code>, canonical URLs, OG image URLs, the sitemap's absolute links, and links inside outgoing emails is not set in Vercel Production. The code falls back to the Vercel-provided URL, which may be a per-deployment hostname rather than the stable alias.</dd>
+    <dt>Who it affects</dt><dd>Link previews when someone shares an opportunity; search-engine canonicalisation; the click-through link in confirmation emails.</dd>
+    <dt>Fix</dt><dd>Set <code>NEXT_PUBLIC_SITE_URL=https://esenet-platforme.vercel.app</code> (or the custom domain once it exists) in Production. 5 minutes.</dd>
+    <dt>Not verified</dt><dd>I did not confirm the fallback actually misbehaves — it may resolve correctly. Flagging because it's unset and documented as needed.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R7</span><span class="sev important">Important</span></div>
+  <h4>Account deletion can't block re-login</h4>
+  <dl>
+    <dt>What</dt><dd><code>deleteMyAccount()</code> anonymises the profile and sets <code>deactivated_at</code>, but can't touch <code>auth.users</code>. A "deleted" account can still authenticate — it just lands on an empty anonymised profile. Documented in <code>QA.md</code> as a known limitation.</dd>
+    <dt>Who it affects</dt><dd>Anyone who deletes their account expecting it gone. Low volume pre-fair, but a GDPR-adjacent expectation gap.</dd>
+    <dt>Fix</dt><dd>A service-role call to ban the auth user as part of deletion, or a middleware check on <code>deactivated_at</code> that force-signs-out. ~3h.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R8</span><span class="sev important">Important</span></div>
+  <h4>Company verification is a manual, single-point admin bottleneck</h4>
+  <dl>
+    <dt>What</dt><dd>Every company's opportunities are invisible (<code>pending</code>, RLS-hidden) until an admin opens <code>/admin/companies</code> and clicks verify. There is one admin fixture. No notification to admins on company signup, no queue SLA, no bulk action.</dd>
+    <dt>Who it affects</dt><dd>Every company that signs up during the fair. If 40 companies register in the week before and nobody watches the queue, students see an empty marketplace.</dd>
+    <dt>Fix</dt><dd>(a) notify admins on company signup (the <code>notify()</code> infra exists); (b) the "N awaiting verification" badge is already on <code>/admin</code>; (c) decide who owns that queue during the fair. (a) ~2h.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">N10</span><span class="sev important">Important</span></div>
+  <h4>Spec conflict: <code>UX_ELEVATION.md</code> &sect;7 says French, the whole app is English</h4>
+  <dl>
+    <dt>What</dt><dd>&sect;7 ("Voice: French, tutoiement") and its &sect;5 examples call for a French UI. Every string is English; <code>&lt;html lang="en"&gt;</code>; <code>ONBOARDING.md</code> (which you reviewed) explicitly says English. The specs disagree; the newer/ruled one plus all shipped code say English.</dd>
+    <dt>Fix</dt><dd>(a) align &sect;7 to English — ~1 doc commit, recommended; or (b) a product-wide i18n pass — large, needs a French-only vs bilingual decision.</dd>
+    <dt>Cost</dt><dd>(a) 30 min. (b) days.</dd>
+    <dt>Status</dt><dd>Logged in <code>QUEUE.md</code>, awaiting your (a)/(b) call. I did not touch &sect;7.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">F5-fu</span><span class="sev important">Important (trivial fix)</span></div>
+  <h4><code>auth_leaked_password_protection</code> disabled</h4>
+  <dl>
+    <dt>What</dt><dd>Supabase's HaveIBeenPwned check is off. One dashboard toggle (Authentication &rarr; Providers). <code>QA.md</code> already notes it.</dd>
+    <dt>Fix</dt><dd>Toggle it on. 1 minute.</dd>
+  </dl>
+</div>
+
+<div class="finding important">
+  <div class="sevbar"><span class="id">R9</span><span class="sev important">Important (unknown)</span></div>
+  <h4><code>/auth/callback</code> redirect-allowlist status unknown</h4>
+  <dl>
+    <dt>What</dt><dd><code>QA.md</code> flags that <code>&lt;prod-origin&gt;/auth/callback</code> and the localhost equivalent must be in Supabase &rarr; Authentication &rarr; URL Configuration &rarr; Redirect URLs, or every email link errors out. Whether the production origin is allowlisted is not visible from the code, and I did not test a real email link.</dd>
+    <dt>Fix</dt><dd>Check the dashboard; add the origin if missing. 5 minutes.</dd>
+  </dl>
+</div>
+
+<h3>Nice-to-have</h3>
+
+<div class="finding nice">
+  <div class="sevbar"><span class="id">R10</span><span class="sev nice">Nice-to-have</span></div>
+  <h4>125 <code>multiple_permissive_policies</code> warnings</h4>
+  <dl>
+    <dt>What</dt><dd>Multiple permissive RLS policies for the same role+action on a table, all OR-evaluated per query. Deliberate (public + owner + admin stacked), but a per-query CPU tax at scale. Consolidating to one policy per role+action with an internal <code>OR</code> is the fix — large, mechanical, low return until traffic is real.</dd>
+    <dt>Recommendation</dt><dd>Defer.</dd>
+  </dl>
+</div>
+
+<div class="finding nice">
+  <div class="sevbar"><span class="id">R11</span><span class="sev nice">Nice-to-have</span></div>
+  <h4>19 unindexed foreign keys, 6 unused indexes</h4>
+  <dl>
+    <dt>What</dt><dd><code>0011</code> covered the hot ones; <code>application_status_events.application_id</code> and 18 others still have no covering index. Separately, 6 indexes (e.g. <code>opportunities_type_idx</code>) have never been used — speculative adds, minor write overhead.</dd>
+    <dt>Fix</dt><dd>One additive migration cleans both. ~2h. Fold into the R3 pass.</dd>
+  </dl>
+</div>
+
+<div class="finding nice">
+  <div class="sevbar"><span class="id">R12</span><span class="sev nice">Nice-to-have</span></div>
+  <h4><code>/notifications</code> capped at 50; admin queues unbounded</h4>
+  <dl>
+    <dt>What</dt><dd><code>fetchNotifications</code> defaults to <code>limit=50</code>, no "load more". <code>/admin/companies</code> and <code>/admin/reports</code> are fully unbounded (grow with every signup / report).</dd>
+    <dt>Recommendation</dt><dd>Low priority — admin volume is small, notification history isn't load-bearing.</dd>
+  </dl>
+</div>
+
+<div class="finding nice">
+  <div class="sevbar"><span class="id">R13</span><span class="sev nice">Nice-to-have</span></div>
+  <h4>Every route renders dynamically because <code>SiteHeader</code> calls <code>cookies()</code></h4>
+  <dl>
+    <dt>What</dt><dd>The root-layout header does <code>createClient()</code> + <code>auth.getUser()</code> on every request, opting every page — including <code>/privacy</code>, <code>/terms</code>, <code>/cookies</code>, the marketing landing — into dynamic rendering and a Supabase round-trip. Static content pays an auth tax.</dd>
+    <dt>Fix</dt><dd>Split the header into a static shell + a client auth island, or cache the user lookup. ~3h. In <code>SECURITY_PERFORMANCE_AUDIT.md</code>'s "also tracked" tail.</dd>
+  </dl>
+</div>
+
+<div class="finding nice">
+  <div class="sevbar"><span class="id">R14</span><span class="sev nice">Nice-to-have</span></div>
+  <h4><code>/admin</code> stat query <code>.limit(5000)</code> on <code>applications</code></h4>
+  <dl>
+    <dt>What</dt><dd><code>src/lib/admin.ts</code> caps the applications count read at 5000 rows. Past that the admin overview silently undercounts. Fine for a year; noting it.</dd>
+  </dl>
+</div>
+
+<!-- ===================== 4 ===================== -->
+<h2 id="s4">4. What was never verified</h2>
+
+<h3>Only ever traced (code read, never executed against a running build)</h3>
+<ul>
+<li><strong>The entire signed-in experience on the deployed Vercel build.</strong> Onboarding (both flows), <code>/profile</code> edits, apply, withdraw, save/unsave, feed post/comment/like/edit, notifications, the account menu, company dashboard, team invites, join requests, ownership transfer, account deletion, all admin actions. <code>QUEUE.md</code> labels most of this "traced, not executed."</li>
+<li><strong>Onboarding end-to-end.</strong> Walked once on 2026-08-30 against the production <em>database</em> through a local dev server, with admin-confirmed accounts since deleted. Never run against <code>esenet-platforme.vercel.app</code>. The Task D checks in <code>QUEUE.md</code> were done that way — real flow, real DB, local server, not the deployed build.</li>
+<li><strong><code>error.tsx</code></strong> — code-reviewed, never triggered.</li>
+<li><strong>The email hook's happy path in production</strong> — the 401-on-bad-signature and the local <code>delivered@resend.dev</code> 200 were verified locally weeks ago; a real prod signup delivering a real email has never happened (B1/B2).</li>
+</ul>
+
+<h3><code>QA.md</code> claims never run, or marked unverified there</h3>
+<ul>
+<li>"Recommended for you" strip rendering (no QA student password) — SQL checked, render not.</li>
+<li>"Similar opportunities" — verified once with a throwaway row, not since.</li>
+<li>Application-deadline apply path end-to-end (no QA student password).</li>
+<li>Post edit / comment edit in-browser round trip — render checked via SQL fixture, the actual Save not.</li>
+<li>Notification bell with real data + auto-mark-read-on-open (tested via a mock).</li>
+<li>Notification emails end-to-end (F1).</li>
+<li>Most "verify with direct REST as another user" security assertions in <code>QA.md</code>'s security list — some were run live during Phase 2 (the "confirmed live" ones), many are checklist items.</li>
+<li>Real touch-tap interaction at mobile widths — the Browser pane's tap synthesis hangs under device emulation, so only layout/overflow/tap-target <em>size</em> were checked.</li>
+<li>The full <code>QA.md</code> regression checklist has <strong>not</strong> been run start-to-finish after the onboarding work, the B-sweep, or today's deploy.</li>
+</ul>
+
+<h3>Needs a seeded environment vs. just needs a click</h3>
+<p><strong>Needs seeding</strong> (multiple students, varied profiles, a company with applicants): the match arc at realistic overlap, <code>/students</code> filters + pagination past page 1, the recommended strip populated, applicant-review with more than one applicant, feed pagination, any list route at volume.</p>
+<p><strong>Just needs someone logged in to click</strong> (the 4 QA accounts exist, the password is recoverable via reset): the entire onboarding walk on the deployed build, <code>/profile</code> edits, apply/withdraw, save, feed post/comment, the account-menu keyboard behaviour, company dashboard + team, admin verify + moderation. None needs new data — it needs a session and 30 minutes.</p>
+
+<!-- ===================== 5 ===================== -->
+<h2 id="s5">5. Risk before the fair</h2>
+<p>Assume November 2026, real students uploading real CVs, real companies posting real jobs, a signup surge in the week before.</p>
+
+<h3>Storage</h3>
+<ul>
+<li><strong><code>cvs</code> bucket</strong> — private, folder-ownership INSERT policy, SELECT widened by <code>0018</code> to any actor of a company the student applied to. <strong>Never security-reviewed</strong> (<code>ONBOARDING.md</code> &sect;5 states this — it's why the CV onboarding step is disabled). Real CVs are real PII. Before students upload real ones: can a company read a CV of a student who didn't apply to them? A former team member? Does the 10-min signed-URL leak via logs or referrer? Is there a size/type check at the storage layer, or only in the app action (which a direct API call bypasses)?</li>
+<li><strong><code>profile-media</code> and <code>post-media</code></strong> — public buckets, folder-ownership write. Anyone can guess <code>&lt;uuid&gt;/avatar.jpg</code>. Acceptable for avatars. But: no malware scanning, no image moderation, and the 5 MB limit is enforced only in the app action — a direct <code>storage.upload</code> with the user's own JWT is bounded by the RLS policy, which checks the path prefix, not size or type. A user can upload a 500 MB file or a non-image to their own folder.</li>
+<li>No lifecycle policy: post images attached to a deleted account's posts (which stay as "Deleted user" content) persist.</li>
+</ul>
+
+<h3>Abuse &amp; rate limiting</h3>
+<ul>
+<li><strong>R4</strong> — nothing throttled. Signup bombing burns the email quota; the fair's legitimate surge could itself hit Supabase's default mailer limit and lock out real students.</li>
+<li><code>content_reports</code> INSERT is open to any authenticated user — report spam floods <code>/admin/reports</code>.</li>
+<li><code>notifications</code> INSERT is deliberately loose (<code>QA.md</code> documents it): any authed user can push a notification to any other user, attributed to themselves. Junk-notification spam is possible; they can't forge a third-party actor or self-target.</li>
+<li>No CAPTCHA (enabling it once with no client token broke signup for 3 days — F5 cause 1 — so it's disabled). A public signup form with no CAPTCHA and no rate limit is a bot target.</li>
+</ul>
+
+<h3>The public-read student profile (F3)</h3>
+<p>The moment a real student onboards, their full profile + history is readable by every authenticated user via PostgREST — including unverified self-signed-up "companies". No opt-out. Decide before real students arrive, not after.</p>
+
+<h3>Email deliverability</h3>
+<ul>
+<li><strong>B1</strong> blocks it entirely for now.</li>
+<li>Once a domain is verified: a <strong>cold domain</strong> with no sending reputation, suddenly sending a burst of confirmation emails during the surge, is a spam-folder risk. Warm the domain (low volume for a week first), set DMARC, monitor Resend during the fair.</li>
+<li>Auth email is a <strong>hard dependency on login</strong> (confirmation ON). If Resend has an incident during the fair, nobody new can log in — the hook fails open so accounts are created, but they can't confirm. Consider an admin-confirm fallback, or relaxing confirmation during the event.</li>
+</ul>
+
+<h3>Scale — every list route at 500 opportunities / 2000 students</h3>
+<div class="rows">
+  <div class="row"><div class="k">/opportunities</div><div class="v small">Paginates at 20, filters preserved. OK.</div></div>
+  <div class="row"><div class="k">/students</div><div class="v small">Paginates at 20. OK structurally; F3 is the concern, not perf.</div></div>
+  <div class="row"><div class="k">/feed</div><div class="v small">Cursor pagination, 10/page. OK.</div></div>
+  <div class="row"><div class="k">/companies</div><div class="v small"><strong>Not paginated (R2).</strong> Fetches all verified companies + all their published opportunities + sorts in JS on every page load.</div></div>
+  <div class="row"><div class="k">/applications, /saved</div><div class="v small">Unbounded but scoped to one student's own rows. Fine at realistic volume.</div></div>
+  <div class="row"><div class="k">/admin/companies, /admin/reports</div><div class="v small">Unbounded (R12). At 500 companies the page fetches all 500. Annoying, not fatal.</div></div>
+  <div class="row"><div class="k">/admin overview</div><div class="v small"><code>.limit(5000)</code> on applications (R14). Undercounts past 5000; a year away.</div></div>
+  <div class="row"><div class="k">RLS overhead (R3)</div><div class="v small">Per-row <code>auth.uid()</code> across 50 policies is the compounding cost — every filtered query pays it per row scanned.</div></div>
+  <div class="row"><div class="k">Infra</div><div class="v small">Supabase free tier: 60 connections, no PITR backup, pauses after 7 days idle, 500 MB DB. A fair-day spike + real CV storage may need Pro ($25/mo). Decide before, not during.</div></div>
+</div>
+
+<h3>What embarrasses</h3>
+<ul>
+<li>A student signs up at the fair, on their phone, and never gets the confirmation email (B1). Worst first impression, worst moment.</li>
+<li>A company registers, posts a job, and it never appears because nobody verified them (R8).</li>
+<li>Someone shares an opportunity on LinkedIn and the preview card has a broken or deployment-specific URL (R6).</li>
+<li>A student abandons onboarding mid-flow and the platform never follows up (R1).</li>
+</ul>
+
+<!-- ===================== 6 ===================== -->
+<h2 id="s6">6. What's next</h2>
+
+<h3>Before the fair — in order</h3>
+<div class="rows">
+  <div class="row"><div class="k">1 &nbsp;·&nbsp; B1, R6</div><div class="v">Acquire a domain; verify it in Resend; set <code>EMAIL_FROM</code> + <code>NEXT_PUBLIC_SITE_URL</code> in Production. <span class="v small">~2h once the domain exists. <strong>Domain purchase is external — do this first;</strong> all email work is blocked on it.</span></div></div>
+  <div class="row"><div class="k">2 &nbsp;·&nbsp; &sect;4</div><div class="v">Run <code>QA.md</code>'s full regression checklist against the deployed build, logged in as the 4 QA accounts. <span class="v small">~half a day. Reset the fixture password if lost.</span></div></div>
+  <div class="row"><div class="k">3 &nbsp;·&nbsp; F3</div><div class="v">Decide student-profile visibility and ship the policy. <span class="v small">Decision + ~half a day. Your product call.</span></div></div>
+  <div class="row"><div class="k">4 &nbsp;·&nbsp; &sect;5 storage</div><div class="v">Security-review the <code>cvs</code> bucket + enforce size/type at the policy layer; then enable <code>ONBOARDING_CV_ENABLED</code>. <span class="v small">~1 day.</span></div></div>
+  <div class="row"><div class="k">5 &nbsp;·&nbsp; R4</div><div class="v">Rate-limit the mutating actions (minimum: signup, apply, post, report). <span class="v small">~4h. Redis (Upstash free) or Vercel WAF.</span></div></div>
+  <div class="row"><div class="k">6 &nbsp;·&nbsp; R1</div><div class="v">"Finish your profile" banner for non-onboarded students. <span class="v small">~2h.</span></div></div>
+  <div class="row"><div class="k">7 &nbsp;·&nbsp; R8</div><div class="v">Notify admins on company signup; assign the verification queue to a person. <span class="v small">~2h + a process decision.</span></div></div>
+  <div class="row"><div class="k">8 &nbsp;·&nbsp; F1, F2</div><div class="v">Verify one notification email end-to-end; make a wrong key fail loud. <span class="v small">~3h. Seeded account pair.</span></div></div>
+  <div class="row"><div class="k">9 &nbsp;·&nbsp; F5-fu, R9</div><div class="v">Toggle on leaked-password protection; confirm <code>/auth/callback</code> is allowlisted. <span class="v small">15 min.</span></div></div>
+  <div class="row"><div class="k">10 &nbsp;·&nbsp; R2</div><div class="v">Paginate <code>/companies</code>. <span class="v small">~3h.</span></div></div>
+  <div class="row"><div class="k">11 &nbsp;·&nbsp; R3, R11</div><div class="v">RLS perf pass: <code>(select auth.uid())</code> rewrite + FK indexes + drop unused. <span class="v small">~1 day. Your sign-off (RLS change).</span></div></div>
+</div>
+
+<h3>After the fair</h3>
+<ul>
+<li>N10 resolution (French vs English) — unless you want it before, in which case it's a large insert near the top.</li>
+<li>R5 (reconcile <code>DESIGN_SYSTEM.md</code>) — before the next contributor, not before the fair.</li>
+<li>R7 (block re-login on deleted accounts).</li>
+<li>R10 (consolidate permissive policies), R13 (static-render legal pages), R12/R14 (admin pagination).</li>
+<li>The deferred roadmap (see &sect;7).</li>
+</ul>
+
+<h3>What I'd cut</h3>
+<ul>
+<li><strong>The CV onboarding step</strong> — leave it disabled through the fair. It adds a drop-off point on the step most likely to lose people, and depends on a storage review that isn't done. Students can add a CV from <code>/profile</code> after.</li>
+<li><strong>N10 as a pre-fair item</strong> — a full i18n pass this close to the deadline is how you miss the deadline. Align the spec to English (option a) and move on.</li>
+<li><strong>R10 / R13 / most of the NICE-TO-HAVE list</strong> — none of it is felt at fair scale (a few hundred users, a few hundred rows). Doing it now is polishing the basement.</li>
+</ul>
+
+<!-- ===================== 7 ===================== -->
+<h2 id="s7">7. What we could explore</h2>
+<p>Features not built, not in Phase 1/2, that would change the product's value.</p>
+
+<div class="rows">
+  <div class="row"><div class="k">Event-day companion &nbsp;—&nbsp; before Nov</div><div class="v">QR check-in, a "who's here today" company list, a session schedule, table numbers. The fair is the one day the whole audience is in one room. <span class="v small">Depends on: a decision on whether the platform is the event app or just the year-round layer. ~1–2 weeks. Highest-leverage thing for the actual event; the roadmap already names it.</span></div></div>
+  <div class="row"><div class="k">Reminder / digest emails &nbsp;—&nbsp; before Nov</div><div class="v">"3 new opportunities match your skills", "your application moved to shortlisted a week ago". <span class="v small">Depends on: working email (B1), a Vercel Cron, <code>fetchRecommendedOpportunities</code> (exists). ~3 days. Directly counters R1 drop-off.</span></div></div>
+  <div class="row"><div class="k">Convert anonymous &rarr; signup on public opportunity pages &nbsp;—&nbsp; before Nov</div><div class="v">The detail page is already public; add a sharper "sign up to apply" path and per-opportunity OG cards (OG images exist). <span class="v small">Depends on: B1, R6. ~2 days. Mostly polish on what exists; it's how a shared link becomes a user.</span></div></div>
+  <div class="row"><div class="k">Profile-strength score visible to the student &nbsp;—&nbsp; before Nov</div><div class="v">Turn the existing 9-check completeness nudge into an ongoing score with concrete next actions. <span class="v small">Depends on: nothing — the checks exist. ~1 day. Cheap, counters R1.</span></div></div>
+  <div class="row"><div class="k">Scored matching (deferred) &nbsp;—&nbsp; after Nov</div><div class="v">Replace tag-overlap with a real score (skill weight, recency, seniority fit, location). <span class="v small">Depends on: real data to tune against. ~1–2 weeks. Can't tune a scorer with no real applications.</span></div></div>
+  <div class="row"><div class="k">Saved searches / alerts &nbsp;—&nbsp; after Nov</div><div class="v">A student saves a filter; gets notified when a matching opportunity is posted. <span class="v small">Depends on: working email, the notification infra (exists). ~3 days.</span></div></div>
+  <div class="row"><div class="k">Company analytics &nbsp;—&nbsp; after Nov</div><div class="v">"your opportunity was viewed N times, X applied, here's the funnel". <span class="v small">Depends on: a lightweight view-count table. ~4 days. A retention feature; companies retain across a year, not a week.</span></div></div>
+  <div class="row"><div class="k">Interview scheduling on the application &nbsp;—&nbsp; after Nov</div><div class="v">Companies move applicants through stages with the student seeing it live (partly built — <code>application_status_events</code>), plus a "propose 3 slots" step. <span class="v small">~1 week.</span></div></div>
+  <div class="row"><div class="k">Alumni layer (deferred) &nbsp;—&nbsp; after Nov</div><div class="v">Alumni as mentors / referrers, not just a directory. <span class="v small">Depends on: a role/relationship model; messaging (also deferred). Weeks.</span></div></div>
+</div>
+
+<p><strong>My opinion on ordering:</strong> the event-day companion, reminder emails, and the convert-anonymous path are the three that matter before November. They're the difference between "a website that exists" and "the thing everyone at the fair is actually using." Everything else waits for the data the fair produces.</p>
+
+<!-- ===================== 8 ===================== -->
+<h2 id="s8">8. What I'd do differently</h2>
+<p>Process, not code.</p>
+
+<h3>Where the time went</h3>
+<ul>
+<li><strong>Verification debt compounded because there was never a seeded signed-in environment.</strong> Session after session added routes and features labelled "traced, not executed" because there was no way to log in and click. The dev-environment setup (repurposing the <code>amber-harbor</code> Supabase project) was started, got as far as pasting connection strings, and was abandoned when the work pivoted to onboarding. Every subsequent session widened the unverified surface instead of closing it. The single most expensive process failure on this project.</li>
+<li><strong>The email hook shipped without anyone attempting a signup afterward (F5).</strong> Two independent prod-down causes went live and sat for ~3 days. <code>QA.md</code> has an auth regression flow. It was not run after either change. Nobody could create an account for three days and it was found by you, not by the process.</li>
+</ul>
+
+<h3>What got built twice / thrown away</h3>
+<ul>
+<li>The <code>interests</code> column was specced, ruled on, then cut before implementation — the spec process caught it, which is the process working.</li>
+<li>The onboarding shell wordmark was built, shipped, found stretched at 375px during Task D, and fixed (<code>08ae20d</code>). A 375px check at build time — which <code>ONBOARDING.md</code> &sect;13 requires — would have caught it before the commit.</li>
+<li>The <code>/opportunities</code> unbounded query was shipped, then paginated after a 22-row scale test. <code>/companies</code> (R2) is the <em>same bug</em> still unfixed because it wasn't in a sweep's route list — a checklist gap, not a new mistake.</li>
+</ul>
+
+<h3>What got shipped without being checked</h3>
+<ul>
+<li>Most of the B-sweep and the entire onboarding feature: lint + build clean, code correct on inspection, never exercised on a running build. <code>0024</code> was applied to production and verified with <code>SELECT</code>s — but the flow that writes through it was walked once, against prod data, via a local server, with throwaway accounts.</li>
+<li><code>DESIGN_SYSTEM.md</code> was allowed to go stale (R5) — the reconcile was deferred to "the last commit of the elevation work" and that commit was never scheduled.</li>
+</ul>
+
+<h3>My own failures</h3>
+<ul>
+<li><strong>I claimed greps were clean when they weren't — twice</strong> (you made "paste the pattern" a standing rule). A clean grep is a claim, and I made it without showing the evidence.</li>
+<li><strong>I skipped Task D twice without saying I was skipping it.</strong> It was in your instructions two messages running; I did other parts and let it drop silently both times. You had to name it the third time.</li>
+<li><strong>I made changes when told to flag and stop.</strong> The pattern: "tell me what this costs" answered with a commit instead of a number (twice); "flag it, don't fix it" followed by a fix.</li>
+<li><strong>I created test accounts directly in the production database</strong> (Task D) and then had to clean them up. The memory note that "the dev Supabase <em>is</em> production data" existed before I did that.</li>
+<li><strong>I applied migration <code>0024</code> to production</strong> off a standing rule, in a session where most other work was unverified. It was authorised, additive, and checked afterward — but "traced, not executed" everywhere else plus "writes to prod schema" here is exactly the risk profile that should have made me slow down.</li>
+</ul>
+
+<h3>The rule that would have caught most of it</h3>
+<p><strong>Nothing ships as "done" without one real end-to-end run in a seeded environment — and if there's no seeded environment, building that is the next task, not an optional detour.</strong> The corollary: run <code>QA.md</code>'s relevant section after every change that touches its area, and paste the result. Almost every finding in &sect;3 and &sect;4 traces back to the absence of that one rule.</p>
+
+<!-- ===================== 9 ===================== -->
+<h2 id="s9">9. What I could not verify and why</h2>
+<div class="closer">
+<p>This list is not empty and will not be padded to look complete — these are the real gaps.</p>
+<ul>
+<li><strong>The deployed build's signed-in behaviour — all of it.</strong> I verified the public pages on <code>esenet-platforme.vercel.app</code> in a browser today (landing, <code>/opportunities</code>, a detail page, <code>/companies</code>, <code>/students</code> gate — all render, console clean). Everything behind a login is traced from source and from the local walk-through, not confirmed on the deployed build. I did not log in to the production site.</li>
+<li><strong>Onboarding on the deployed build.</strong> Walked once, 2026-08-30, against the production database, through a local dev server, with two admin-confirmed accounts I then deleted. That establishes the flow writes the right data and the steps advance. It does not establish that the deployed Vercel build behaves the same — different runtime, env, session handling.</li>
+<li><strong>Whether <code>SUPABASE_SERVICE_ROLE_KEY</code> in Production is a valid service-role key.</strong> It is present (via <code>vercel env ls</code>). Its value is encrypted and I can't read it; F2 means the app can't validate it either; and I have not seen a notification email send. F1 is "probably resolved," not "verified resolved."</li>
+<li><strong>Whether any real email is delivered from production.</strong> B1 says non-owner addresses fail. I did not test the owner address either (that means triggering a real signup/reset against production). The last real email verification was a local test weeks ago against <code>delivered@resend.dev</code>.</li>
+<li><strong>The <code>cvs</code> bucket's actual access behaviour.</strong> I read the policies. I did not attempt a cross-company CV read, a direct oversized upload, or a signed-URL replay. <code>ONBOARDING.md</code> itself says this bucket was never security-reviewed.</li>
+<li><strong><code>QA.md</code>'s security assertions via direct REST.</strong> Some carry "confirmed live" notes from the Phase 2 build. The rest are checklist items I did not re-run. I can't tell you which RLS attacks have actually been attempted against the current schema versus which are aspirational.</li>
+<li><strong>Anything at scale.</strong> The largest test in this project's history is ~22 scratch rows. Every claim about behaviour at 500 opportunities / 2000 students is inference from the query shapes, not measurement.</li>
+<li><strong>Real touch interaction on a phone.</strong> The browser automation can't synthesise a reliable tap under device emulation. Layout, overflow, and tap-target sizes at 375px were checked; actual finger-on-glass was not, anywhere.</li>
+<li><strong>The two undocumented <code>ismail*</code> accounts.</strong> I know they exist, their roles, timestamps, and that one is onboarded. I don't know who made them or how that onboarding run went — I'm assuming they're yours.</li>
+<li><strong><code>error.tsx</code>.</strong> Never triggered. Code-reviewed only.</li>
+<li><strong><code>NEXT_PUBLIC_SITE_URL</code> fallback (R6).</strong> I flagged it as unset. I did not confirm the Vercel fallback actually produces a wrong URL — it may be fine.</li>
+<li><strong>Migrations <code>schema.sql</code>–<code>0016</code>.</strong> Their objects exist in production (table count, RLS state, spot-checked columns and triggers). I did not diff every file against the live schema line by line; they're not in the migration tracking table because they were applied by hand.</li>
+</ul>
+</div>
+
+</div>
+</body>
+</html>
