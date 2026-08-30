@@ -10,7 +10,7 @@ const TEXT = "#17143C";
 const MUTED = "#5b5875";
 
 function escapeHtml(s: string): string {
-  return s
+  return String(s ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
