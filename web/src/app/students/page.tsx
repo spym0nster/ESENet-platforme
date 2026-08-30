@@ -207,7 +207,7 @@ export default async function StudentsPage({
                     <h2 className="font-display text-lg font-semibold">
                       {s.full_name}
                     </h2>
-                    <Badge variant="info">{availabilityLabel(s.availability)}</Badge>
+                    <Badge tone="cyan">{availabilityLabel(s.availability)}</Badge>
                   </div>
                   {s.headline && (
                     <p className="mt-1 text-sm text-text-muted">{s.headline}</p>

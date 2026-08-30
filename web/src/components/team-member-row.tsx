@@ -43,7 +43,7 @@ export function TeamMemberRow({
     <Card className="flex items-center justify-between gap-3 p-3">
       <div className="flex items-center gap-2">
         <p className="text-sm font-medium">{name}</p>
-        <Badge variant={role === "owner" ? "info" : "neutral"}>{role}</Badge>
+        <Badge tone={role === "owner" ? "cyan" : "neutral"}>{role}</Badge>
       </div>
       <div className="flex items-center gap-3">
         {canTransferTo && (
