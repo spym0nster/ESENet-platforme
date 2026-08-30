@@ -30,10 +30,7 @@ export function ApplyForm({
 
   if (alreadyApplied || (state && "success" in state)) {
     return (
-      <p
-        className="rounded-ctrl px-4 py-3 text-sm font-medium"
-        style={{ background: "var(--accent-soft)", color: "var(--accent-on-soft)" }}
-      >
+      <p className="rounded-ctrl border border-accent/30 bg-accent-soft px-4 py-3 text-sm font-medium text-accent-on-soft">
         You&apos;ve applied to this opportunity.
       </p>
     );
