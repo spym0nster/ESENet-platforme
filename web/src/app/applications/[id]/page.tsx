@@ -176,7 +176,7 @@ export default async function ApplicationDetailPage({
       </div>
 
       <Card className="mt-8">
-        <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-text-muted">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
           Status history
         </h2>
         <ol className="mt-4 space-y-4">
@@ -204,7 +204,7 @@ export default async function ApplicationDetailPage({
 
       {application.message && (
         <Card className="mt-4">
-          <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-text-muted">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
             Your cover message
           </h2>
           <p className="mt-3 whitespace-pre-wrap text-sm text-text">

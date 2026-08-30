@@ -201,13 +201,13 @@ export default async function StudentsPage({
                     className="h-12 w-12 shrink-0 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-alt font-display text-lg font-bold text-text-faint">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-alt font-display text-lg font-semibold text-text-faint">
                     {s.full_name.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-display text-lg font-bold">
+                    <h2 className="font-display text-lg font-semibold">
                       {s.full_name}
                     </h2>
                     <Badge variant="info">{availabilityLabel(s.availability)}</Badge>

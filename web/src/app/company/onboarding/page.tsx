@@ -86,7 +86,7 @@ export default async function CompanyOnboardingPage({
       ) : (
         <div className="mt-10 grid gap-8 sm:grid-cols-2">
           <div>
-            <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
               New company
             </h2>
             <p className="mt-2 text-sm text-text-muted">
@@ -98,7 +98,7 @@ export default async function CompanyOnboardingPage({
           </div>
 
           <div>
-            <h2 className="font-mono text-xs uppercase tracking-widest text-text-faint">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
               Join an existing company
             </h2>
             <p className="mt-2 text-sm text-text-muted">

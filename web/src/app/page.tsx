@@ -150,7 +150,7 @@ export default async function Home() {
 
       <section className="mx-auto max-w-5xl px-6 pt-16">
         <div className="flex items-baseline justify-between">
-          <h2 className="font-display text-xl font-semibold">Latest opportunities</h2>
+          <h2 className="font-display text-lg font-semibold">Latest opportunities</h2>
           <Link
             href="/opportunities"
             className="font-mono text-[11px] uppercase tracking-widest text-accent-2 hover:text-text"

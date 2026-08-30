@@ -113,12 +113,12 @@ export default async function CompaniesPage({
                     className="h-12 w-12 shrink-0 rounded-md bg-surface-alt object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-surface-alt font-display text-lg font-bold text-text-faint">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-surface-alt font-display text-lg font-semibold text-text-faint">
                     {c.company_name.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h2 className="font-display text-base font-bold">
+                  <h2 className="font-display text-base font-semibold">
                     {c.company_name}
                   </h2>
                   {c.description && (
