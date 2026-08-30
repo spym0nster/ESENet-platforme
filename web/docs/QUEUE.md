@@ -68,23 +68,14 @@ the trigger**.
 **Bug found + fixed** (`08ae20d`): the shell's panel wordmark was stretched
 by `align-items: stretch` on the column flex — `items-start` + `shrink-0`.
 
-### Test data left in production (yours to remove)
+### Test data — DELETED 2026-08-30
 
-Created for Task D against `qgcvcqwsprqyzbdrxegb`:
-- auth user `onboarding.test.student.c1@gmail.com` (`f8f0eed7-…`) + its
-  `profiles` / `student_details` / `education` rows (Yasmine Cherif) — now
-  listed in `/students`
-- auth user `onboarding.test.company.c1@gmail.com` (`af046aba-…`) + its
-  `profiles` / `companies` (Medina Data Labs) / `company_members` /
-  `opportunities` (one, `547f0d13-…`, `published` but RLS-hidden — unverified)
-
-Both keepable if you want real examples of a completed profile / a posted
-role; say the word and I'll delete them, or run:
-```sql
-delete from auth.users where email in
- ('onboarding.test.student.c1@gmail.com','onboarding.test.company.c1@gmail.com');
-```
-(cascades to the app rows).
+Both Task D auth users deleted from `qgcvcqwsprqyzbdrxegb` via `execute_sql`
+(`delete from auth.users where email in (…)`), FK cascade verified: `profiles`,
+`student_details`, `companies` (Medina Data Labs), `company_members`, and the
+one opportunity (`547f0d13-…`) all gone. Post-delete count query: 0 rows left
+anywhere. No storage objects were owned by either user. No moderation /
+invite / status-event rows referenced them (all NO ACTION FKs checked first).
 
 ### Onboarding — built (per the new "work continuously" rule)
 
@@ -307,31 +298,43 @@ visible.
 
 ## Needs Bilel
 
-### N9 — env vars missing from Vercel Production (signup / email) — F5
+### N9 — env vars on Vercel Production (signup / email) — F5
 
-The email hook now fails open, so signup **creates the account** again. But
-the confirmation email still won't send in Production until these are added
-to **Vercel → esenet-platforme → Environment Variables → Production**
-(they currently exist in **Preview only**):
+**Update 2026-08-30:** `main` is deployed (the 71-commit backlog + the
+fail-open hook + the whole onboarding flow are now on prod). Per the summary
+you'd already added `SEND_EMAIL_HOOK_SECRET`, `RESEND_API_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY` to Production and rotated the secrets — so the
+hook is configured. The one thing still open is `EMAIL_FROM` (below), which
+is what makes signup work for addresses **other than the Resend account
+owner**.
 
-| Variable | Value | Where to get it |
-|---|---|---|
-| `SEND_EMAIL_HOOK_SECRET` | `v1,whsec_…` | Supabase → Authentication → Hooks → Send Email Hook (the secret shown there) — must match what Preview has |
-| `RESEND_API_KEY` | `re_…` | resend.com → API Keys |
-| `SUPABASE_SERVICE_ROLE_KEY` | the **real** `service_role` secret (not the anon key — F2/F4) | Supabase → Project Settings → API → `service_role` |
+#### `EMAIL_FROM` — add to Vercel Production once a Resend domain is verified
 
-`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are already in
-Production — leave them.
+| Field | Value |
+|---|---|
+| **Variable name** | `EMAIL_FROM` (exact, case-sensitive) |
+| **Environment** | Production (and Preview, so preview deploys send too) |
+| **Format** | `Display Name <address@verified-domain>` — RFC 5322 "name-addr". Examples: `ESENet <no-reply@esenet.tn>`, `ESENet Talent Fair <hello@mail.esenet.tn>` |
+| **Read by** | `src/lib/email.ts` line 15 — `process.env.EMAIL_FROM ?? "ESENet <onboarding@resend.dev>"`. Nothing else. No code change needed; it's picked up on the next deploy after you set it. |
 
-Also: `web/.env.local`'s `SUPABASE_SERVICE_ROLE_KEY` is set to the anon key
-(F4) — replace it locally with the real one too if you want the
-notify()→email path testable in dev.
+Rules for the value:
+- The **domain part must exactly match a domain that shows "Verified" in
+  Resend → Domains.** A subdomain like `mail.esenet.tn` counts only if that
+  exact subdomain is the one you verified.
+- The local part (`no-reply`, `hello`, …) is free — no mailbox needs to
+  exist for outbound.
+- Keep the angle brackets. `EMAIL_FROM=no-reply@esenet.tn` (bare) also works
+  but you lose the friendly "ESENet" sender name.
 
-With email-confirmation ON, until `RESEND_API_KEY` lands a new signup can
-create the account but can't confirm/login. If you want signups usable
-*right now* without waiting on Resend, the interim option is Supabase → Auth
-→ "Confirm email" OFF — but CLAUDE.md says don't, and the deferred-provision
-flow assumes it's on.
+Once set: redeploy (or it rides the next push), then a real signup to any
+address delivers the confirmation mail.
+
+#### Interim, if you want signups working before the domain is ready
+
+Supabase → Authentication → Providers → Email → "Confirm email" **OFF**.
+CLAUDE.md says don't, and the deferred-provision flow is built around it
+being on — so treat this as a stopgap only, and turn it back on the moment
+`EMAIL_FROM` is live.
 
 ### N8 — directory list pages ✅ RESOLVED (`ca2f2a3`)
 
