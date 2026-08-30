@@ -22,9 +22,26 @@ against seeded data is labelled **traced, not executed**.
 | 4 | Phase 3 item 7 — the route sweep | ✅ done (6 commits) — traced |
 | N3–N7 | Follow-ups from the first review | ✅ done (N3 verified, N4 verified) |
 | A | Keyboard pass on the signed-in nav | ✅ done — report below |
-| B | Consistency sweep (list only, no changes) | ✅ done — list below |
+| B | Consistency sweep | ✅ **swept** — B1–B7 done, 8 commits |
 
-**The elevation is code-complete pending your review of the B list.**
+**The elevation is code-complete.** One gap surfaced during the B sweep —
+see N8. Onboarding is starting now (migration first, shown before it's
+applied).
+
+---
+
+## B sweep — done (`f???`… 8 commits)
+
+| # | Ruling | Commit |
+|---|---|---|
+| B1 | mono eyebrow for a label; Poppins `text-lg font-semibold` for a real section heading | outliers converted |
+| B2 | `text-3xl font-extrabold` for every page title; **`UX_ELEVATION.md` §3 amended** to 30 / 800 with the reasoning | done |
+| B3 | "← Back to X" everywhere, `inline-block py-2` target | done |
+| B4 | "No X yet", no trailing period | done |
+| B5 | EmptyState CTAs all `LinkButton variant="primary"` | done |
+| B6 | notification bell onto `useDisclosure` — every header menu now keyboard-operable | done |
+| B7 | `Section` extracted to `ui/Section` | done |
+| — | + a correction: 2 `Badge variant="info"` the item-7 grep missed (`students/page`, `team-member-row`) | done |
 
 ---
 
@@ -174,6 +191,19 @@ visible.
 ---
 
 ## Needs Bilel
+
+### N8 — the two directory list pages were never swept
+
+`src/app/students/page.tsx` and `src/app/companies/page.tsx` (the `/students`
+and `/companies` directory lists) were **not in item 7's route list**, so they
+still carry pre-elevation markup: bespoke `rounded-md bg-accent` login buttons,
+a **mono** `rounded-md bg-accent font-mono` search button, inline
+`rounded-lg border` cards instead of `Card`, `text-text-faint` on the avatar
+initials. B fixed only what its own findings touched there (h1, empty-state
+wording + CTA, the two stray badges).
+
+They need one sweep commit — same mechanical work as item 7. Doing onboarding
+first as instructed; say if you want this sweep before it.
 
 ### N1 — `HeaderNav` props signature changed (item 2)
 
