@@ -271,9 +271,9 @@ export default async function OpportunityPage({
 
       <Link
         href="/opportunities"
-        className="font-mono text-[11px] uppercase tracking-widest text-accent-2 hover:text-text"
+        className="inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
       >
-        ← All opportunities
+        ← Back to opportunities
       </Link>
 
       <Card className="mt-4 p-6">

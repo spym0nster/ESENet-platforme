@@ -133,9 +133,9 @@ export default async function ApplicationDetailPage({
     <div className="mx-auto max-w-2xl px-6 py-16">
       <Link
         href="/applications"
-        className="font-mono text-xs text-accent-2 hover:text-text"
+        className="inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
       >
-        ← All applications
+        ← Back to applications
       </Link>
 
       <div className="mt-4 flex flex-wrap items-start justify-between gap-3">

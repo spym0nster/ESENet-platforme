@@ -101,7 +101,7 @@ export default async function CompanyProfilePage({
         href="/companies"
         className="inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
       >
-        ← All companies
+        ← Back to companies
       </Link>
 
       {/* banner + overlapping logo */}

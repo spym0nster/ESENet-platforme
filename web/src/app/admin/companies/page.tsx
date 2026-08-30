@@ -31,7 +31,7 @@ export default async function AdminCompaniesPage() {
         href="/admin"
         className="inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
       >
-        ← Admin overview
+        ← Back to admin overview
       </Link>
       <p className="mt-4 font-mono text-xs uppercase tracking-widest text-accent-2">
         Admin

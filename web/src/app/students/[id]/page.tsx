@@ -85,7 +85,7 @@ export default async function StudentProfilePage({
         href="/students"
         className="inline-block py-2 font-mono text-xs text-accent-2 hover:text-text"
       >
-        ← All students
+        ← Back to students
       </Link>
 
       {/* banner + overlapping avatar — the /companies/[id] header pattern.
