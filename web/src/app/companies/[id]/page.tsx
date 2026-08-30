@@ -10,9 +10,9 @@ import { OpportunityCard } from "@/components/opportunity-card";
 import { PostCard } from "@/components/post-card";
 import { fetchCompanyProfile } from "@/lib/companies";
 import { fetchPosts } from "@/lib/posts";
+import { posterGradient } from "@/lib/poster-gradient";
 
-const BANNER_GRADIENT =
-  "linear-gradient(135deg, #0A0C33 0%, #171048 42%, #3C1560 72%, #641274 100%)";
+const BANNER_GRADIENT = posterGradient("135deg");
 
 const TABS = ["about", "roles", "team", "posts"] as const;
 type Tab = (typeof TABS)[number];

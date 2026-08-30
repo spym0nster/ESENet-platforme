@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { posterGradient } from "@/lib/poster-gradient";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -55,6 +56,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${poppins.variable} ${manrope.variable} ${plexMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* One source for the poster gradient (src/lib/poster-gradient.ts):
+            the hero reads var(--poster-grad); the company banner and OG
+            routes take the string from the same module. */}
+        <style>{`:root{--poster-grad:${posterGradient()}}`}</style>
+      </head>
       <body className="min-h-full flex flex-col">
         {/* The one gradient the product is allowed: shared by every MatchArc
             (§8 — the arc, the company banner, the active-tab underline, and

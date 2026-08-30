@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { loadOgFonts } from "@/lib/og";
+import { posterGradient } from "@/lib/poster-gradient";
 
 export const alt = "An opportunity on ESENet";
 export const size = { width: 1200, height: 630 };
@@ -63,7 +64,7 @@ export default async function Image({
           justifyContent: "space-between",
           padding: 80,
           background:
-            "linear-gradient(135deg, #0A0C33 0%, #171048 42%, #3C1560 72%, #641274 100%)",
+            posterGradient("135deg"),
           color: "#F5F3FC",
           fontFamily: "Poppins, sans-serif",
         }}
