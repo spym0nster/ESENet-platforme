@@ -54,7 +54,14 @@ export function SkillsForm({
               className="inline-flex items-center gap-1 rounded-chip border border-accent-2/30 bg-accent2-soft px-2 py-0.5 font-mono text-[11px] text-accent-2 transition hover:brightness-110"
             >
               {s}
-              <span aria-hidden>✕</span>
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+                <path
+                  d="M2 2l6 6M8 2l-6 6"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
           ))}
         </div>

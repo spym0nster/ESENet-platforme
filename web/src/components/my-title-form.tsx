@@ -24,7 +24,7 @@ export function MyTitleForm({ currentTitle }: { currentTitle: string | null }) {
         {pending ? "Saving…" : "Save"}
       </Button>
       {state && "error" in state && <span className="text-xs text-magenta">{state.error}</span>}
-      {state && "success" in state && <span className="text-xs text-accent-2">Saved ✓</span>}
+      {state && "success" in state && <span className="text-xs text-accent-2">Saved.</span>}
     </form>
   );
 }

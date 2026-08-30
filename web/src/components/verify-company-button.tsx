@@ -11,7 +11,7 @@ export function VerifyCompanyButton({ companyProfileId }: { companyProfileId: st
   );
 
   if (state && "success" in state) {
-    return <span className="font-mono text-xs text-accent-2">Verified ✓</span>;
+    return <span className="font-mono text-xs text-accent-2">Verified</span>;
   }
 
   return (
