@@ -73,7 +73,7 @@ export async function createCompany(
   }
 
   revalidatePath("/", "layout");
-  redirect("/company/profile");
+  redirect("/company/onboarding/details");
 }
 
 /**

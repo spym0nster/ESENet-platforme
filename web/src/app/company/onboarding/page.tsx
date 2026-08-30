@@ -6,6 +6,9 @@ import { searchCompanies } from "@/app/actions/company-onboarding";
 import { CreateCompanyForm } from "@/components/create-company-form";
 import { RequestToJoinButton } from "@/components/request-to-join-button";
 import { PendingJoinRequest } from "@/components/pending-join-request";
+import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
+import { companyStepProgress } from "@/lib/onboarding";
 import { Card, Badge, Input, Button } from "@/components/ui";
 
 function firstParam(v: string | string[] | undefined): string {
@@ -43,10 +46,10 @@ export default async function CompanyOnboardingPage({
     redirect("/");
   }
 
-  // Already attached to a company (owner or member) — nothing to onboard.
+  // Already attached to a company — nothing to onboard.
   const companyId = await resolveCompanyId(supabase, user.id);
   if (companyId) {
-    redirect("/company/profile");
+    redirect("/company/dashboard");
   }
 
   const { data: pendingRequest } = await supabase
@@ -59,22 +62,21 @@ export default async function CompanyOnboardingPage({
   const sp = await searchParams;
   const q = firstParam(sp.q);
   const results = q ? await searchCompanies(q) : [];
+  const { current, total } = companyStepProgress("create");
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-16">
-      <p className="font-mono text-xs uppercase tracking-widest text-accent-2">
-        Set up your company
-      </p>
-      <h1 className="mt-2 font-display text-3xl font-extrabold">
-        Create or join a company
+    <OnboardingShell subtitle="Set up your company so students can find your roles.">
+      <OnboardingProgress current={current} total={total} />
+      <h1 className="font-display text-3xl font-extrabold">
+        Create or join your company
       </h1>
-      <p className="mt-2 text-text-muted">
-        If your company is already on ESENet, join it instead of creating a
-        duplicate — a teammate can approve your request.
+      <p className="mt-2 text-sm text-text-muted">
+        If a colleague already set it up, ask to join instead of making a
+        duplicate.
       </p>
 
       {pendingRequest ? (
-        <div className="mt-10">
+        <div className="mt-8">
           <PendingJoinRequest
             requestId={pendingRequest.id}
             companyName={
@@ -84,34 +86,32 @@ export default async function CompanyOnboardingPage({
           />
         </div>
       ) : (
-        <div className="mt-10 grid gap-8 sm:grid-cols-2">
+        <div className="mt-8 space-y-8">
           <div>
-            <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
-              New company
-            </h2>
-            <p className="mt-2 text-sm text-text-muted">
-              Nobody from your company has signed up yet.
-            </p>
-            <div className="mt-4">
+            <h2 className="font-display text-lg font-semibold">New company</h2>
+            <div className="mt-3">
               <CreateCompanyForm />
             </div>
           </div>
 
+          <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-widest text-text-faint">
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
           <div>
-            <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">
+            <h2 className="font-display text-lg font-semibold">
               Join an existing company
             </h2>
-            <p className="mt-2 text-sm text-text-muted">
-              A colleague already set one up — find it and ask to join.
-            </p>
-            <form action="/company/onboarding" className="mt-4 flex gap-2">
+            <form action="/company/onboarding" className="mt-3 flex flex-wrap gap-2">
               <Input
                 name="q"
                 type="text"
                 defaultValue={q}
                 placeholder="Search by company name…"
               />
-              <Button type="submit" variant="secondary" className="shrink-0 px-4">
+              <Button type="submit" variant="secondary" className="shrink-0">
                 Search
               </Button>
             </form>
@@ -119,8 +119,8 @@ export default async function CompanyOnboardingPage({
             {q && (
               <div className="mt-4 space-y-3">
                 {results.length === 0 ? (
-                  <p className="text-sm text-text-faint">
-                    No company matches &ldquo;{q}&rdquo;. You can create it instead.
+                  <p className="text-sm text-text-muted">
+                    No company matches &ldquo;{q}&rdquo;. Create it instead.
                   </p>
                 ) : (
                   results.map((r) => (
@@ -143,6 +143,6 @@ export default async function CompanyOnboardingPage({
           </div>
         </div>
       )}
-    </div>
+    </OnboardingShell>
   );
 }

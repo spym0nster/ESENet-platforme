@@ -32,9 +32,9 @@ export function OnboardingShell({
         <span aria-hidden className="hidden md:block" />
       </aside>
 
-      <main className="flex-1 px-6 py-10 md:px-12 md:py-16">
-        <div className="mx-auto max-w-md">{children}</div>
-      </main>
+      <div className="flex-1 px-6 py-10 md:px-12 md:py-16">
+        <div className="mx-auto max-w-lg">{children}</div>
+      </div>
     </div>
   );
 }
