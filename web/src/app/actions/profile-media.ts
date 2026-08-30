@@ -111,5 +111,7 @@ export async function uploadProfileMedia(
   revalidatePath("/company/profile");
   revalidatePath("/company/dashboard");
   revalidatePath("/opportunities");
+  revalidatePath("/onboarding/identity");
+  revalidatePath("/company/onboarding/logo");
   return { success: true };
 }

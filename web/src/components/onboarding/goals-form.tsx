@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Field, Input } from "@/components/ui";
 import { saveGoals, type OnboardingStepState } from "@/app/actions/onboarding";
 import { GOAL_TYPES, MAX_GOAL_TYPES } from "@/lib/onboarding";
@@ -20,6 +20,12 @@ export function GoalsForm({
     null
   );
   const [goals, setGoals] = useState<string[]>(defaultGoals);
+  const firstCardRef = useRef<HTMLButtonElement>(null);
+
+  // §3: focus the first control of the step — here that's the first card.
+  useEffect(() => {
+    firstCardRef.current?.focus();
+  }, []);
 
   function toggle(value: string) {
     setGoals((g) =>
@@ -37,11 +43,12 @@ export function GoalsForm({
       <input type="hidden" name="goal_types" value={JSON.stringify(goals)} />
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {GOAL_TYPES.map((g) => {
+        {GOAL_TYPES.map((g, i) => {
           const on = goals.includes(g.value);
           return (
             <button
               key={g.value}
+              ref={i === 0 ? firstCardRef : undefined}
               type="button"
               aria-pressed={on}
               onClick={() => toggle(g.value)}
@@ -77,7 +84,6 @@ export function GoalsForm({
             name="interests"
             defaultValue={defaultInterests ?? ""}
             placeholder="e.g. data engineering, product design"
-            autoFocus
           />
         </Field>
       </div>
