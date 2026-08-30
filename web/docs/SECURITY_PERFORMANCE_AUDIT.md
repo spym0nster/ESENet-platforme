@@ -61,6 +61,19 @@ Email delivery failing should never prevent an account from existing.
 - Supabase → Authentication → Providers → "Enable Captcha protection" (was on)
 - Supabase → Authentication → Hooks → Send Email Hook (points at the prod URL)
 
+### Update 2026-08-30
+
+Env vars set + secrets rotated + confirmation re-enabled. Signup for the
+Resend account-owner address now works end to end (verified via password
+reset). **But a signup with any *other* address still fails on the
+deployed site:** the old route (fail-open fix committed, not deployed)
+returns **502** — `EMAIL_FROM` is Resend's `onboarding@resend.dev`, which
+only delivers to the account owner until a domain is verified, so Resend
+rejects the send and the old route treats that as fatal. Reproduced:
+signup with `onboarding.test.student.c1@gmail.com` → 502, `auth.users` row
+rolled back. **Deploy the fail-open route** (and verify a real domain in
+Resend + set `EMAIL_FROM`) to fix signup for everyone, not just the owner.
+
 ### Fix / direction
 
 - **Done in code:** the route now fails open — the only non-200 it returns is

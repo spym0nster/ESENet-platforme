@@ -28,8 +28,63 @@ against seeded data is labelled **traced, not executed**.
 | F5 | Signup 3-day outage — diagnose + fix email hook | ✅ hook fails open now; env vars → **N9** |
 | — | Straggler sweep (404, error boundary, legal, apply-form banner) | ✅ done — 404 verified |
 
-**Open:** N9 (prod env vars — Bilel), N6 (opportunity-form inputs — needs a
-test account). Everything else in this queue is done.
+**Open:** N9 (prod env vars — Bilel). N6 done (`… commit`) — form migrated to
+the ui primitives, verified by posting + editing an opportunity live.
+
+### Task D — onboarding walked end to end (2026-08-30)
+
+Real account, real login/provisioning; the signup **email click** was
+substituted (admin `email_confirm` via service_role) because the deployed
+old email hook 502s any non-owner address — see F5 update. Everything else
+is the real flow against prod.
+
+**Student** (Yasmine Cherif, `onboarding.test.student.c1@gmail.com`):
+login → provision → **redirect to `/onboarding/goals`** ✓. Goals (cards,
+"2/3 selected", interests) → Identity (name pre-filled from signup) →
+Skills (marketplace + seed suggestions, chip add, free-text Enter add) →
+Education (ESEN prefilled, year select, "Finish") → **`/opportunities`**.
+Every step advances; **Back keeps answers** (verified goals + interests
+survived a Back); progress reads "Step N of 4" with `aria-valuetext`.
+`onboarded_at` stamped, all fields persisted (`goal_types`,
+`graduation_year`, folded `looking_for`). Re-hitting `/onboarding` →
+redirects out. **Freeze trigger**: `update … set onboarded_at = null` had
+no effect. Student now appears in `/students`.
+
+**Company** (Karim Ben Salah, `onboarding.test.company.c1@gmail.com`):
+create-or-join → `/company/onboarding/details` (after a dev-server restart —
+the running server had a stale redirect target; code + target page are
+correct) → Logo → First opportunity → posted → `/company/dashboard`.
+Details persisted. Dashboard shows the stat strip (1 PUBLISHED / 0 / 0 / 0)
+and the posting row with PUBLISHED + "HIDDEN — PENDING VERIFICATION".
+
+**375px:** no horizontal overflow on any onboarding step
+(`scrollWidth === clientWidth === 375`), student or company, including the
+full opportunity form. Panel stacks as a top band on mobile.
+
+**Signed-in nav** (verified as a side effect): account menu opens, shows
+name + email + role links + Log out, **Escape closes and returns focus to
+the trigger**.
+
+**Bug found + fixed** (`08ae20d`): the shell's panel wordmark was stretched
+by `align-items: stretch` on the column flex — `items-start` + `shrink-0`.
+
+### Test data left in production (yours to remove)
+
+Created for Task D against `qgcvcqwsprqyzbdrxegb`:
+- auth user `onboarding.test.student.c1@gmail.com` (`f8f0eed7-…`) + its
+  `profiles` / `student_details` / `education` rows (Yasmine Cherif) — now
+  listed in `/students`
+- auth user `onboarding.test.company.c1@gmail.com` (`af046aba-…`) + its
+  `profiles` / `companies` (Medina Data Labs) / `company_members` /
+  `opportunities` (one, `547f0d13-…`, `published` but RLS-hidden — unverified)
+
+Both keepable if you want real examples of a completed profile / a posted
+role; say the word and I'll delete them, or run:
+```sql
+delete from auth.users where email in
+ ('onboarding.test.student.c1@gmail.com','onboarding.test.company.c1@gmail.com');
+```
+(cascades to the app rows).
 
 ### Onboarding — built (per the new "work continuously" rule)
 
