@@ -63,29 +63,8 @@ export async function addProfileItem(
   // ones that exist as real columns on the target table are written —
   // Postgres will reject the rest, but we filter to the known set anyway
   // so a request can't graft an arbitrary column name onto the insert.
-  const allowedColumns = [
-    "school",
-    "degree",
-    "field_of_study",
-    "title",
-    "organization",
-    "description",
-    "url",
-    "name",
-    "issuer",
-    "issue_date",
-    "start_date",
-    "end_date",
-  ];
-
-  const row: Record<string, string | null> = { profile_id: user.id };
-  for (const col of allowedColumns) {
-    const value = formData.get(col);
-    if (value !== null) {
-      const trimmed = String(value).trim();
-      row[col] = trimmed || null;
-    }
-  }
+  const row = itemRowFromForm(formData);
+  row.profile_id = user.id;
 
   const requiredField = TABLES[table].requiredField;
   if (!row[requiredField]) {
@@ -96,6 +75,81 @@ export async function addProfileItem(
 
   if (error) {
     console.error(`addProfileItem(${table}) failed:`, error);
+    return { error: "We couldn't save that. Please try again." };
+  }
+
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+// Every column any of the 4 tables might send. Only real columns of the
+// target table are written — Postgres rejects the rest, but we filter to
+// the known set anyway so a request can't graft an arbitrary column on.
+const ALLOWED_ITEM_COLUMNS = [
+  "school",
+  "degree",
+  "field_of_study",
+  "graduation_year",
+  "title",
+  "organization",
+  "description",
+  "url",
+  "name",
+  "issuer",
+  "issue_date",
+  "start_date",
+  "end_date",
+] as const;
+
+function itemRowFromForm(formData: FormData): Record<string, string | number | null> {
+  const row: Record<string, string | number | null> = {};
+  for (const col of ALLOWED_ITEM_COLUMNS) {
+    const value = formData.get(col);
+    if (value === null) continue;
+    const trimmed = String(value).trim();
+    if (col === "graduation_year") {
+      const n = parseInt(trimmed, 10);
+      row[col] = Number.isFinite(n) ? n : null;
+    } else {
+      row[col] = trimmed || null;
+    }
+  }
+  return row;
+}
+
+/**
+ * Update one existing profile item by id. Ownership-scoped (`profile_id =
+ * auth.uid()`), same column allow-list as add. Used by the onboarding
+ * Education step (it edits the one row it created rather than inserting a
+ * second on revisit) and available to /profile for in-place edits.
+ */
+export async function updateProfileItem(
+  _prevState: ProfileItemState,
+  formData: FormData
+): Promise<ProfileItemState> {
+  const table = String(formData.get("table") ?? "");
+  const id = String(formData.get("id") ?? "");
+  if (!isValidTable(table) || !id) {
+    return { error: "Invalid request." };
+  }
+
+  const { supabase, user, error: authError } = await requireStudent();
+  if (!user) return { error: authError };
+
+  const row = itemRowFromForm(formData);
+  const requiredField = TABLES[table].requiredField;
+  if (requiredField in row && !row[requiredField]) {
+    return { error: "Please fill in the required field." };
+  }
+
+  const { error } = await supabase
+    .from(table)
+    .update(row)
+    .eq("id", id)
+    .eq("profile_id", user.id);
+
+  if (error) {
+    console.error(`updateProfileItem(${table}) failed:`, error);
     return { error: "We couldn't save that. Please try again." };
   }
 

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { patchStudentDetails } from "@/lib/students";
 
 export type ProfileActionState = { error: string } | { success: true } | null;
 
@@ -38,34 +39,37 @@ export async function updateStudentProfile(
   const { supabase, user, error: authError } = await requireStudent();
   if (!user) return { error: authError };
 
-  const headline = String(formData.get("headline") ?? "").trim();
-  const bio = String(formData.get("bio") ?? "").trim();
-  const lookingFor = String(formData.get("looking_for") ?? "").trim();
-  const availability = String(formData.get("availability") ?? "").trim();
-  const linkedinUrl = String(formData.get("linkedin_url") ?? "").trim();
-  const skillsRaw = String(formData.get("skills") ?? "[]");
+  // Partial update: only the fields this request actually carried get
+  // written, so a caller with a subset (an onboarding step) can't blank the
+  // rest. The /profile form still submits every field, so its behaviour is
+  // unchanged.
+  const patch: Record<string, unknown> = {};
+  const text = (key: string) => {
+    if (!formData.has(key)) return;
+    const v = String(formData.get(key) ?? "").trim();
+    patch[key] = v || null;
+  };
+  text("headline");
+  text("bio");
+  text("looking_for");
+  text("availability");
+  text("linkedin_url");
 
-  let skills: string[] = [];
-  try {
-    const parsed = JSON.parse(skillsRaw);
-    if (Array.isArray(parsed)) {
-      skills = parsed.map((s) => String(s).trim()).filter(Boolean).slice(0, 20);
+  if (formData.has("skills")) {
+    try {
+      const parsed = JSON.parse(String(formData.get("skills") ?? "[]"));
+      if (Array.isArray(parsed)) {
+        patch.skills = parsed
+          .map((s) => String(s).trim())
+          .filter(Boolean)
+          .slice(0, 20);
+      }
+    } catch {
+      // ignore malformed payload
     }
-  } catch {
-    // ignore malformed payload, treat as empty
   }
 
-  const { error } = await supabase
-    .from("student_details")
-    .update({
-      headline: headline || null,
-      bio: bio || null,
-      looking_for: lookingFor || null,
-      availability: availability || null,
-      linkedin_url: linkedinUrl || null,
-      skills,
-    })
-    .eq("profile_id", user.id);
+  const { error } = await patchStudentDetails(supabase, user.id, patch);
 
   if (error) {
     console.error("updateStudentProfile failed:", error);

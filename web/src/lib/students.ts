@@ -156,6 +156,23 @@ export async function fetchStudentProfile(
   };
 }
 
+/**
+ * The single write path for `student_details` — a partial update, so a
+ * caller that only has one field (an onboarding step) doesn't blank the
+ * rest. Both `updateStudentProfile` (the /profile form) and the onboarding
+ * step actions go through here. Callers validate; this just writes.
+ */
+export async function patchStudentDetails(
+  supabase: SupabaseClient,
+  userId: string,
+  patch: Record<string, unknown>
+) {
+  return supabase
+    .from("student_details")
+    .update(patch)
+    .eq("profile_id", userId);
+}
+
 /** "Available now" vs "Available from <month year>", from an ISO date or null. */
 export function availabilityLabel(availability: string | null): string {
   if (!availability) return "Available now";

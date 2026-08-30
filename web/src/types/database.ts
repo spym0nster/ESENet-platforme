@@ -44,6 +44,8 @@ export interface StudentDetails {
   availability: string | null; // ISO date
   cv_url: string | null;
   linkedin_url: string | null;
+  goal_types: string[]; // 0024 — opportunity types sought (Goals step)
+  onboarded_at: string | null; // 0024 — onboarding finish-line marker
 }
 
 export interface Company {
@@ -98,6 +100,7 @@ export interface Education {
   field_of_study: string | null;
   start_date: string | null;
   end_date: string | null;
+  graduation_year: number | null; // 0024
   created_at: string;
 }
 
