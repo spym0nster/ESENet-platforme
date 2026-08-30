@@ -22,10 +22,10 @@ export function OnboardingShell({
   return (
     <div className="mx-auto flex min-h-full max-w-5xl flex-col md:flex-row">
       <aside
-        className="flex shrink-0 flex-col gap-6 px-6 py-8 text-white md:w-[38%] md:justify-between md:px-10 md:py-14"
+        className="flex shrink-0 flex-col items-start gap-6 px-6 py-8 text-white md:w-[38%] md:justify-between md:px-10 md:py-14"
         style={{ backgroundImage: posterGradient("160deg") }}
       >
-        <Logo className="h-6 w-auto" />
+        <Logo className="h-6 w-auto shrink-0" />
         <p className="max-w-[16rem] font-display text-lg font-semibold leading-snug">
           {subtitle}
         </p>
