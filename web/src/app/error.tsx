@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import { Button, LinkButton } from "@/components/ui";
 
 export default function Error({
   error,
@@ -28,19 +28,12 @@ export default function Error({
         {error.digest ? ` (ref ${error.digest})` : ""}.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={reset}
-          className="rounded-md bg-accent px-5 py-2.5 font-mono text-sm text-white"
-        >
+        <Button type="button" onClick={reset}>
           Try again
-        </button>
-        <Link
-          href="/"
-          className="rounded-md border border-border px-5 py-2.5 font-mono text-sm text-text-muted hover:text-text"
-        >
+        </Button>
+        <LinkButton href="/" variant="secondary">
           Go home
-        </Link>
+        </LinkButton>
       </div>
     </div>
   );

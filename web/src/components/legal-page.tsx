@@ -25,7 +25,7 @@ export function LegalPage({
       </p>
       <h1 className="mt-2 font-display text-3xl font-extrabold">{title}</h1>
 
-      <div className="mt-6 rounded-lg border border-dashed border-magenta/50 bg-magenta-soft p-4 text-sm">
+      <div className="mt-6 rounded-card border border-dashed border-magenta/50 bg-magenta-soft p-4 text-sm">
         <p className="font-semibold text-text">
           Working draft — not yet reviewed or approved by ESEN.
         </p>
@@ -51,7 +51,7 @@ export function LegalSection({
 }) {
   return (
     <section>
-      <h2 className="font-display text-lg font-bold">{title}</h2>
+      <h2 className="font-display text-lg font-semibold">{title}</h2>
       <div className="mt-3 space-y-3 text-sm text-text-muted [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
         {children}
       </div>
@@ -70,7 +70,7 @@ function ReviewTag() {
 /** Wraps a paragraph that's ESEN's/legal's decision to make, not a fact about the app. */
 export function NeedsReview({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-md border border-dashed border-magenta/50 bg-surface-alt p-3">
+    <p className="rounded-ctrl border border-dashed border-magenta/50 bg-surface-alt p-3">
       <ReviewTag /> <span className="ml-1">{children}</span>
     </p>
   );

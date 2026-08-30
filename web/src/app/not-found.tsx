@@ -1,8 +1,8 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/ui";
 
 export default function NotFound() {
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center px-6 py-28 text-center">
+    <div className="mx-auto flex max-w-lg flex-col items-center px-6 py-24 text-center">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-accent-2">
         404
       </p>
@@ -14,18 +14,12 @@ export default function NotFound() {
         been removed.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <Link
-          href="/opportunities"
-          className="rounded-md bg-accent px-5 py-2.5 font-mono text-sm text-white"
-        >
+        <LinkButton href="/opportunities" variant="primary">
           Browse opportunities
-        </Link>
-        <Link
-          href="/"
-          className="rounded-md border border-border px-5 py-2.5 font-mono text-sm text-text-muted hover:text-text"
-        >
+        </LinkButton>
+        <LinkButton href="/" variant="secondary">
           Go home
-        </Link>
+        </LinkButton>
       </div>
     </div>
   );
