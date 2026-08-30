@@ -25,6 +25,11 @@ against seeded data is labelled **traced, not executed**.
 | B | Consistency sweep | ✅ **swept** — B1–B7 done, 8 commits |
 | O | Onboarding | ✅ **built end to end** — 0024 applied, all steps + gating |
 | N8 | Sweep /students + /companies directory pages | ✅ done — /companies verified |
+| F5 | Signup 3-day outage — diagnose + fix email hook | ✅ hook fails open now; env vars → **N9** |
+| — | Straggler sweep (404, error boundary, legal, apply-form banner) | ✅ done — 404 verified |
+
+**Open:** N9 (prod env vars — Bilel), N6 (opportunity-form inputs — needs a
+test account). Everything else in this queue is done.
 
 ### Onboarding — built (per the new "work continuously" rule)
 
