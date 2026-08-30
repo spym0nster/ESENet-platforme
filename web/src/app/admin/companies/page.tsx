@@ -58,7 +58,7 @@ export default async function AdminCompaniesPage() {
         {pending.length === 0 ? (
           <div className="mt-4">
             <EmptyState
-              title="Nothing pending"
+              title="No companies pending"
               body="Every registered company is currently verified."
             />
           </div>

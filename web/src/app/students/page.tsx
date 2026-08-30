@@ -163,8 +163,8 @@ export default async function StudentsPage({
           <EmptyState
             title={
               hasFilters
-                ? "No students match your filters."
-                : "No student profiles yet."
+                ? "No students match your filters"
+                : "No student profiles yet"
             }
             body={
               hasFilters

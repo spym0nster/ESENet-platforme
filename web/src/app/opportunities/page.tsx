@@ -256,7 +256,7 @@ export default async function OpportunitiesPage({
       {!error && (!opportunities || opportunities.length === 0) && (
         <div className="mt-8">
           <EmptyState
-            title={hasFilters ? "Nothing matches these filters" : "No opportunities yet"}
+            title={hasFilters ? "No opportunities match your filters" : "No opportunities yet"}
             body={
               hasFilters
                 ? openCount

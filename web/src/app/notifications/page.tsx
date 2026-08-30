@@ -62,7 +62,7 @@ export default async function NotificationsPage() {
       {notifications.length === 0 ? (
         <div className="mt-8">
           <EmptyState
-            title="Nothing yet"
+            title="No notifications yet"
             body="Application updates, join requests and replies to your posts will show up here."
           />
         </div>

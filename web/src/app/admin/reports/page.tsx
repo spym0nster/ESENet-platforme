@@ -72,7 +72,7 @@ export default async function AdminReportsPage() {
         <h2 className="font-mono text-xs uppercase tracking-widest text-text-muted">Open</h2>
         {open.length === 0 ? (
           <div className="mt-4">
-            <EmptyState title="Nothing open" body="No unresolved reports right now." />
+            <EmptyState title="No open reports" body="No unresolved reports right now." />
           </div>
         ) : (
           <ul className="mt-4 space-y-3">

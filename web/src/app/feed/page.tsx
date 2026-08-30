@@ -119,7 +119,7 @@ export default async function FeedPage({
 
       {posts.length === 0 ? (
         <EmptyState
-          title="Nothing here yet"
+          title="No posts yet"
           body={
             user
               ? "Share a project, a milestone, or a role you're hiring for — your post starts the feed."

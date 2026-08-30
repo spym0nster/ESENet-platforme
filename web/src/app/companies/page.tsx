@@ -79,7 +79,7 @@ export default async function CompaniesPage({
       {companies.length === 0 ? (
         <div className="mt-8">
           <EmptyState
-            title={q ? "No companies match that name." : "No companies yet."}
+            title={q ? "No companies match that name" : "No companies yet"}
             body={
               q
                 ? "Try a shorter or different search."

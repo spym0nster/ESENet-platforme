@@ -69,7 +69,7 @@ export default async function SavedOpportunitiesPage() {
       {!error && rows.length === 0 ? (
         <div className="mt-8">
           <EmptyState
-            title="Nothing saved yet"
+            title="No saved opportunities yet"
             body="Save opportunities while browsing and they land here for later."
             action={
               <LinkButton href="/opportunities" variant="primary">

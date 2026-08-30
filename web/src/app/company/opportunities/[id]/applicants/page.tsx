@@ -148,7 +148,7 @@ export default async function OpportunityApplicantsPage({
       {!error && (!applications || applications.length === 0) ? (
         <div className="mt-8">
           <EmptyState
-            title="No applicants yet."
+            title="No applicants yet"
             body="Once a student applies, they'll show up here."
           />
         </div>
