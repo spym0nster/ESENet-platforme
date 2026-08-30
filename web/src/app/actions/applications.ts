@@ -45,6 +45,18 @@ export async function applyToOpportunity(
     return { error: "Only student accounts can apply to opportunities." };
   }
 
+  // Onboarding gate (0024): a student must finish their profile before
+  // applying. The detail page already swaps the form for a "finish your
+  // profile" prompt; a direct POST lands here. No RLS involved.
+  const { data: sd } = await supabase
+    .from("student_details")
+    .select("onboarded_at")
+    .eq("profile_id", user.id)
+    .maybeSingle();
+  if (!sd?.onboarded_at) {
+    redirect(`/onboarding?next=/opportunities/${opportunityId}`);
+  }
+
   // Server-side gate: the opportunity must still be open for applications.
   // The UI hides the form in these cases, so hitting this is a stale page or
   // a direct POST. RLS can't express "deadline hasn't passed", so this check

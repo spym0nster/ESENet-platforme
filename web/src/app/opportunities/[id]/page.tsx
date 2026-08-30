@@ -8,7 +8,7 @@ import { ApplyForm } from "@/components/apply-form";
 import { SaveOpportunityButton } from "@/components/save-opportunity-button";
 import { ShareButton } from "@/components/share-button";
 import { fetchSimilarOpportunities } from "@/lib/opportunities";
-import { Badge, Card, Chip, CompanyLogo, MatchArc } from "@/components/ui";
+import { Badge, Card, Chip, CompanyLogo, LinkButton, MatchArc } from "@/components/ui";
 
 const TYPE_LABEL: Record<string, string> = {
   internship: "Internship",
@@ -172,6 +172,7 @@ export default async function OpportunityPage({
 
   let alreadyApplied = false;
   let isStudent = false;
+  let studentOnboarded = true;
   let isSaved = false;
   let studentSkills: string[] = [];
   if (user) {
@@ -193,10 +194,11 @@ export default async function OpportunityPage({
     if (isStudent) {
       const { data: details } = await supabase
         .from("student_details")
-        .select("skills")
+        .select("skills, onboarded_at")
         .eq("profile_id", user.id)
         .maybeSingle();
       studentSkills = details?.skills ?? [];
+      studentOnboarded = Boolean(details?.onboarded_at);
 
       const { data: saved } = await supabase
         .from("saved_opportunities")
@@ -323,7 +325,21 @@ export default async function OpportunityPage({
         </div>
 
         <div className="mt-6">
-          {alreadyApplied || !applicationsClosed ? (
+          {isStudent && !studentOnboarded && !alreadyApplied ? (
+            <div className="rounded-ctrl border border-border bg-surface-alt px-4 py-3 text-sm">
+              <p className="text-text-muted">
+                Finish setting up your profile to apply.
+              </p>
+              <LinkButton
+                href={`/onboarding?next=/opportunities/${opportunity.id}`}
+                variant="primary"
+                size="compact"
+                className="mt-3"
+              >
+                Finish your profile
+              </LinkButton>
+            </div>
+          ) : alreadyApplied || !applicationsClosed ? (
             <ApplyForm
               opportunityId={opportunity.id}
               alreadyApplied={alreadyApplied}

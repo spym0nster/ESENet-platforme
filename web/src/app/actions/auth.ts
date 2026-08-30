@@ -145,7 +145,9 @@ export async function signUp(
   }
 
   revalidatePath("/", "layout");
-  redirect("/opportunities");
+  // Rare path (email confirmation is on, so signUp usually has no session).
+  // A fresh student goes straight to onboarding.
+  redirect(role === "student" ? "/onboarding" : "/opportunities");
 }
 
 export async function signIn(
@@ -187,7 +189,26 @@ export async function signIn(
   revalidatePath("/", "layout");
   // Only ever redirect to a same-site relative path — never a value that
   // could send the user off ESENet.
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/opportunities");
+  const dest =
+    next.startsWith("/") && !next.startsWith("//") ? next : "/opportunities";
+
+  // A student who hasn't finished onboarding goes there first, carrying
+  // wherever they were headed as `?next=`.
+  const [{ data: prof }, { data: sd }] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle(),
+    supabase
+      .from("student_details")
+      .select("onboarded_at")
+      .eq("profile_id", data.user.id)
+      .maybeSingle(),
+  ]);
+  if (prof?.role === "student" && !sd?.onboarded_at) {
+    redirect(
+      `/onboarding${dest !== "/opportunities" ? `?next=${encodeURIComponent(dest)}` : ""}`
+    );
+  }
+
+  redirect(dest);
 }
 
 export async function signOut() {

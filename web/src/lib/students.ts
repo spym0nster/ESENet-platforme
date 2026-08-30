@@ -58,7 +58,9 @@ export async function fetchStudents(
     )
     .eq("profiles.role", "student")
     .is("profiles.deactivated_at", null)
-    .or("headline.not.is.null,bio.not.is.null,skills.neq.{}");
+    // Onboarding is the directory gate (0024). Existing started profiles
+    // were backfilled with onboarded_at, so nobody previously listed drops.
+    .not("onboarded_at", "is", null);
 
   const q = filters.q?.replace(/[,()]/g, " ").trim();
   if (q) {
@@ -138,9 +140,17 @@ export async function fetchStudentProfile(
 
   const { data: details } = await supabase
     .from("student_details")
-    .select("headline, bio, skills, looking_for, availability, linkedin_url")
+    .select(
+      "headline, bio, skills, looking_for, availability, linkedin_url, onboarded_at"
+    )
     .eq("profile_id", id)
     .maybeSingle();
+
+  // Not-yet-onboarded students have no public profile (0024) — same as not
+  // appearing in the directory. The page turns this into notFound().
+  if (!details?.onboarded_at) {
+    return null;
+  }
 
   return {
     id: profile.id,
