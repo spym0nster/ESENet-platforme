@@ -6,7 +6,14 @@ import {
   updateOpportunity,
   type OpportunityState,
 } from "@/app/actions/opportunities";
-import { Button, LinkButton } from "@/components/ui";
+import {
+  Button,
+  Field,
+  Input,
+  LinkButton,
+  Select,
+  Textarea,
+} from "@/components/ui";
 
 const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "internship", label: "Internship" },
@@ -57,12 +64,7 @@ export function OpportunityForm({
 
       <Section title="Basic information">
         <Field label="Opportunity type" error={fieldErrors?.type}>
-          <select
-            name="type"
-            required
-            defaultValue={opportunity?.type ?? ""}
-            className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
-          >
+          <Select name="type" required defaultValue={opportunity?.type ?? ""}>
             <option value="" disabled>
               Select a type
             </option>
@@ -71,11 +73,11 @@ export function OpportunityForm({
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
 
         <Field label="Title" error={fieldErrors?.title}>
-          <input
+          <Input
             name="title"
             type="text"
             required
@@ -83,18 +85,16 @@ export function OpportunityForm({
             maxLength={120}
             defaultValue={opportunity?.title ?? ""}
             placeholder="Business Intelligence PFE Intern"
-            className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
           />
         </Field>
 
         <Field label="Description" error={fieldErrors?.description}>
-          <textarea
+          <Textarea
             name="description"
             required
             rows={6}
             defaultValue={opportunity?.description ?? ""}
             placeholder="We are looking for a Business Intelligence student to join our data team for a PFE project..."
-            className="w-full rounded-ctrl border border-border-strong bg-surface p-3 text-sm outline-none focus:border-accent-2"
           />
         </Field>
       </Section>
@@ -114,7 +114,14 @@ export function OpportunityForm({
                   aria-label={`Remove ${skill}`}
                   className="-m-1 p-1 text-accent-2/70 hover:text-accent-2"
                 >
-                  ×
+                  <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden>
+                    <path
+                      d="M2 2l6 6M8 2l-6 6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </button>
               </span>
             ))}
@@ -138,12 +145,11 @@ export function OpportunityForm({
 
       <Section title="Details">
         <Field label="Location">
-          <input
+          <Input
             name="location"
             type="text"
             defaultValue={opportunity?.location ?? ""}
             placeholder="Tunis, Sousse, Hybrid…"
-            className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
           />
         </Field>
 
@@ -159,19 +165,17 @@ export function OpportunityForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Start date">
-            <input
+            <Input
               name="start_date"
               type="date"
               defaultValue={opportunity?.start_date ?? ""}
-              className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
             />
           </Field>
           <Field label="End date" error={fieldErrors?.end_date}>
-            <input
+            <Input
               name="end_date"
               type="date"
               defaultValue={opportunity?.end_date ?? ""}
-              className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2"
             />
           </Field>
         </div>
@@ -180,11 +184,11 @@ export function OpportunityForm({
           label="Application deadline"
           error={fieldErrors?.application_deadline}
         >
-          <input
+          <Input
             name="application_deadline"
             type="date"
             defaultValue={opportunity?.application_deadline ?? ""}
-            className="w-full rounded-ctrl border border-border-strong bg-surface p-2.5 text-sm outline-none focus:border-accent-2 sm:w-1/2"
+            className="sm:w-1/2"
           />
           <span className="mt-1 block text-xs text-text-faint">
             After this date students can no longer apply. Leave blank for no
@@ -215,6 +219,7 @@ export function OpportunityForm({
   );
 }
 
+/** A form section — a real <fieldset>/<legend>, unlike the content <Section>. */
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset className="space-y-4">
@@ -223,25 +228,5 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       </legend>
       {children}
     </fieldset>
-  );
-}
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1 block font-mono text-xs uppercase tracking-wide text-text-faint">
-        {label}
-      </span>
-      {children}
-      {error && <span className="mt-1 block text-xs text-magenta">{error}</span>}
-    </label>
   );
 }
