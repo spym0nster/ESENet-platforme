@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { EmptyState, Input, LinkButton } from "@/components/ui";
+import {
+  Button,
+  Card,
+  CompanyLogo,
+  EmptyState,
+  Input,
+  LinkButton,
+} from "@/components/ui";
 import { fetchCompanyDirectory } from "@/lib/companies";
 
 export const metadata = {
@@ -52,7 +59,7 @@ export default async function CompaniesPage({
         Verified ESEN partners hiring interns, PFE students and graduates.
       </p>
 
-      <form className="mt-8 flex gap-3" action="/companies">
+      <form className="mt-8 flex flex-wrap items-center gap-3" action="/companies">
         <Input
           name="q"
           defaultValue={q}
@@ -60,12 +67,9 @@ export default async function CompaniesPage({
           aria-label="Company name"
           className="max-w-xs"
         />
-        <button
-          type="submit"
-          className="rounded-md bg-accent px-5 py-2.5 font-mono text-sm text-white"
-        >
+        <Button type="submit" variant="secondary" className="shrink-0">
           Search
-        </button>
+        </Button>
         {q && (
           <Link
             href="/companies"
@@ -98,37 +102,25 @@ export default async function CompaniesPage({
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {companies.map((c) => (
             <li key={c.id}>
-              <Link
-                href={`/companies/${c.id}`}
-                className="flex h-full gap-4 rounded-lg border border-border bg-surface p-5 transition hover:border-accent-2/50"
-              >
-                {c.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL
-                  <img
-                    src={c.logo_url}
-                    alt=""
-                    className="h-12 w-12 shrink-0 rounded-md bg-surface-alt object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-surface-alt font-display text-lg font-semibold text-text-faint">
-                    {c.company_name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <h2 className="font-display text-base font-semibold">
-                    {c.company_name}
-                  </h2>
-                  {c.description && (
-                    <p className="mt-1 line-clamp-2 text-sm text-text-muted">
-                      {c.description}
+              <Link href={`/companies/${c.id}`} className="block h-full">
+                <Card interactive className="flex h-full gap-3">
+                  <CompanyLogo name={c.company_name} src={c.logo_url} />
+                  <div className="min-w-0">
+                    <h2 className="font-display text-base font-semibold">
+                      {c.company_name}
+                    </h2>
+                    {c.description && (
+                      <p className="mt-1 line-clamp-2 text-sm text-text-muted">
+                        {c.description}
+                      </p>
+                    )}
+                    <p className="mt-2 font-mono text-xs text-accent-2">
+                      {c.openRoles === 0
+                        ? "No open roles right now"
+                        : `${c.openRoles} open role${c.openRoles === 1 ? "" : "s"}`}
                     </p>
-                  )}
-                  <p className="mt-2 font-mono text-xs text-accent-2">
-                    {c.openRoles === 0
-                      ? "No open roles right now"
-                      : `${c.openRoles} open role${c.openRoles === 1 ? "" : "s"}`}
-                  </p>
-                </div>
+                  </div>
+                </Card>
               </Link>
             </li>
           ))}

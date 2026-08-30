@@ -2,7 +2,16 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { Badge, EmptyState, Input, LinkButton } from "@/components/ui";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Input,
+  LinkButton,
+} from "@/components/ui";
 import { fetchStudents, availabilityLabel } from "@/lib/students";
 
 // Student profiles are personal data — visible to signed-in members
@@ -57,19 +66,13 @@ export default async function StudentsPage({
           company account to search students by skill, availability and what
           they&rsquo;re looking for.
         </p>
-        <div className="mt-8 flex items-center justify-center gap-4">
-          <Link
-            href="/login?next=/students"
-            className="rounded-md bg-accent px-6 py-3 font-semibold text-white"
-          >
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <LinkButton href="/login?next=/students" variant="primary">
             Log in
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-md border border-border px-6 py-3 font-semibold hover:border-accent-2/50"
-          >
+          </LinkButton>
+          <LinkButton href="/signup" variant="secondary">
             Create an account
-          </Link>
+          </LinkButton>
         </div>
       </div>
     );
@@ -139,12 +142,9 @@ export default async function StudentsPage({
           Available now
         </label>
         <div className="flex items-center gap-3 lg:col-span-2 lg:justify-end">
-          <button
-            type="submit"
-            className="rounded-md bg-accent px-5 py-2.5 font-mono text-sm text-white"
-          >
+          <Button type="submit" variant="secondary" className="shrink-0">
             Search
-          </button>
+          </Button>
           {hasFilters && (
             <Link
               href="/students"
@@ -185,57 +185,40 @@ export default async function StudentsPage({
       <ul className="mt-8 space-y-4">
         {students.map((s) => (
           <li key={s.id}>
-            <Link
-              href={`/students/${s.id}`}
-              className="block rounded-lg border border-border bg-surface p-6 transition hover:border-accent-2/50"
-            >
-              <div className="flex items-start gap-4">
-                {s.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL
-                  <img
-                    src={s.avatar_url}
-                    alt=""
-                    className="h-12 w-12 shrink-0 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-alt font-display text-lg font-semibold text-text-faint">
-                    {s.full_name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-display text-lg font-semibold">
-                      {s.full_name}
-                    </h2>
-                    <Badge tone="cyan">{availabilityLabel(s.availability)}</Badge>
-                  </div>
-                  {s.headline && (
-                    <p className="mt-1 text-sm text-text-muted">{s.headline}</p>
-                  )}
-                  {s.looking_for && (
-                    <p className="mt-1 text-xs text-text-faint">
-                      Looking for: {s.looking_for}
-                    </p>
-                  )}
-                  {s.skills.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {s.skills.slice(0, 8).map((skillName) => (
-                        <span
-                          key={skillName}
-                          className="rounded border border-border bg-surface-alt px-2 py-0.5 font-mono text-xs text-text-muted"
-                        >
-                          {skillName}
-                        </span>
-                      ))}
-                      {s.skills.length > 8 && (
-                        <span className="px-1 py-0.5 font-mono text-xs text-text-faint">
-                          +{s.skills.length - 8}
-                        </span>
-                      )}
+            <Link href={`/students/${s.id}`} className="block">
+              <Card interactive>
+                <div className="flex items-start gap-4">
+                  <Avatar name={s.full_name} src={s.avatar_url} size="lg" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-display text-lg font-semibold">
+                        {s.full_name}
+                      </h2>
+                      <Badge tone="cyan">
+                        {availabilityLabel(s.availability)}
+                      </Badge>
                     </div>
-                  )}
+                    {s.headline && (
+                      <p className="mt-1 text-sm text-text-muted">{s.headline}</p>
+                    )}
+                    {s.looking_for && (
+                      <p className="mt-1 text-xs text-text-muted">
+                        Looking for: {s.looking_for}
+                      </p>
+                    )}
+                    {s.skills.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {s.skills.slice(0, 8).map((skillName) => (
+                          <Chip key={skillName}>{skillName}</Chip>
+                        ))}
+                        {s.skills.length > 8 && (
+                          <Chip>+{s.skills.length - 8}</Chip>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </Card>
             </Link>
           </li>
         ))}
