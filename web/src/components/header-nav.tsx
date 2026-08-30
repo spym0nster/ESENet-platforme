@@ -4,21 +4,31 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "@/components/notification-bell";
 import { AvatarMenu } from "@/components/avatar-menu";
+import { MobileNavMenu } from "@/components/mobile-nav-menu";
 import type { AppNotification } from "@/types/database";
 
 /**
  * The whole header nav in one client island — so the active-route state
  * (`usePathname`), the notification bell and the account menu share a
- * single client boundary instead of scattering many across the async
- * SiteHeader.
+ * single client boundary.
  *
- * Signed in, the bar carries only the section links (plus Dashboard for a
- * company, Admin for an admin) and the bell; everything personal — profile,
- * saved, applications, and the only Log out — lives in the account menu.
+ * ≥640px: the section links sit inline in the bar (plus Dashboard for a
+ * company, Admin for an admin), then the bell and the account menu; the
+ * personal links and the only Log out live in the account menu.
+ * <640px: the section links move into a bottom sheet — the account menu's
+ * for a signed-in person, a hamburger sheet for a visitor — so the bar
+ * stays one row: wordmark, bell, menu trigger.
  *
  * The current section gets full-contrast text and a solid cyan underline
  * (the gradient underline is reserved for the profile tabs — §8).
  */
+const SECTIONS = [
+  { href: "/opportunities", label: "Opportunities" },
+  { href: "/companies", label: "Companies" },
+  { href: "/students", label: "Students" },
+  { href: "/feed", label: "Feed" },
+];
+
 function NavItem({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
   const active =
@@ -58,15 +68,20 @@ export function HeaderNav({
   avatarUrl: string | null;
   companyName: string | null;
 }) {
-  return (
-    <nav className="flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-xs uppercase tracking-wider">
-      <NavItem href="/opportunities">Opportunities</NavItem>
-      <NavItem href="/companies">Companies</NavItem>
-      <NavItem href="/students">Students</NavItem>
-      <NavItem href="/feed">Feed</NavItem>
+  const sections = [...SECTIONS];
+  if (role === "company")
+    sections.push({ href: "/company/dashboard", label: "Dashboard" });
+  if (role === "admin") sections.push({ href: "/admin", label: "Admin" });
 
-      {role === "company" && <NavItem href="/company/dashboard">Dashboard</NavItem>}
-      {role === "admin" && <NavItem href="/admin">Admin</NavItem>}
+  return (
+    <nav className="flex items-center gap-x-6 gap-y-1 font-mono text-xs uppercase tracking-wider">
+      <div className="hidden items-center gap-x-6 sm:flex">
+        {sections.map((s) => (
+          <NavItem key={s.href} href={s.href}>
+            {s.label}
+          </NavItem>
+        ))}
+      </div>
 
       {signedIn && <NotificationBell unread={unread} recent={recent} />}
 
@@ -77,22 +92,26 @@ export function HeaderNav({
           email={email}
           avatarUrl={avatarUrl}
           companyName={companyName}
+          sections={sections}
         />
       ) : (
-        <span className="flex items-center gap-2 sm:ml-2 sm:border-l sm:border-white/15 sm:pl-4">
-          <Link
-            href="/login"
-            className="inline-flex min-h-9 items-center rounded-ctrl border border-border-strong px-4 font-sans text-xs font-semibold normal-case tracking-normal text-[color:var(--header-fg)] transition hover:border-white/40 hover:text-white active:translate-y-px"
-          >
-            Log in
-          </Link>
-          <Link
-            href="/signup"
-            className="inline-flex min-h-9 items-center rounded-ctrl bg-accent px-4 font-sans text-xs font-semibold normal-case tracking-normal text-white transition hover:brightness-105 active:translate-y-px"
-          >
-            Sign up
-          </Link>
-        </span>
+        <>
+          <MobileNavMenu sections={sections} />
+          <span className="flex items-center gap-2 sm:ml-2 sm:border-l sm:border-white/15 sm:pl-4">
+            <Link
+              href="/login"
+              className="hidden min-h-9 items-center rounded-ctrl border border-border-strong px-4 font-sans text-xs font-semibold normal-case tracking-normal text-[color:var(--header-fg)] transition hover:border-white/40 hover:text-white active:translate-y-px sm:inline-flex"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className="inline-flex min-h-9 items-center rounded-ctrl bg-accent px-4 font-sans text-xs font-semibold normal-case tracking-normal text-white transition hover:brightness-105 active:translate-y-px"
+            >
+              Sign up
+            </Link>
+          </span>
+        </>
       )}
     </nav>
   );

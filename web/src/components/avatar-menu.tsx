@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Avatar } from "@/components/ui";
 import { signOut } from "@/app/actions/auth";
+import { useDisclosure } from "@/components/use-disclosure";
 
 type Role = "student" | "company" | "admin";
 type Item = { label: string; href: string };
@@ -11,9 +12,12 @@ type Item = { label: string; href: string };
 /**
  * The account menu in the header — everything that used to be scattered as
  * mono links in the bar (My profile, Saved, applications…) plus the only
- * copy of Log out. Click to open (never hover — §7). Escape closes and
- * returns focus to the trigger; Arrow keys move between items. On a phone
- * it's a bottom sheet with a backdrop instead of a dropdown.
+ * copy of Log out. Click to open (never hover — §7).
+ *
+ * Desktop: a dropdown of account items only (the section links live in the
+ * bar). Below 640px: one bottom sheet that also carries the section links,
+ * so a phone has a single menu, not a nav row that wraps plus a separate
+ * account dropdown.
  */
 const MENU: Record<Role, Item[]> = {
   student: [
@@ -40,70 +44,27 @@ export function AvatarMenu({
   email,
   avatarUrl,
   companyName,
+  sections,
 }: {
   role: Role | null;
   displayName: string | null;
   email: string | null;
   avatarUrl: string | null;
   companyName: string | null;
+  /** the header's section links — rendered in the mobile sheet only */
+  sections: Item[];
 }) {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  const close = useCallback((returnFocus = true) => {
-    setOpen(false);
-    if (returnFocus) triggerRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-
-    function onDown(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        close();
-        return;
-      }
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-        e.preventDefault();
-        const items = panelRef.current?.querySelectorAll<HTMLElement>(
-          '[role="menuitem"]'
-        );
-        if (!items?.length) return;
-        const arr = [...items];
-        const idx = arr.indexOf(document.activeElement as HTMLElement);
-        const next =
-          e.key === "ArrowDown"
-            ? arr[(idx + 1) % arr.length]
-            : arr[(idx - 1 + arr.length) % arr.length];
-        next.focus();
-      }
-    }
-
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    panelRef.current
-      ?.querySelector<HTMLElement>('[role="menuitem"]')
-      ?.focus();
-
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open, close]);
+  const { open, setOpen, wrapRef, triggerRef, panelRef } = useDisclosure();
+  const pathname = usePathname();
 
   const name =
     role === "company"
       ? companyName ?? displayName ?? "Your company"
       : displayName ?? "Your account";
   const items = role ? MENU[role] : [];
+
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <div ref={wrapRef} className="relative">
@@ -158,6 +119,27 @@ export function AvatarMenu({
                 </p>
               )}
             </div>
+
+            {/* section links — phone only; on desktop they're in the bar */}
+            <ul className="border-b border-border py-1 sm:hidden">
+              {sections.map((s) => (
+                <li key={s.href}>
+                  <Link
+                    href={s.href}
+                    role="menuitem"
+                    aria-current={isActive(s.href) ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                    className={`block px-4 py-2.5 text-sm transition hover:bg-surface-alt focus-visible:bg-surface-alt ${
+                      isActive(s.href)
+                        ? "font-semibold text-text"
+                        : "text-text-muted hover:text-text focus-visible:text-text"
+                    }`}
+                  >
+                    {s.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
 
             {items.length > 0 && (
               <ul className="py-1">
