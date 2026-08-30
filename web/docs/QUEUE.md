@@ -20,6 +20,156 @@ against seeded data is labelled **traced, not executed**.
 | 2 | Signed-in navigation (avatar menu, role-aware) | ✅ done — traced (no signed-in seed) |
 | 3 | Phase 3 item 6 — `/` landing rebuild | ✅ done — verified (public page) |
 | 4 | Phase 3 item 7 — the route sweep | ✅ done (6 commits) — traced |
+| N3–N7 | Follow-ups from the first review | ✅ done (N3 verified, N4 verified) |
+| A | Keyboard pass on the signed-in nav | ✅ done — report below |
+| B | Consistency sweep (list only, no changes) | ✅ done — list below |
+
+**The elevation is code-complete pending your review of the B list.**
+
+---
+
+## B — Consistency sweep (drift found; nothing changed)
+
+Same idea implemented more than one way, across all the routes touched over
+these sessions. Ranked by how visible the inconsistency is.
+
+### B1 — Section headings, ~4 ways *(most visible)*
+
+| Style | Where | Count |
+|---|---|---|
+| `font-mono text-xs uppercase tracking-widest text-text-muted` | most section labels | 17 |
+| …`text-text-faint` (pre-sweep, missed) | 2 spots | 2 |
+| `font-mono text-xs font-semibold uppercase …text-muted` | `/applications/[id]` | 2 |
+| `font-display text-lg font-semibold` | `/students/[id]`, `/company/dashboard` "Postings" | 2 |
+| `font-display text-xl font-semibold` | landing "Latest opportunities" | 1 |
+| `font-display text-lg/base font-bold` (leftover) | 2 spots | 2 |
+
+**Recommend:** one rule. Either "section labels are always the mono eyebrow"
+(`text-xs uppercase tracking-widest text-text-muted`) and the Poppins `text-lg`
+is only for true content headings, or the reverse. I lean mono-eyebrow for
+labels, Poppins `text-lg` only where a section is a real heading a user would
+read (the `/students/[id]` timeline sections, "Latest opportunities"). Pick one
+and I'll sweep it.
+
+### B2 — Page-title `h1`, 4 ways
+
+| Style | Where |
+|---|---|
+| `font-display text-3xl font-extrabold` | 24 pages — the de-facto standard |
+| `font-display text-[29px] font-semibold tracking-tight` | `/opportunities`, `/feed` — someone applied §3's "29 / 600" literally to just these two |
+| `font-display text-2xl font-extrabold` | `/applications/[id]` (a sub-detail page) |
+| `font-display text-2xl font-bold` | the "connect Supabase" fallback h1s on `/companies` + `/students` |
+
+Plus the **eyebrow above h1** tracks with it: the two `text-[29px]` pages use a
+`text-[11px]` eyebrow; the other 23 use `text-xs`.
+
+**Recommend:** standardise on `text-3xl font-extrabold` + `text-xs` eyebrow (the
+24-page majority; `font-extrabold` also gives the page title the "loudest thing"
+weight §1 wants). That means `UX_ELEVATION.md` §3's type-scale row for "Page
+title" is wrong for this codebase and should read 30 / 800, or the two
+`text-[29px]` pages change. Your call which direction; I'll align all of them.
+
+### B3 — "Back" links, mixed prefix + one smaller target
+
+`← All companies` / `← All students` / `← All opportunities` /
+`← All applications` (list-returns) vs `← Back to dashboard` (edit page) vs
+`← Admin overview` (admin subpages) vs `← Previous` (pagination).
+Also `/applications/[id]`'s back link is missing the `inline-block py-2` the
+others have, so its tap target is shorter.
+
+**Recommend:** `← All <things>` for every "up to the list" link; keep
+"Back to …" only for a genuine one-step-back. Standard class
+`inline-block py-2 font-mono text-xs text-accent-2 hover:text-text` everywhere.
+
+### B4 — EmptyState titles, 4+ patterns
+
+`No applicants yet.` (trailing period) · `No applications yet` · `No posts yet`
+· `No description yet` · `No team members listed` · `Nothing here yet` ·
+`Nothing open` · `Nothing pending` · `Nothing saved yet` · `Nothing yet`.
+
+**Recommend:** `No <plural noun> yet`, never a trailing period, for the
+"you have none" case; `Nothing <state>` only where "no X yet" reads wrong
+(`Nothing to review`). I'll normalise.
+
+### B5 — EmptyState CTA style
+
+Most are now `<LinkButton variant="primary">`. A few are still a mono `<Link>`
+(`/companies/[id]` roles-tab "Browse all opportunities", the older
+"Browse opportunities →"). §4 says EmptyState has "one primary CTA" —
+recommend all become `LinkButton variant="primary"`.
+
+### B6 — `NotificationBell` doesn't use the shared disclosure hook
+
+`AvatarMenu` and `MobileNavMenu` now share `useDisclosure` (Escape + focus
+return, arrow cycling, focus trap, focus-first-on-open). The bell still has its
+own older handler: Escape + outside-click only — **no focus move on open, no
+trap, no arrow keys**. It's the one header menu that isn't keyboard-complete.
+Recommend porting it to `useDisclosure`.
+
+### B7 — a local `Section` component
+
+`/students/[id]` defines its own `function Section({title,children})`. It's the
+only user, so this is minor — but if B1 lands on "Poppins `text-lg` for real
+section headings", that helper should become `ui/Section` and be reused.
+
+### Resolved along the way (no drift — noting so you know it was checked)
+
+- Success/info banners: now uniformly
+  `rounded-ctrl border border-accent/30 bg-accent-soft … text-accent-on-soft`
+  across `signup-form`, `student-profile-form`, `company-profile-form`,
+  `/company/dashboard`.
+- Upload confirmations: both say `Uploaded.` now.
+- `Badge` deprecated `variant=` names: gone from `src/` entirely.
+- Emoji in product chrome: gone from `src/` entirely.
+
+---
+
+## A — Keyboard pass on the signed-in nav
+
+**Traced, not executed** where noted — `AvatarMenu` only mounts for a
+signed-in user and there's no seed account. The shared `useDisclosure` hook it
+uses *was* exercised live through the anonymous `MobileNavMenu` (same hook):
+open → focus first item, Escape → close + focus returns to trigger, both
+confirmed in the browser.
+
+### Tab order through the bar (desktop, signed in)
+
+Traced from the DOM (`SiteHeader` → `HeaderNav`):
+
+1. `Skip to content` skip-link
+2. Logo (`<Link href="/">`)
+3. Section links, left to right: Opportunities → Companies → Students → Feed →
+   Dashboard (company) / Admin (admin)
+4. Notification bell button
+5. Account-menu trigger
+6. → into `<main>`
+
+Matches visual order, no traps outside a menu, nothing reachable that isn't
+visible.
+
+### Into the account menu
+
+- Trigger has `aria-haspopup="menu"`, `aria-expanded`, `aria-label="Account
+  menu"`. Enter/Space/click opens (native button).
+- On open, `useDisclosure` focuses the first focusable in the panel — the first
+  account item on desktop, the first section link in the mobile sheet.
+- **Arrows** cycle every `a[href]`/`button` in the panel, wrapping. *(hook
+  verified via MobileNavMenu)*
+- **Escape** closes and moves focus back to the trigger. *(verified)*
+- **Tab / Shift+Tab** wrap at the ends — focus is trapped in the panel while
+  open. *(verified via MobileNavMenu)*
+- Clicking an item closes the menu, then navigates; focus lands on the new page.
+- Outside click (mousedown) closes without stealing focus.
+- Mobile sheet: a `bg-black/40` backdrop; tapping it closes.
+
+### Can't confirm without a session
+
+- `AvatarMenu` itself rendering — trigger markup (avatar + chevron) differs from
+  the hamburger, though the `useDisclosure` wiring is identical.
+- Any screen-reader behaviour: `role="menu"` / `role="menuitem"` announcement,
+  `aria-expanded` transitions, whether the section-links `<ul>` inside the sheet
+  should be its own labelled group.
+- The bell dropdown's keyboard is **known-incomplete** — see B6.
 
 ---
 
@@ -69,21 +219,17 @@ can be exercised.
 `/forgot-password`, `/reset-password`) deliberately have none — they're static
 shells around client forms with nothing async to skeleton.
 
-### N4 — poster-gradient hex still in 3 files (item 3)
+### N1–N7 status after your first review
 
-`--poster-grad` now tokenises the hero. The same four-stop gradient is still
-raw hex in `companies/[id]/page.tsx` (as a **135°** diagonal, not 180°) and in
-both `opengraph-image.tsx` routes. The OG routes genuinely can't use the token
-(`next/og` / Satori runs with no stylesheet). The company banner could adopt
-`--poster-grad` if you're fine standardising it to one angle. Low priority.
-
-### N3 — mobile section links still wrap (item 2)
-
-The account menu collapses to a bottom sheet at <640px as specced. The four
-section links still *wrap* onto two rows on a phone rather than folding into a
-hamburger/sheet — consolidating the whole nav into one mobile sheet is a
-bigger change than a presentation pass and wasn't in the item's wording.
-Confirm if you want the section links in the sheet too.
+| # | Ruling | Done |
+|---|---|---|
+| N1 | approved | kept |
+| N2 | your reading correct — 4 links + Admin, no Dashboard | kept |
+| N3 | fix it — one sheet below 640px | ✅ `26ef820`… see the N3-fix commit; verified in browser |
+| N4 | one source, three consumers | ✅ `src/lib/poster-gradient.ts`; hex now in one file; verified |
+| N5 | approved | kept |
+| N6 | park until seed | parked — `opportunity-form` inputs still hand-rolled |
+| N7 | add `/companies` + `/students` `loading.tsx`; auth stays without | ✅ done |
 
 ---
 
