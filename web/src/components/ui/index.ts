@@ -8,3 +8,4 @@ export { MatchArc } from "./match-arc";
 export { CompanyLogo } from "./company-logo";
 export { Avatar } from "./avatar";
 export { Chip } from "./chip";
+export { Section } from "./section";

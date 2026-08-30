@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { Avatar, Chip, EmptyState } from "@/components/ui";
+import { Avatar, Chip, EmptyState, Section } from "@/components/ui";
 import { PostCard } from "@/components/post-card";
 import { fetchPosts } from "@/lib/posts";
 import { fetchStudentProfile, availabilityLabel } from "@/lib/students";
@@ -259,21 +259,6 @@ export default async function StudentProfilePage({
           </div>
         )}
       </Section>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mt-10">
-      <h2 className="font-display text-lg font-semibold text-text">{title}</h2>
-      <div className="mt-3">{children}</div>
     </div>
   );
 }
