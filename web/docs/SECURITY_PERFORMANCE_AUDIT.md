@@ -8,6 +8,79 @@ Ordered newest first.
 
 ---
 
+## F5 · Signup was broken in production for ~3 days, two independent ways
+
+**Severity:** critical (nobody could create an account — the top of the funnel)
+**Area:** auth / signup / email hook
+**Found:** 2026-08-30, reported by Bilel; diagnosed from `auth_logs` + the
+deployed route + `auth.users`
+**Status:** cause 2 (this hook) fixed in code + fail-open (`… commit`); both
+still need env vars set (QUEUE.md). Cause 1 (CAPTCHA) was a dashboard toggle.
+
+### What
+
+`auth.users` holds **4 rows, all from 2026-08-27** — the QA fixtures. Zero
+real accounts have been created since. Over the 24h `auth_logs` window
+(2026-08-29 → 08-30) **every single `/signup` request failed**, in two phases:
+
+1. **`captcha_failed` (400)** — Supabase Auth's "Enable Captcha protection"
+   was turned on in the dashboard, but the signup form sends no CAPTCHA
+   token (there is no CAPTCHA code anywhere in the repo — `git log -S captcha`
+   / `hcaptcha` / `Turnstile` all empty). Every signup 400'd. This is a
+   dashboard setting, not git-traceable; Bilel has since disabled it.
+2. **`unexpected_failure` (500)** — with CAPTCHA off (~08-30 08:00), the
+   Send Email Hook takes over and returns 500:
+
+   ```
+   $ curl -i -X POST https://esenet-platforme.vercel.app/api/auth/email-hook -d '{…}'
+   HTTP/1.1 500 Internal Server Error
+   {"error":{"http_code":500,"message":"Email hook is not configured."}}
+   ```
+
+   `auth_logs`: `{"action":"run_hook","hook":"https://esenet-platforme.vercel.app/api/auth/email-hook","msg":"Hook errored out","error":"500: Unexpected status code returned from hook: 500"}`
+   → `user_confirmation_requested` returns `500 unexpected_failure` and GoTrue
+   **rolls back the `auth.users` insert.** Fails closed.
+
+The route returns that 500 from its own guard: `SEND_EMAIL_HOOK_SECRET` is
+**not in the Vercel Production environment** (it exists only in Preview,
+alongside `RESEND_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` — F1). The hook
+route landed `6ad46ed` (2026-08-29 12:53); it has 500'd on every prod signup
+since the dashboard hook was pointed at it.
+
+### Why it matters
+
+Beyond "no signups for 3 days": the email hook was a **hard, synchronous
+dependency on account creation** with no fallback. A Resend outage, a bad
+deploy, a typo in the secret — any of them would have done the same thing.
+Email delivery failing should never prevent an account from existing.
+
+### Where
+
+- `web/src/app/api/auth/email-hook/route.ts` — the route (now fail-open)
+- Vercel project `esenet-platforme` → Environment Variables → **Production**
+- Supabase → Authentication → Providers → "Enable Captcha protection" (was on)
+- Supabase → Authentication → Hooks → Send Email Hook (points at the prod URL)
+
+### Fix / direction
+
+- **Done in code:** the route now fails open — the only non-200 it returns is
+  a verified-bad signature (401). Missing config / Resend down / malformed
+  payload / any throw → logged, 200, account created, email recoverable via
+  resend.
+- **Still required (QUEUE.md — needs Bilel):** add `SEND_EMAIL_HOOK_SECRET`
+  and `RESEND_API_KEY` to Vercel **Production** (currently Preview-only).
+  Until then signup *succeeds* but the confirmation email doesn't send, and
+  with email-confirmation ON the user can't log in — so this is not fully
+  resolved without the env vars.
+- **Consider:** a monitored alert on "auth email send failed" (right now it's
+  a `console.error` nobody watches), and whether email confirmation should be
+  relaxed / an admin-confirm path should exist for when delivery fails.
+- **Process:** two prod-down auth changes (a dashboard CAPTCHA toggle, a hook
+  wired up without its env var) shipped without anyone attempting a signup
+  afterward. `web/docs/QA.md` has an auth regression flow — it wasn't run.
+
+---
+
 ## F1 · Notification emails are silently off in production
 
 **Severity:** medium (a whole feature is dark in prod, with no signal)

@@ -247,18 +247,37 @@ visible.
 
 ## Needs Bilel
 
-### N8 — the two directory list pages were never swept
+### N9 — env vars missing from Vercel Production (signup / email) — F5
 
-`src/app/students/page.tsx` and `src/app/companies/page.tsx` (the `/students`
-and `/companies` directory lists) were **not in item 7's route list**, so they
-still carry pre-elevation markup: bespoke `rounded-md bg-accent` login buttons,
-a **mono** `rounded-md bg-accent font-mono` search button, inline
-`rounded-lg border` cards instead of `Card`, `text-text-faint` on the avatar
-initials. B fixed only what its own findings touched there (h1, empty-state
-wording + CTA, the two stray badges).
+The email hook now fails open, so signup **creates the account** again. But
+the confirmation email still won't send in Production until these are added
+to **Vercel → esenet-platforme → Environment Variables → Production**
+(they currently exist in **Preview only**):
 
-They need one sweep commit — same mechanical work as item 7. Doing onboarding
-first as instructed; say if you want this sweep before it.
+| Variable | Value | Where to get it |
+|---|---|---|
+| `SEND_EMAIL_HOOK_SECRET` | `v1,whsec_…` | Supabase → Authentication → Hooks → Send Email Hook (the secret shown there) — must match what Preview has |
+| `RESEND_API_KEY` | `re_…` | resend.com → API Keys |
+| `SUPABASE_SERVICE_ROLE_KEY` | the **real** `service_role` secret (not the anon key — F2/F4) | Supabase → Project Settings → API → `service_role` |
+
+`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are already in
+Production — leave them.
+
+Also: `web/.env.local`'s `SUPABASE_SERVICE_ROLE_KEY` is set to the anon key
+(F4) — replace it locally with the real one too if you want the
+notify()→email path testable in dev.
+
+With email-confirmation ON, until `RESEND_API_KEY` lands a new signup can
+create the account but can't confirm/login. If you want signups usable
+*right now* without waiting on Resend, the interim option is Supabase → Auth
+→ "Confirm email" OFF — but CLAUDE.md says don't, and the deferred-provision
+flow assumes it's on.
+
+### N8 — directory list pages ✅ RESOLVED (`ca2f2a3`)
+
+`/students` + `/companies` swept: bespoke buttons → `Button`/`LinkButton`,
+inline cards → `Card interactive`, initials → `Avatar` (+ new `lg`) /
+`CompanyLogo`, chips → `Chip`. `/companies` verified in the browser.
 
 ### N1 — `HeaderNav` props signature changed (item 2)
 
