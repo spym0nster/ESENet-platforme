@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { markAllNotificationsRead } from "@/app/actions/notifications";
+import { useDisclosure } from "@/components/use-disclosure";
 import type { AppNotification } from "@/types/database";
 
 function timeAgo(iso: string): string {
@@ -27,13 +28,11 @@ export function NotificationBell({
   unread: number;
   recent: AppNotification[];
 }) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, wrapRef, triggerRef, panelRef } = useDisclosure();
   const markedRef = useRef(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
 
-  // Opening the panel marks everything read (same behaviour as visiting
-  // /notifications) — but the panel keeps highlighting what was unread for
-  // this view. Fires at most once per mount.
+  // Opening the panel marks everything read (same as visiting /notifications);
+  // the panel keeps highlighting what was unread for this view. At most once.
   useEffect(() => {
     if (open && unread > 0 && !markedRef.current) {
       markedRef.current = true;
@@ -41,27 +40,10 @@ export function NotificationBell({
     }
   }, [open, unread]);
 
-  useEffect(() => {
-    if (!open) return;
-    function onDocClick(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
   return (
     <div ref={wrapRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="relative flex items-center py-3 text-[color:var(--header-fg)] transition hover:text-white"
@@ -94,7 +76,9 @@ export function NotificationBell({
 
       {open && (
         <div
+          ref={panelRef}
           role="menu"
+          aria-label="Notifications"
           className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-surface text-left normal-case tracking-normal [box-shadow:var(--lift)]"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
@@ -103,6 +87,7 @@ export function NotificationBell({
             </span>
             <Link
               href="/notifications"
+              role="menuitem"
               onClick={() => setOpen(false)}
               className="font-mono text-[11px] text-accent-2 hover:text-text"
             >
@@ -112,7 +97,7 @@ export function NotificationBell({
 
           {recent.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-text-muted">
-              Nothing yet.
+              No notifications yet.
             </p>
           ) : (
             <ul className="max-h-96 divide-y divide-border overflow-y-auto">
@@ -143,8 +128,9 @@ export function NotificationBell({
                     {n.link ? (
                       <Link
                         href={n.link}
+                        role="menuitem"
                         onClick={() => setOpen(false)}
-                        className="block hover:bg-surface-alt"
+                        className="block hover:bg-surface-alt focus-visible:bg-surface-alt"
                       >
                         {body}
                       </Link>
