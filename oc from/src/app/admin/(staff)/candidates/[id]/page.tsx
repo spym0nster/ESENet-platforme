@@ -2,10 +2,11 @@ import { ArrowLeft, Check, ExternalLink, FileText, Mail, Phone, X } from "lucide
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AssignmentControls, ContactFlag, NotesEditor, StatusActions } from "@/components/admin/candidate-controls";
+import { AssignmentControls, ContactFlag, EmailButtons, NotesEditor, StatusActions } from "@/components/admin/candidate-controls";
 import { CapacityBar, DemoTag, Panel, ScorePill, StatusBadge, Tag } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { requireStaff } from "@/lib/auth";
+import { features } from "@/lib/env";
 import { db } from "@/lib/db";
 import { assignMissionOptions, loadMatchMissions, loadTeamOptions, recommend } from "@/lib/services/matching";
 import { getSettings } from "@/lib/services/settings";
@@ -61,6 +62,10 @@ export default async function CandidatePage({ params }: { params: Promise<{ id: 
     },
     missions,
   );
+  const lastSent = (kind: "accepted" | "rejected") => {
+    const h = history.find((x) => x.action === "candidate.email_sent" && (x.next as { kind?: string } | null)?.kind === kind);
+    return h ? formatDateTime(h.createdAt) : null;
+  };
   const active = candidate.assignments.filter((a) => a.active);
   const past = candidate.assignments.filter((a) => !a.active);
 
@@ -275,6 +280,16 @@ export default async function CandidatePage({ params }: { params: Promise<{ id: 
               Score = 85% weighted skill coverage (core skills count double; 60% coverage counts as a full fit) + 15% experience.
               See README → Skill matching.
             </p>
+          </Panel>
+
+          <Panel title="Email the candidate" eyebrow="Sent manually · logged">
+            <EmailButtons
+              candidateId={candidate.id}
+              name={candidate.fullName}
+              status={candidate.status}
+              emailEnabled={features.email}
+              sent={{ accepted: lastSent("accepted"), rejected: lastSent("rejected") }}
+            />
           </Panel>
 
           <Panel title="People to contact">

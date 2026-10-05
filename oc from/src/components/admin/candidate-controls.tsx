@@ -1,8 +1,9 @@
 "use client";
 
-import { Ban, Clock, Flag, FlagOff, Loader2, RotateCcw, Save, Star, UserCheck, UserMinus, UserPlus } from "lucide-react";
+import { Ban, Clock, Flag, FlagOff, Loader2, Mail, RotateCcw, Save, Star, UserCheck, UserMinus, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { endAssignment, updateAssignmentDetails } from "@/actions/assignments";
+import { sendDecisionEmail } from "@/actions/emails";
 import { setCandidateNotes, setCandidateStatus, setContactReason } from "@/actions/candidates";
 import { AssignForm, type AssignMissionOption, type AssignTeamOption } from "@/components/admin/assign-form";
 import {
@@ -277,5 +278,73 @@ export function ContactFlag({ candidateId, reason }: { candidateId: string; reas
         <Flag /> Flag
       </Button>
     </form>
+  );
+}
+
+/* ── Decision emails ────────────────────────────────────────── */
+
+export type SentInfo = { accepted: string | null; rejected: string | null };
+
+export function EmailButtons({
+  candidateId,
+  name,
+  status,
+  emailEnabled,
+  sent,
+}: {
+  candidateId: string;
+  name: string;
+  status: CandidateStatus;
+  emailEnabled: boolean;
+  sent: SentInfo;
+}) {
+  const { run, pending } = useAction();
+  const [confirm, setConfirm] = useState<"accepted" | "rejected" | null>(null);
+
+  const item = (kind: "accepted" | "rejected", label: string, ready: boolean, hint: string) => (
+    <div className="space-y-1.5">
+      <Button
+        variant={kind === "accepted" ? "success" : "outline"}
+        size="sm"
+        className="w-full"
+        disabled={!emailEnabled || !ready || pending}
+        onClick={() => setConfirm(kind)}
+      >
+        <Mail /> {label}
+      </Button>
+      <p className="text-[11px] leading-snug text-dim">{sent[kind] ? `Last sent ${sent[kind]}` : ready ? "Not sent yet." : hint}</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-3">
+      {!emailEnabled && (
+        <p className="border border-gold/40 bg-gold/8 px-3 py-2 text-xs text-gold">
+          Email is not configured yet (SMTP). The buttons stay disabled until an admin adds it.
+        </p>
+      )}
+      {item("accepted", "Send acceptance email", status === "SELECTED", "Select this candidate first.")}
+      {item("rejected", "Send rejection email", status === "REJECTED", "Reject this candidate first.")}
+
+      <AlertDialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Send the {confirm} email to {name}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirm === "accepted"
+                ? "A welcome message: we are happy to tell them they are part of the OC team, with a reminder of J-2, J-1 and Jour J."
+                : "A polite message saying we cannot offer them a place in the OC team this year."}{" "}
+              The send is recorded in the audit log.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirm && void run(() => sendDecisionEmail(candidateId, confirm))}>Send email</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
