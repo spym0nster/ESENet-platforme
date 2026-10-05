@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# prisma generated client
+src/generated/
+
+# env — never commit secrets
+.env
+.env*.local
+.env.production
+
+# vercel
+.vercel
+
+# os / editor
+.DS_Store
+Thumbs.db
+.claude/
+
+# logs
+npm-debug.log*
+.pgdata/

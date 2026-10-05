@@ -1,0 +1,352 @@
+// ESENet Talent Fair 2026 — OC Operations Platform
+// PostgreSQL via Prisma 7 (driver adapter: @prisma/adapter-pg).
+// The connection URL lives in prisma.config.ts (DATABASE_URL), not here.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  AMBASSADOR
+}
+
+enum CandidateStatus {
+  PENDING
+  SHORTLISTED
+  SELECTED
+  WAITLIST
+  REJECTED
+}
+
+/// The three operational days every OC member works. Candidates never pick these.
+enum OperationalDay {
+  J_MINUS_2
+  J_MINUS_1
+  JOUR_J
+}
+
+// ─────────────────────────────────────────────────────────────
+// Staff accounts (ESEN Ambassadors). Applicants never log in.
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(AMBASSADOR)
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  auditLogs          AuditLog[]
+  assignmentsMade    Assignment[]     @relation("AssignedBy")
+  assignmentsEnded   Assignment[]     @relation("EndedBy")
+  reviewedCandidates Candidate[]      @relation("ReviewedBy")
+  supervisedTeams    Team[]           @relation("TeamSupervisor")
+  operationsNotes    OperationsNote[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// Applications
+// ─────────────────────────────────────────────────────────────
+
+model Candidate {
+  id            String @id @default(cuid())
+  /// Public-facing reference shown on the success page, e.g. OC26-7K3F9Q
+  applicationId String @unique
+
+  fullName       String
+  /// Always stored normalized (trimmed + lowercased). Unique → one application per email.
+  email          String  @unique
+  phone          String
+  classYear      String
+  specialization String
+  linkedin       String?
+  portfolio      String?
+
+  /// Must be true — the form cannot be submitted otherwise (checked client + server + DB constraint).
+  availabilityConfirmed Boolean
+  consentAt             DateTime
+
+  eventExperience             Boolean
+  eventExperienceDetails      String?
+  ambassadorExperience        Boolean
+  ambassadorExperienceDetails String?
+
+  whatCanYouBring       String
+  additionalInformation String?
+  /// Free text when the "Other" skill is ticked.
+  otherSkill            String?
+
+  /// Private Vercel Blob pathname. Never a public URL — served via /api/cv/[candidateId] to staff only.
+  cvUrl      String?
+  cvFileName String?
+
+  status       CandidateStatus @default(PENDING)
+  reviewedAt   DateTime?
+  reviewedById String?
+  reviewedBy   User?           @relation("ReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  /// Internal-only notes from the Ambassadors team.
+  internalNotes String?
+  /// When set, the candidate shows up in Operations → "People to contact".
+  contactReason String?
+
+  /// Development fixtures only (npm run demo:seed). Never created in production automatically.
+  isDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  skills         CandidateSkill[]
+  assignments    Assignment[]
+  scheduleItems  ScheduleItemPerson[]
+  operationsNote OperationsNote[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([classYear])
+  @@index([specialization])
+}
+
+model Skill {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  slug      String  @unique
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+  /// The "Other" option — ticking it reveals a free-text field.
+  isOther   Boolean @default(false)
+
+  candidates CandidateSkill[]
+  missions   MissionSkill[]
+}
+
+model CandidateSkill {
+  candidateId String
+  skillId     String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  skill       Skill     @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([candidateId, skillId])
+  @@index([skillId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Organisation: teams, missions, recommended skills
+// ─────────────────────────────────────────────────────────────
+
+model Team {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  capacity    Int     @default(0)
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  /// Ambassador responsible for this team (optional). OC team leaders are assignments with isLead = true.
+  supervisorId String?
+  supervisor   User?   @relation("TeamSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  missions      Mission[]
+  assignments   Assignment[]
+  scheduleItems ScheduleItem[]
+}
+
+model Mission {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  capacity    Int     @default(0)
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  /// Default team for people assigned to this mission (can be overridden per assignment).
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  skills        MissionSkill[]
+  assignments   Assignment[]
+  scheduleItems ScheduleItem[]
+}
+
+model MissionSkill {
+  missionId String
+  skillId   String
+  /// 2 = core skill for this mission, 1 = useful skill. Used by the matching algorithm.
+  weight    Int     @default(1)
+  mission   Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([missionId, skillId])
+  @@index([skillId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Assignments — never deleted. A reassignment ends the old row
+// (active = false) and creates a new one that points back to it.
+// ─────────────────────────────────────────────────────────────
+
+model Assignment {
+  id          String    @id @default(cuid())
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Restrict)
+  missionId   String
+  mission     Mission   @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Restrict)
+
+  /// Optional role / sub-role, e.g. "Setup & Infrastructure".
+  subRole String?
+  /// OC team leader for this team.
+  isLead  Boolean @default(false)
+  notes   String?
+  /// Matching score at the moment of assignment (0–100), kept for accountability.
+  scoreAtAssignment Int?
+
+  active Boolean @default(true)
+
+  assignedById String?
+  assignedBy   User?   @relation("AssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  endedAt    DateTime?
+  endedById  String?
+  endedBy    User?     @relation("EndedBy", fields: [endedById], references: [id], onDelete: SetNull)
+  endReason  String?
+
+  previousAssignmentId String?     @unique
+  previousAssignment   Assignment? @relation("Reassignment", fields: [previousAssignmentId], references: [id], onDelete: SetNull)
+  nextAssignment       Assignment? @relation("Reassignment")
+
+  @@index([candidateId, active])
+  @@index([teamId, active])
+  @@index([missionId, active])
+}
+
+// ─────────────────────────────────────────────────────────────
+// J-2 / J-1 / JOUR J planning
+// ─────────────────────────────────────────────────────────────
+
+model ScheduleDay {
+  id    String         @id @default(cuid())
+  key   OperationalDay @unique
+  label String
+  title String
+  /// Calendar date of this operational day (set by an admin in Settings).
+  date  DateTime?      @db.Date
+  notes String?
+
+  items ScheduleItem[]
+}
+
+model ScheduleItem {
+  id        String      @id @default(cuid())
+  dayId     String
+  day       ScheduleDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  /// "HH:MM", 24h. Strings keep the plan timezone-agnostic.
+  startTime String
+  endTime   String?
+  title     String
+  location  String?
+  notes     String?
+
+  missionId String?
+  mission   Mission? @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  teamId    String?
+  team      Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  people ScheduleItemPerson[]
+
+  @@index([dayId, startTime])
+}
+
+model ScheduleItemPerson {
+  itemId      String
+  candidateId String
+  item        ScheduleItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  candidate   Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, candidateId])
+  @@index([candidateId])
+}
+
+/// Notes shown on the Operations screen during J-2 / J-1 / JOUR J.
+model OperationsNote {
+  id         String          @id @default(cuid())
+  body       String
+  day        OperationalDay?
+  pinned     Boolean         @default(false)
+  resolvedAt DateTime?
+
+  candidateId String?
+  candidate   Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([resolvedAt, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Settings, audit, rate limiting
+// ─────────────────────────────────────────────────────────────
+
+/// Singleton row (id = 1).
+model AppSetting {
+  id                       Int             @id @default(1)
+  applicationsOpen         Boolean         @default(true)
+  /// When false (default) a candidate can hold at most one active assignment.
+  allowMultipleAssignments Boolean         @default(false)
+  /// Forces the Operations screen onto a given day; otherwise derived from ScheduleDay dates.
+  currentDayOverride       OperationalDay?
+  updatedAt                DateTime        @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// e.g. candidate.status_changed, assignment.created, assignment.reassigned, mission.updated
+  action     String
+  targetType String
+  targetId   String?
+  summary    String
+  previous   Json?
+  next       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+/// Fixed-window counters for public endpoints. Keys are hashed (no raw IPs stored).
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}
