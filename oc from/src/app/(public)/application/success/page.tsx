@@ -35,23 +35,18 @@ export default async function SuccessPage() {
             Your application to the {EVENT.name} operational team has been received.
           </p>
 
-          {applicationId && fullName && (
-            <dl className="mt-8 grid gap-px border border-line bg-line sm:grid-cols-2">
-              <div className="bg-bg p-4">
-                <dt className="eyebrow">Application ID</dt>
-                <dd className="mt-2 font-mono text-2xl tracking-[0.08em] text-green">{applicationId}</dd>
-              </div>
-              <div className="bg-bg p-4">
-                <dt className="eyebrow">Name</dt>
-                <dd className="mt-2 text-lg font-semibold">{fullName}</dd>
-              </div>
-            </dl>
+          {fullName && (
+            <p className="mt-6 border-l-2 border-green pl-4 text-lg">
+              Thank you, <span className="font-semibold">{fullName}</span>.
+            </p>
           )}
 
-          <p className="mt-8 leading-relaxed text-muted">
-            Your profile will be reviewed by the {EVENT.org} team.
-            {applicationId && " Keep your application ID — quote it if you need to contact us."}
-          </p>
+          <div className="mt-8 border border-line bg-bg p-5">
+            <p className="font-display text-xl font-extrabold uppercase [font-stretch:112%]">Stay connected</p>
+            <p className="mt-2 leading-relaxed text-muted">
+              Your profile will be reviewed by the {EVENT.org} team. We will send you an email — keep an eye on your inbox.
+            </p>
+          </div>
           <Button asChild variant="outline" className="mt-8">
             <Link href="/">Back to home</Link>
           </Button>
