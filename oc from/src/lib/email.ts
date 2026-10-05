@@ -108,8 +108,7 @@ export function applicationReceivedEmail(name: string) {
     `Your profile will be reviewed by the ${EVENT.org} team. Stay connected: we will send you an email with our decision.`,
     "",
     `— ${EVENT.org}`,
-  ].join("
-");
+  ].join("\n");
   const html = layout(
     "Application received",
     `Hello ${escapeHtml(name)},<br/>Your application to the ${EVENT.name} operational team has been received.<br/><br/>Your profile will be reviewed by the ${EVENT.org} team. <strong>Stay connected</strong>: we will send you an email with our decision.<br/><br/>— ${EVENT.org}`,
