@@ -99,25 +99,20 @@ export function decisionEmail(kind: DecisionKind, fullName: string) {
   return { subject, text, html };
 }
 
-export function applicationReceivedEmail(name: string, applicationId: string) {
-  const subject = `${EVENT.name} — OC application received (${applicationId})`;
+export function applicationReceivedEmail(name: string) {
+  const subject = `${EVENT.name} — OC application received`;
   const text = [
     `Hello ${name},`,
     "",
     `Your application to the ${EVENT.name} operational team has been received.`,
-    `Application ID: ${applicationId}`,
-    "",
-    `Your profile will be reviewed by the ${EVENT.org} team.`,
+    `Your profile will be reviewed by the ${EVENT.org} team. Stay connected: we will send you an email with our decision.`,
     "",
     `— ${EVENT.org}`,
-  ].join("\n");
-  const html = `<!doctype html><html><body style="margin:0;background:#00040F;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#FAFAFC">
-  <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;border:1px solid #13264A;background:#010819">
-    <tr><td style="padding:28px 28px 8px;font-size:11px;letter-spacing:.18em;color:#2DA5E9;text-transform:uppercase">${EVENT.name} · Operations team</td></tr>
-    <tr><td style="padding:0 28px;font-size:26px;font-weight:bold;letter-spacing:.02em">Application received</td></tr>
-    <tr><td style="padding:16px 28px;font-size:15px;line-height:1.6;color:#C9CFDB">Hello ${escapeHtml(name)},<br/>Your application to the ${EVENT.name} operational team has been received.</td></tr>
-    <tr><td style="padding:0 28px"><div style="border:1px solid #13264A;padding:14px 16px;font-family:'Courier New',monospace;font-size:13px;color:#9CA29D">APPLICATION ID<br/><span style="font-size:20px;color:#55E274;letter-spacing:.08em">${escapeHtml(applicationId)}</span></div></td></tr>
-    <tr><td style="padding:16px 28px 28px;font-size:14px;line-height:1.6;color:#C9CFDB">Your profile will be reviewed by the ${EVENT.org} team.</td></tr>
-  </table></body></html>`;
+  ].join("
+");
+  const html = layout(
+    "Application received",
+    `Hello ${escapeHtml(name)},<br/>Your application to the ${EVENT.name} operational team has been received.<br/><br/>Your profile will be reviewed by the ${EVENT.org} team. <strong>Stay connected</strong>: we will send you an email with our decision.<br/><br/>— ${EVENT.org}`,
+  );
   return { subject, text, html };
 }

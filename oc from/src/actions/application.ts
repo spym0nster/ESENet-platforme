@@ -160,7 +160,7 @@ export async function submitApplication(formData: FormData): Promise<SubmitAppli
     });
 
     after(async () => {
-      const mail = applicationReceivedEmail(cleanText(data.fullName), applicationId);
+      const mail = applicationReceivedEmail(cleanText(data.fullName));
       await sendEmail(data.email, mail.subject, mail.text, mail.html);
       if (Math.random() < 0.05) await pruneRateLimits();
     });
