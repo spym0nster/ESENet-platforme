@@ -27,3 +27,6 @@ Thumbs.db
 # logs
 npm-debug.log*
 .pgdata/
+
+# vercel
+.vercel
