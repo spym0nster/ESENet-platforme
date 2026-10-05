@@ -2,6 +2,7 @@ import { Download } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AddCandidateDialog } from "@/components/admin/add-candidate";
 import { CandidateFilters } from "@/components/admin/candidate-filters";
 import { Pagination } from "@/components/admin/pagination";
 import { StatusMenu } from "@/components/admin/status-menu";
@@ -38,13 +39,16 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
         title="Candidates"
         description={`${total} application${total === 1 ? "" : "s"} match the current filters.`}
         actions={
-          user.role === "ADMIN" ? (
-            <Button asChild variant="outline" size="sm">
-              <a href={exportHref(sp)}>
-                <Download /> Export CSV
-              </a>
-            </Button>
-          ) : undefined
+          <>
+            {user.role === "ADMIN" && (
+              <Button asChild variant="outline" size="sm">
+                <a href={exportHref(sp)}>
+                  <Download /> Export CSV
+                </a>
+              </Button>
+            )}
+            <AddCandidateDialog skills={options.skills.filter((s) => s.name !== "Other")} />
+          </>
         }
       />
 
