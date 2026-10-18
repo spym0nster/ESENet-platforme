@@ -62,7 +62,16 @@ forms show "temporarily unavailable". Copy lives in `src/content/forms.ts`.
 Spam: honeypot only for now (Turnstile is a later step). Stands are free;
 sponsor packs only add extras (`BENEFITS` in `event.ts`).
 
+## Organisers
+
+`/{lang}/admin` (password = `ADMIN_PASSWORD`): counts, approve/reject stand
+applications with a stand number (approval emails the team badges at
+`/{lang}/badge/[code]`), visitor list. `/{lang}/admin/scan`: camera QR check-in
+(visitor `ESN-` and staff `STF-` codes; manual entry as fallback).
+
+Live: https://esenet-talent-fair.vercel.app (Vercel project `esenet-talent-fair`,
+deployed with `vercel deploy --prod` from `event/`).
+
 ## Not built yet
 
-- Admin review of exhibitors (approve + stand number), the check-in scanner, staff badges.
-- Turnstile, and deployment (its own Vercel project, Root Directory `event`, needs the same env vars).
+- Turnstile anti-spam, custom domain (esenet-tn.com), the Google Sheet webhook and Resend keys.
