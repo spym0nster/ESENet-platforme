@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { FORMS, type FormState } from "@/content/forms";
 import { hasLocale, type Locale } from "@/content/i18n";
-import { db, esc, isEmail, newCode, sendMail, siteUrl } from "@/lib/server";
+import { db, esc, isEmail, mirrorToSheet, newCode, sendMail, siteUrl } from "@/lib/server";
 
 const text = (fd: FormData, k: string, max = 300) => String(fd.get(k) ?? "").trim().slice(0, max);
 const fileOf = (fd: FormData, k: string) => {
@@ -86,7 +86,13 @@ export async function registerVisitor(_prev: FormState, fd: FormData): Promise<F
     return fail(t.errGeneric);
   }
 
-  await mail(name, code);
+  await Promise.all([
+    mail(name, code),
+    mirrorToSheet("visitors", {
+      code, name, email, phone: text(fd, "phone", 40), status, school: text(fd, "school", 160), field: text(fd, "field", 160),
+      cv_shared: consentCv && !!cvPath, lang,
+    }),
+  ]);
   redirect(`/${lang}/ticket/${code}`);
 }
 
@@ -162,6 +168,14 @@ export async function applyExhibitor(_prev: FormState, fd: FormData): Promise<Fo
     return fail(t.errGeneric);
   }
 
-  await sendMail(email, t.mailSubject, `<p>${esc(company)},</p><p>${t.mailBody}</p><p>ESENet — 25.11.2026, ESEN Technopôle</p>`);
+  await Promise.all([
+    sendMail(email, t.mailSubject, `<p>${esc(company)},</p><p>${t.mailBody}</p><p>ESENet — 25.11.2026, ESEN Technopôle</p>`),
+    mirrorToSheet("exhibitors", {
+      code, company, sector: text(fd, "sector", 120), website, description, logo: logoUrl,
+      hiring: fd.getAll("hiring").join(", "), needs: text(fd, "needs", 400), email, phone: text(fd, "phone", 40),
+      person1: `${people[0].name} — ${people[0].title}`, person2: `${people[1].name} — ${people[1].title}`,
+      sponsor_interest: SPONSOR.includes(sponsor) ? sponsor : "", lang,
+    }),
+  ]);
   redirect(`/${lang}/exhibit/thanks`);
 }
