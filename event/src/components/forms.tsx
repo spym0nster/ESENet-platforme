@@ -4,6 +4,8 @@ import { useActionState, type ReactNode } from "react";
 import { applyExhibitor, registerVisitor } from "@/app/actions/register";
 import { FORMS } from "@/content/forms";
 import type { Locale } from "@/content/i18n";
+import { NodeRule } from "./alchemy";
+import { Glyph } from "./ui";
 
 const input =
   "mt-2 block w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-[16px] text-ink outline-none transition-colors placeholder:text-slate/50 focus:border-blue focus:ring-2 focus:ring-blue/20";
@@ -26,9 +28,13 @@ function Check({ name, children }: { name: string; children: ReactNode }) {
 
 function Step({ n, title }: { n: string; title: string }) {
   return (
-    <div className="flex items-baseline gap-4 border-b border-ink/10 pb-3">
-      <span className="font-mono text-[12px] tracking-[0.2em] text-blue">{n}</span>
-      <h2 className="font-display text-xl font-semibold tracking-tight text-ink">{title}</h2>
+    <div>
+      <div className="flex items-center gap-3 pb-3">
+        <Glyph kind={(Number(n) % 3) as 0 | 1 | 2} />
+        <span className="font-mono text-[12px] tracking-[0.2em] text-blue">{n}</span>
+        <h2 className="font-display text-xl font-semibold tracking-tight text-ink">{title}</h2>
+      </div>
+      <NodeRule />
     </div>
   );
 }

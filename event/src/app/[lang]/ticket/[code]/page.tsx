@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { FormPage } from "@/components/form-page";
+import { NodeRule, TransmutationRow } from "@/components/alchemy";
 import { ButtonLink } from "@/components/ui";
 import { FORMS } from "@/content/forms";
 import { hasLocale } from "@/content/i18n";
@@ -35,8 +36,12 @@ export default async function Ticket({ params }: PageProps<"/[lang]/ticket/[code
           />
           <p className="mt-5 font-display text-2xl font-semibold tracking-tight text-ink">{data.full_name}</p>
           <p className="mt-1 font-mono text-[12px] tracking-[0.2em] text-slate">{code}</p>
+          <NodeRule className="mt-6" />
           <p className="mt-5 text-[14px] text-slate">{t.ticketWhen}</p>
           <p className="text-[14px] text-slate">{t.ticketWhere}</p>
+        </div>
+        <div className="bg-navy px-6 py-4">
+          <TransmutationRow className="text-[11px]" />
         </div>
       </div>
       <div className="mt-8 text-center">

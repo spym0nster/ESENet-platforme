@@ -7,6 +7,7 @@ import type { Locale } from "@/content/i18n";
 import { getDictionary } from "@/content/i18n";
 import { SiteFooter } from "./sections/closing";
 import { SiteHeader } from "./site-header";
+import { Flask, NodeRule, TransmutationRow } from "./alchemy";
 import { Container, Glyph, SectionLabel } from "./ui";
 
 type Aside = { title: string; steps: { t: string; d: string }[] };
@@ -52,7 +53,13 @@ export function FormPage({
             className="-z-10 object-cover object-[50%_35%] opacity-35"
           />
           <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-night via-night/75 to-night/40" />
+          <div aria-hidden className="absolute inset-0 -z-10 bg-[url('/brand/molecule.svg')] bg-[length:120%_auto] bg-[position:70%_40%] bg-no-repeat opacity-25" />
+          {/* the poster's flask: data pours in, value comes out */}
+          <div aria-hidden className="pointer-events-none absolute -right-6 top-24 -z-10 hidden h-[130%] w-[34rem] opacity-60 lg:block xl:right-[4%]">
+            <Flask idPrefix="reg-flask" className="h-full w-full" />
+          </div>
           <div aria-hidden className="bg-signature absolute inset-x-0 top-16 h-px sm:top-[72px]" />
+          <NodeRule tone="dark" className="absolute inset-x-0 bottom-6" />
           <Container>
             <SectionLabel n="—">{label}</SectionLabel>
             <h1 className="mt-6 max-w-4xl font-display text-[clamp(2.6rem,6.5vw,5.5rem)] font-extrabold leading-[0.95] tracking-[-0.045em]">
@@ -73,8 +80,9 @@ export function FormPage({
               {aside && (
                 <aside className="relative overflow-hidden rounded-3xl bg-navy p-7 text-snow lg:sticky lg:top-24 lg:col-span-4 lg:p-8">
                   <div aria-hidden className="bg-signature absolute inset-x-0 top-0 h-[3px]" />
-                  <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-cyan-bright">{aside.title}</p>
-                  <ol className="mt-6 space-y-6">
+                  <div aria-hidden className="absolute inset-0 bg-[url('/brand/molecule.svg')] bg-[length:230%_auto] bg-[position:85%_110%] bg-no-repeat opacity-30" />
+                  <p className="relative font-mono text-[11px] uppercase tracking-[0.26em] text-cyan-bright">{aside.title}</p>
+                  <ol className="relative mt-6 space-y-6">
                     {aside.steps.map((s, i) => (
                       <li key={s.t} className="flex gap-4">
                         <span className="mt-1 flex w-8 shrink-0 items-center gap-1.5 font-mono text-[11px] tracking-[0.1em] text-blue-light">
@@ -87,7 +95,7 @@ export function FormPage({
                       </li>
                     ))}
                   </ol>
-                  <dl className="mt-8 space-y-3 border-t border-white/10 pt-6">
+                  <dl className="relative mt-8 space-y-3 border-t border-white/10 pt-6">
                     {facts.map((f) => (
                       <div key={f.k} className="grid grid-cols-[5.5rem_1fr] gap-3">
                         <dt className="font-mono text-[11px] uppercase tracking-[0.2em] text-mist/70">{f.k}</dt>
@@ -95,7 +103,8 @@ export function FormPage({
                       </div>
                     ))}
                   </dl>
-                  <a href={`mailto:${EVENT.contactEmail}`} className="mt-6 block text-[14px] text-cyan-bright underline underline-offset-4">
+                  <TransmutationRow align="start" className="relative mt-7 text-[10px] sm:text-[11px]" />
+                  <a href={`mailto:${EVENT.contactEmail}`} className="relative mt-6 block text-[14px] text-cyan-bright underline underline-offset-4">
                     {EVENT.contactEmail}
                   </a>
                 </aside>
