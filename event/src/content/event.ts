@@ -11,7 +11,11 @@ export const EVENT = {
   instagramHandle: "@esenet_talentfair",
   platformUrl: "https://esenet-platforme.vercel.app",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=ESEN+%C3%89cole+Sup%C3%A9rieure+de+l%27%C3%89conomie+Num%C3%A9rique+Manouba",
-  partnershipEmail: "nour.gaddes@esen.tn",
+  // Generic club address (as on esenet-tn.com) rather than a personal one.
+  contactEmail: "ambassadors@esen.tn",
+  partnershipEmail: "ambassadors@esen.tn",
+  // ESEN's public Facebook reel of the 2025 (Synapse) edition.
+  aftermovieUrl: "https://www.facebook.com/reel/1611796053145700",
 } as const;
 
 // 2026 targets from the partnership deck — shown as targets, not results.

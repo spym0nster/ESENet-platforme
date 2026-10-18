@@ -37,12 +37,14 @@ export function Arrow({ className = "" }: { className?: string }) {
   );
 }
 
-type Variant = "primary" | "ghost" | "ink";
+type Variant = "primary" | "ghost" | "ink" | "outline";
 
 const variants: Record<Variant, string> = {
   primary: "bg-green text-night hover:bg-snow",
   ghost: "border border-white/30 text-snow hover:border-snow hover:bg-white/[0.06]",
   ink: "bg-ink text-snow hover:bg-blue",
+  // ghost's light-background counterpart
+  outline: "border border-ink/25 text-ink hover:border-ink hover:bg-ink/[0.04]",
 };
 
 export function ButtonLink({

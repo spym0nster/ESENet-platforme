@@ -14,15 +14,19 @@
   --color-cyan-bright: #1fdcc4;
   --color-teal: #0b7f95;
   --color-green: #5be36b;
-  --color-paper: #eef2fb;
+  --color-paper: #f3f6fc;
+  --color-slate: #4b587a;
+  --color-green-deep: #18843f;
   --color-mist: #c6d1ea;
   --color-snow: #eef4ff;
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   --animate-marquee: marquee 48s linear infinite;
+  --animate-marquee-slow: marquee 70s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 70s linear infinite;
 
   @keyframes marquee {
     from {
@@ -30,6 +34,14 @@
     }
     to {
       transform: translateX(-50%);
+    }
+  }
+  @keyframes marquee-reverse {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
     }
   }
 }
@@ -42,8 +54,8 @@
   }
 
   body {
-    background: var(--color-navy);
-    color: var(--color-snow);
+    background: #ffffff;
+    color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -81,6 +93,17 @@
   color: transparent;
 }
 
+/* Faint blueprint grid behind the "lab" sections, after the poster's
+   rendered data hall. Fades out toward the edges. */
+@utility bg-blueprint {
+  background-image:
+    linear-gradient(rgba(110, 139, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(110, 139, 255, 0.07) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse at center, #000 25%, transparent 75%);
+}
+
 /* Scroll reveal. Elements are visible by default (no JS, crawlers,
    reduced motion); RevealObserver only hides the ones still below the fold
    and lets them rise in when they arrive. */
@@ -94,7 +117,102 @@
   transform: translateY(28px);
 }
 
+/* Alchemy motion (components/alchemy.tsx). Each element sets its own
+   timing through custom properties so a handful of keyframes cover the
+   flask, the test tube and the data lines. */
+@keyframes bubble {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(var(--rise, -40px));
+    opacity: 0;
+  }
+}
+@keyframes inflow {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--dx, 0), var(--dy, 0));
+    opacity: 0;
+  }
+}
+@keyframes slosh {
+  to {
+    transform: translateX(var(--period, -40px));
+  }
+}
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes travel {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(400%);
+  }
+}
+
+.anim-bubble {
+  animation: bubble var(--dur, 4s) ease-in infinite;
+}
+.anim-inflow {
+  animation: inflow var(--dur, 3.5s) cubic-bezier(0.55, 0, 0.8, 0.4) infinite;
+}
+.anim-slosh {
+  animation: slosh 4.5s linear infinite;
+}
+.anim-glow {
+  animation: glow 3.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.anim-blink {
+  animation: blink 3.6s ease-in-out infinite;
+}
+.anim-travel {
+  animation: travel 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .anim-bubble,
+  .anim-inflow,
+  .anim-slosh,
+  .anim-glow,
+  .anim-blink,
+  .anim-travel {
+    animation: none;
+  }
   html {
     scroll-behavior: auto;
   }
@@ -105,7 +223,9 @@
   .motion-video {
     display: none;
   }
-  .animate-marquee {
+  .animate-marquee,
+  .animate-marquee-slow,
+  .animate-marquee-reverse {
     animation: none;
   }
 }

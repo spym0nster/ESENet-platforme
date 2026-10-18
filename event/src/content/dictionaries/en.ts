@@ -24,12 +24,8 @@ const en = {
     map: "Open in Google Maps",
   },
   hero: {
-    kicker: "ESENet Talent Fair · 8th edition",
-    titleA: "Data",
-    titleB: "Alchimie",
-    tagline: "Turning data into value.",
-    intro:
-      "One day where students, companies and startups meet around data — and the careers it creates.",
+    edition: "8th edition",
+    tagline: "Turning Data into Value",
     dateLabel: "Date",
     date: "Wed 25 November 2026",
     time: "08:00 – 16:00",
@@ -40,7 +36,6 @@ const en = {
     units: { d: "days", h: "hrs", m: "min", s: "sec" },
     live: "Happening now at ESEN",
     over: "Thank you — see you next year",
-    videoLabel: "Footage from ESENet 2025",
   },
   ticker: [
     "Data sovereignty",
@@ -82,6 +77,7 @@ const en = {
       { word: "Value", title: "Impact", body: "Decisions, opportunities, talent." },
     ],
     caption: "ESENet 2025 — a full room for the panels of the 7th edition.",
+    alchemist: "Bring your raw talent. Leave a Data Alchemist.",
   },
   paths: {
     label: "Who it’s for",
@@ -132,16 +128,6 @@ const en = {
     label: "Programme",
     title: "One day, from data to value.",
     note: "Wednesday 25 November 2026. Timings may still move slightly before the day.",
-    morning: "Morning",
-    afternoon: "Afternoon",
-    tags: {
-      welcome: "Welcome",
-      plenary: "Plenary",
-      panel: "Panel",
-      networking: "Networking",
-      companies: "Companies",
-      workshop: "Workshop",
-    },
     items: {
       welcome: { title: "Welcome & registration", sub: "Pick up your badge" },
       opening: { title: "Official opening", sub: "" },
@@ -156,10 +142,11 @@ const en = {
   },
   speakers: {
     label: "Speakers",
-    title: "40+ voices from industry, startups and institutions.",
+    title: "40+ speakers, revealed one by one",
     intro:
-      "Speakers are announced one by one in the weeks before the fair. Follow us on Instagram to see each reveal first.",
+      "Leaders from industry, startups and institutions take the ESENet stage. The 2026 speakers are revealed one by one — until then, meet the voices of 2025.",
     tba: "To be announced",
+    upcoming: "2026 line-up",
   },
   partners: {
     label: "Partners",
@@ -201,6 +188,12 @@ const en = {
     wallCaption: "The 2025 partners wall — Synapse, 7th edition.",
     sponsorsSoon: "2026 partners will be announced here.",
   },
+  trusted: {
+    titleA: "They",
+    titleB: "trusted us",
+    subtitle: "Exhibitors and sponsors from past editions.",
+    note: "ESENet 2025 — Synapse, 7th edition",
+  },
   history: {
     label: "Since 2018",
     title: "Eight editions. One growing network.",
@@ -227,11 +220,15 @@ const en = {
       },
     ],
     now: "This year",
+    aftermovie: "Watch the 2025 aftermovie",
+    crewLabel: "Behind the scenes",
+    crewBody: "Built by students: the ESEN Ambassadors and the school’s clubs plan, build and run the whole day.",
     gallery: {
       opening: "Opening of the 7th edition.",
       speaker: "On the main stage, ESENet 2025.",
-      group: "The Synapse family photo.",
-      networking: "Between sessions in the main hall, ESENet 2025.",
+      team: "The organising team at the ESENet arch, 2025.",
+    awards: "Partners honoured on stage, 2025.",
+    odyssee: "Odyssée 4.0 — the 6th edition in the ESEN courtyard.",
       crew: "The organising crew on the roof, ESENet 2025.",
     },
   },
@@ -279,12 +276,12 @@ const en = {
     body: "ESEN Technopôle, Manouba. Doors open at 08:00.",
   },
   footer: {
-    tagline: "More than an event. A real connection.",
+    taglineA: "More than an event",
+    taglineB: "A real connection",
     organised:
       "Organised by ESEN and the ESEN Ambassadors committee, with the school’s student clubs.",
     explore: "Explore",
     contact: "Contact",
-    partnerships: "Partnerships",
     platform: "ESENet platform",
     platformBody: "Students and companies, connected all year.",
     rights: "© 2026 ESEN — École Supérieure de l’Économie Numérique",

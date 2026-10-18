@@ -26,12 +26,8 @@ const fr: Dictionary = {
     map: "Ouvrir dans Google Maps",
   },
   hero: {
-    kicker: "ESENet Talent Fair · 8ᵉ édition",
-    titleA: "Data",
-    titleB: "Alchimie",
-    tagline: "Turning data into value.",
-    intro:
-      "Une journée où étudiants, entreprises et startups se rencontrent autour de la donnée — et des métiers qu’elle crée.",
+    edition: "8ᵉ édition",
+    tagline: "Turning Data into Value",
     dateLabel: "Date",
     date: "Mer. 25 novembre 2026",
     time: "08h00 – 16h00",
@@ -42,7 +38,6 @@ const fr: Dictionary = {
     units: { d: "jours", h: "h", m: "min", s: "s" },
     live: "En ce moment à l’ESEN",
     over: "Merci — à l’année prochaine",
-    videoLabel: "Images de l’ESENet 2025",
   },
   ticker: [
     "Souveraineté des données",
@@ -84,6 +79,7 @@ const fr: Dictionary = {
       { word: "Value", title: "Valeur", body: "Décisions, opportunités, talents." },
     ],
     caption: "ESENet 2025 — salle comble pour les panels de la 7ᵉ édition.",
+    alchemist: "Venez avec votre talent brut. Repartez Data Alchemist.",
   },
   paths: {
     label: "Pour qui",
@@ -134,16 +130,6 @@ const fr: Dictionary = {
     label: "Programme",
     title: "Une journée, de la donnée à la valeur.",
     note: "Mercredi 25 novembre 2026. Les horaires peuvent encore légèrement évoluer.",
-    morning: "Matin",
-    afternoon: "Après-midi",
-    tags: {
-      welcome: "Accueil",
-      plenary: "Plénière",
-      panel: "Panel",
-      networking: "Networking",
-      companies: "Entreprises",
-      workshop: "Atelier",
-    },
     items: {
       welcome: { title: "Accueil et enregistrement", sub: "Retrait des badges" },
       opening: { title: "Ouverture officielle", sub: "" },
@@ -158,10 +144,11 @@ const fr: Dictionary = {
   },
   speakers: {
     label: "Intervenants",
-    title: "Plus de 40 voix de l’industrie, des startups et des institutions.",
+    title: "Plus de 40 intervenants, dévoilés un à un",
     intro:
-      "Les intervenants sont dévoilés un à un dans les semaines qui précèdent le salon. Suivez-nous sur Instagram pour découvrir chaque annonce en premier.",
+      "Des dirigeants de l’industrie, des startups et des institutions prennent la parole à l’ESENet. Les intervenants 2026 sont dévoilés un à un — en attendant, retrouvez les voix de 2025.",
     tba: "Bientôt annoncé",
+    upcoming: "Programme 2026",
   },
   partners: {
     label: "Partenaires",
@@ -203,6 +190,12 @@ const fr: Dictionary = {
     wallCaption: "Le mur des partenaires 2025 — Synapse, 7ᵉ édition.",
     sponsorsSoon: "Les partenaires 2026 seront annoncés ici.",
   },
+  trusted: {
+    titleA: "Ils ont fait",
+    titleB: "confiance",
+    subtitle: "Exposants & sponsors des éditions précédentes.",
+    note: "ESENet 2025 — Synapse, 7ᵉ édition",
+  },
   history: {
     label: "Depuis 2018",
     title: "Huit éditions. Un réseau qui grandit.",
@@ -229,11 +222,15 @@ const fr: Dictionary = {
       },
     ],
     now: "Cette année",
+    aftermovie: "Revoir l’aftermovie 2025",
+    crewLabel: "En coulisses",
+    crewBody: "Construit par des étudiants : les ESEN Ambassadors et les clubs de l’école conçoivent, montent et font vivre toute la journée.",
     gallery: {
       opening: "Ouverture de la 7ᵉ édition.",
       speaker: "Sur la scène principale, ESENet 2025.",
-      group: "La photo de famille de Synapse.",
-      networking: "Entre deux sessions dans le hall, ESENet 2025.",
+      team: "L’équipe d’organisation devant l’arche ESENet, 2025.",
+    awards: "Les partenaires honorés sur scène, 2025.",
+    odyssee: "Odyssée 4.0 — la 6ᵉ édition dans la cour de l’ESEN.",
       crew: "L’équipe d’organisation sur le toit, ESENet 2025.",
     },
   },
@@ -281,12 +278,12 @@ const fr: Dictionary = {
     body: "ESEN Technopôle, Manouba. Ouverture des portes à 08h00.",
   },
   footer: {
-    tagline: "More than an event. A real connection.",
+    taglineA: "More than an event",
+    taglineB: "A real connection",
     organised:
       "Organisé par l’ESEN et le comité ESEN Ambassadors, en collaboration avec les clubs de l’école.",
     explore: "Explorer",
     contact: "Contact",
-    partnerships: "Partenariats",
     platform: "Plateforme ESENet",
     platformBody: "Étudiants et entreprises, connectés toute l’année.",
     rights: "© 2026 ESEN — École Supérieure de l’Économie Numérique",

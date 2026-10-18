@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import checkin from "@/assets/media/checkin.jpg";
 import { notFound } from "next/navigation";
 import { EVENT } from "@/content/event";
 import { getDictionary, hasLocale } from "@/content/i18n";
@@ -24,7 +26,10 @@ export default async function Register({ params }: PageProps<"/[lang]/register">
   return (
     <>
       <SiteHeader lang={lang} nav={t.nav} cta={t.cta} />
-      <main className="relative flex min-h-[80svh] items-end border-b border-white/10 pb-20 pt-40">
+      <main className="relative isolate flex min-h-[86svh] items-end overflow-hidden bg-night pb-20 pt-40 text-snow">
+        {/* the 2025 check-in desk */}
+        <Image src={checkin} alt="" fill priority placeholder="blur" sizes="100vw" className="-z-10 object-cover object-[50%_30%] opacity-45" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-night via-night/70 to-night/30" />
         <div aria-hidden className="bg-signature absolute inset-x-0 top-16 h-px sm:top-[72px]" />
         <Container>
           <SectionLabel n="—">{r.label}</SectionLabel>

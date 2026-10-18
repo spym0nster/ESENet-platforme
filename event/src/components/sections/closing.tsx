@@ -38,7 +38,7 @@ export function Faq({ t }: { t: Dictionary }) {
 
 export function FinalCall({ t, lang }: { t: Dictionary; lang: Locale }) {
   return (
-    <section className="relative isolate overflow-hidden bg-night py-28 lg:py-44">
+    <section className="relative isolate overflow-hidden bg-night py-28 text-snow lg:py-44">
       <Image src={facade} alt="" fill placeholder="blur" sizes="100vw" className="-z-10 object-cover object-[50%_30%] opacity-35" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-night via-night/70 to-night/40" />
       <Container>
@@ -74,11 +74,15 @@ export function SiteFooter({ t, lang }: { t: Dictionary; lang: Locale }) {
   ];
   const linkClass = "text-[15px] text-mist transition-colors hover:text-snow";
   return (
-    <footer className="border-t border-white/10 bg-night">
+    <footer className="border-t border-white/10 bg-night text-snow">
       <Container className="grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-12 lg:gap-10 lg:py-20">
         <div className="sm:col-span-2 lg:col-span-5">
           <Image src={logo} alt="ESENet Talent Fair" className="h-10 w-auto" sizes="220px" />
-          <p className="mt-6 font-mono text-[11px] uppercase leading-relaxed tracking-[0.28em] text-mist/80">{f.tagline}</p>
+          <p className="mt-6 font-mono text-[11px] uppercase leading-loose tracking-[0.32em] text-mist/80">
+            {f.taglineA}
+            <br />
+            <span className="text-cyan">{f.taglineB}</span>
+          </p>
           <p className="mt-6 max-w-sm text-[15px] leading-relaxed text-mist/80">{f.organised}</p>
         </div>
         <nav aria-label={f.explore} className="lg:col-span-2">
@@ -102,8 +106,8 @@ export function SiteFooter({ t, lang }: { t: Dictionary; lang: Locale }) {
               </a>
             </li>
             <li>
-              <a href={`mailto:${EVENT.partnershipEmail}`} className={linkClass}>
-                {f.partnerships}
+              <a href={`mailto:${EVENT.contactEmail}`} className={linkClass}>
+                {EVENT.contactEmail}
               </a>
             </li>
           </ul>

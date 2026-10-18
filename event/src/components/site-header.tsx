@@ -19,10 +19,14 @@ export function SiteHeader({
   lang,
   nav,
   cta,
+  logoOnScroll = false,
 }: {
   lang: Locale;
   nav: Dictionary["nav"];
   cta: Dictionary["cta"];
+  // On the homepage the hero already shows the big logo, so the header one
+  // fades in only once the hero scrolls away.
+  logoOnScroll?: boolean;
 }) {
   const pathname = usePathname();
   const scrolled = useSyncExternalStore(subscribeScroll, isScrolled, notScrolledOnServer);
@@ -54,12 +58,16 @@ export function SiteHeader({
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 text-snow transition-colors duration-300 ${
         solid ? "border-b border-white/10 bg-navy" : "border-b border-transparent bg-transparent"
       }`}
     >
       <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-6 px-5 sm:h-[72px] sm:px-8 lg:px-12">
-        <Link href={`/${lang}`} className="shrink-0" onClick={() => setOpen(false)}>
+        <Link
+          href={`/${lang}`}
+          className={`shrink-0 transition-opacity duration-300 ${logoOnScroll && !solid ? "pointer-events-none opacity-0" : "opacity-100"}`}
+          onClick={() => setOpen(false)}
+        >
           <Image src={logo} alt="ESENet Talent Fair" priority className="h-7 w-auto sm:h-8" sizes="160px" />
         </Link>
 
