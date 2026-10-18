@@ -57,7 +57,7 @@ export function Hero({ t, lang }: { t: Dictionary; lang: Locale }) {
 
         <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
           <ButtonLink href={`/${lang}/register`}>{t.cta.pass}</ButtonLink>
-          <ButtonLink href={`/${lang}#partners`} variant="ghost">
+          <ButtonLink href={`/${lang}/exhibit`} variant="ghost">
             {t.cta.partner}
           </ButtonLink>
         </div>

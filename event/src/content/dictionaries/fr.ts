@@ -19,7 +19,7 @@ const fr: Dictionary = {
   },
   cta: {
     pass: "Réserver mon pass",
-    partner: "Devenir partenaire",
+    partner: "Stand gratuit",
     deck: "Recevoir le dossier de partenariat",
     contact: "Contacter l’équipe",
     follow: "Suivre sur Instagram",
@@ -93,7 +93,7 @@ const fr: Dictionary = {
       {
         title: "Entreprises & startups",
         body: "Tenez un stand, prenez la parole en panel et rencontrez les talents de l’ESEN, formés au croisement du business et du digital.",
-        cta: "Devenir partenaire",
+        cta: "Réserver un stand gratuit",
       },
       {
         title: "Presse & médias",
@@ -154,7 +154,7 @@ const fr: Dictionary = {
     label: "Partenaires",
     title: "Placez votre marque au cœur de Data Alchimie.",
     intro:
-      "Quatre niveaux de partenariat, chacun lié à un dispositif concret le jour J — de votre logo sur tous les supports à un stand, une prise de parole en panel et la base de CV étudiants.",
+      "Quatre niveaux de partenariat, chacun lié à un dispositif concret le jour J — de votre logo sur tous les supports à une prise de parole en panel et la base de CV étudiants. Le stand est gratuit pour toutes les entreprises — les packs ajoutent de la visibilité.",
     platinum: {
       name: "Platinum",
       line: "Partenaire officiel et exclusif",
@@ -169,7 +169,7 @@ const fr: Dictionary = {
       materials: "Logo sur les supports",
       website: "Logo sur le site officiel",
       aftermovie: "Logo dans le teaser et l’aftermovie",
-      stand: "Stand sur place",
+      stand: "Emplacement de stand premium",
       opening: "Mention lors du discours d’ouverture",
       panel: "Prise de parole dans un panel thématique",
       cvs: "Accès à la base de CV étudiants",

@@ -38,7 +38,7 @@ export function SiteHeader({
   const links = [
     { href: `/${lang}#programme`, label: nav.programme },
     { href: `/${lang}#speakers`, label: nav.speakers },
-    { href: `/${lang}#partners`, label: nav.partners },
+    { href: `/${lang}/exhibit`, label: nav.partners },
     { href: `/${lang}#venue`, label: nav.venue },
     { href: `/${lang}#faq`, label: nav.faq },
   ];
@@ -94,7 +94,7 @@ export function SiteHeader({
           </Link>
           {/* ButtonLink is inline-flex itself, so visibility is set on a wrapper. */}
           <div className="hidden xl:block">
-            <ButtonLink href={`/${lang}#partners`} variant="ghost" size="sm">
+            <ButtonLink href={`/${lang}/exhibit`} variant="ghost" size="sm">
               {cta.partner}
             </ButtonLink>
           </div>
@@ -135,7 +135,7 @@ export function SiteHeader({
               {cta.pass}
             </ButtonLink>
             <ButtonLink
-              href={`/${lang}#partners`}
+              href={`/${lang}/exhibit`}
               variant="ghost"
               onClick={() => setOpen(false)}
               className="justify-between"

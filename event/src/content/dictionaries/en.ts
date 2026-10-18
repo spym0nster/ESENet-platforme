@@ -17,7 +17,7 @@ const en = {
   },
   cta: {
     pass: "Get your pass",
-    partner: "Become a partner",
+    partner: "Book a free stand",
     deck: "Request the partnership deck",
     contact: "Contact the team",
     follow: "Follow on Instagram",
@@ -91,7 +91,7 @@ const en = {
       {
         title: "Companies & startups",
         body: "Take a stand, speak on a panel and meet ESEN talent trained where business and digital meet.",
-        cta: "Become a partner",
+        cta: "Book a free stand",
       },
       {
         title: "Press & media",
@@ -152,7 +152,7 @@ const en = {
     label: "Partners",
     title: "Put your brand at the heart of Data Alchimie.",
     intro:
-      "Four levels of partnership, each tied to something concrete on the day — from your logo on every screen to a stand, a seat on a panel and the student CV database.",
+      "Four levels of partnership, each tied to something concrete on the day — from your logo on every screen to a seat on a panel and the student CV database. Stands are free for every company — packs add visibility.",
     platinum: {
       name: "Platinum",
       line: "Official & exclusive partner",
@@ -167,7 +167,7 @@ const en = {
       materials: "Logo on event materials",
       website: "Logo on the official website",
       aftermovie: "Logo in the teaser and aftermovie",
-      stand: "Stand on site",
+      stand: "Premium stand location",
       opening: "Mention in the opening speech",
       panel: "Speaking slot in a themed panel",
       cvs: "Access to the student CV database",

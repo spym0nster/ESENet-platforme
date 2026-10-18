@@ -30,7 +30,7 @@ npm run build
 | Hero video loop (15 s, 2 MB) | `public/media/hero.mp4` |
 | Brand tokens | `src/app/globals.css` (from `video editing/Data Alchimie poster design/brand-kit/BRAND.md`) |
 
-Routes: `/en`, `/fr`, `/en/register`, `/fr/register`. `/` redirects to the
+Routes: `/en`, `/fr`, `/{lang}/register` (visitor pass), `/{lang}/ticket/[code]` (QR ticket), `/{lang}/exhibit` (free stand application), `/{lang}/exhibit/thanks`. `/` redirects to the
 browser's language (French if it is listed before English, else English) via
 `src/proxy.ts`.
 
@@ -51,7 +51,18 @@ browser's language (French if it is listed before English, else English) via
 - The ESENet logo has light letters: dark backgrounds only.
 - No emoji, no yellow.
 
+## Registration
+
+Visitor passes and free exhibitor stands (2 people each, optional sponsor-pack
+interest) are written by server actions in `src/app/actions/register.ts` to the
+platform's Supabase project, with the service role key (tables have RLS and no
+policies). Setup: run `web/supabase/migrations/0025_event_registrations.sql`,
+copy `.env.local.example` to `.env.local` and fill it. Without the env vars the
+forms show "temporarily unavailable". Copy lives in `src/content/forms.ts`.
+Spam: honeypot only for now (Turnstile is a later step). Stands are free;
+sponsor packs only add extras (`BENEFITS` in `event.ts`).
+
 ## Not built yet
 
-- The pass registration form (`/register` currently says registration opens soon).
-- Deployment (planned as its own Vercel project with Root Directory `event`).
+- Admin review of exhibitors (approve + stand number), the check-in scanner, staff badges.
+- Turnstile, and deployment (its own Vercel project, Root Directory `event`, needs the same env vars).

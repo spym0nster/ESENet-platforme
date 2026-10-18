@@ -53,7 +53,7 @@ export function FinalCall({ t, lang }: { t: Dictionary; lang: Locale }) {
           <p className="text-lg text-mist">{t.final.body}</p>
           <div className="flex flex-wrap gap-3">
             <ButtonLink href={`/${lang}/register`}>{t.cta.pass}</ButtonLink>
-            <ButtonLink href={`/${lang}#partners`} variant="ghost">
+            <ButtonLink href={`/${lang}/exhibit`} variant="ghost">
               {t.cta.partner}
             </ButtonLink>
           </div>
@@ -68,7 +68,7 @@ export function SiteFooter({ t, lang }: { t: Dictionary; lang: Locale }) {
   const explore = [
     { href: `/${lang}#programme`, label: t.nav.programme },
     { href: `/${lang}#speakers`, label: t.nav.speakers },
-    { href: `/${lang}#partners`, label: t.nav.partners },
+    { href: `/${lang}/exhibit`, label: t.nav.partners },
     { href: `/${lang}#venue`, label: t.nav.venue },
     { href: `/${lang}#faq`, label: t.nav.faq },
   ];

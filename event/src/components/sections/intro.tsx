@@ -190,7 +190,7 @@ export function Paths({ t, lang }: { t: Dictionary; lang: Locale }) {
   const pressMail = `mailto:${EVENT.contactEmail}?subject=${encodeURIComponent("ESENet 2026 — Presse / Press")}`;
   const cards = [
     { image: checkin, href: `/${lang}/register`, position: "object-[50%_45%]" },
-    { image: networkingStands, href: `/${lang}#partners`, position: "object-[50%_40%]" },
+    { image: networkingStands, href: `/${lang}/exhibit`, position: "object-[50%_40%]" },
     { image: photographers, href: pressMail, position: "object-[30%_50%]" },
   ];
   return (
