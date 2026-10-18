@@ -56,7 +56,7 @@ browser's language (French if it is listed before English, else English) via
 Visitor passes and free exhibitor stands (2 people each, optional sponsor-pack
 interest) are written by server actions in `src/app/actions/register.ts` to the
 platform's Supabase project, with the service role key (tables have RLS and no
-policies). Setup: run `web/supabase/migrations/0025_event_registrations.sql`,
+policies). Data lives in its own Supabase project `esenet-event-2026` (ref pxfuixfiudbhahgarekt, eu-west-3), separate from the platform; migration `web/supabase/migrations/0025_event_registrations.sql` is applied there. Setup:
 copy `.env.local.example` to `.env.local` and fill it. Without the env vars the
 forms show "temporarily unavailable". Copy lives in `src/content/forms.ts`.
 Spam: honeypot only for now (Turnstile is a later step). Stands are free;
