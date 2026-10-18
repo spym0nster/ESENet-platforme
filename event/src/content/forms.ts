@@ -4,6 +4,13 @@ export type FormState = { error?: string; fields?: Record<string, string> } | nu
 
 const en = {
   visitor: {
+    groups: ["About you", "Your CV"],
+    asideTitle: "How it works",
+    steps: [
+      { t: "Register", d: "Two minutes, free, open to everyone." },
+      { t: "Get your QR ticket", d: "On screen and by email, instantly." },
+      { t: "Come on 25 November", d: "Show the QR at the entrance. That’s it." },
+    ],
     label: "Visitor pass",
     title: "Get your free pass.",
     body: "Open to everyone. Fill in your details and your QR ticket arrives instantly — show it at the entrance on 25 November.",
@@ -36,6 +43,13 @@ const en = {
     back: "Back to the homepage",
   },
   exhibitor: {
+    groups: ["Your company", "Recruiting & stand", "Your team", "Visibility"],
+    asideTitle: "What your free stand includes",
+    steps: [
+      { t: "A stand in the main hall", d: "Table, chairs and Wi-Fi, assigned by our team." },
+      { t: "2 team badges", d: "A QR badge per person for the entrance." },
+      { t: "Direct access to talent", d: "Hundreds of students and graduates, on site." },
+    ],
     label: "Exhibitors",
     title: "Book your free stand.",
     body: "Every company and startup can have a stand at no cost. Tell us who you are and who is coming (2 people per stand). Our team confirms by email and assigns your stand number.",
@@ -76,6 +90,13 @@ const en = {
 
 const fr: typeof en = {
   visitor: {
+    groups: ["À propos de vous", "Votre CV"],
+    asideTitle: "Comment ça marche",
+    steps: [
+      { t: "Inscrivez-vous", d: "Deux minutes, gratuit, ouvert à tous." },
+      { t: "Recevez votre ticket QR", d: "À l’écran et par email, immédiatement." },
+      { t: "Venez le 25 novembre", d: "Présentez le QR à l’entrée. C’est tout." },
+    ],
     label: "Pass visiteur",
     title: "Recevez votre pass gratuit.",
     body: "Ouvert à tous. Renseignez vos informations et recevez immédiatement votre ticket QR — à présenter à l’entrée le 25 novembre.",
@@ -108,6 +129,13 @@ const fr: typeof en = {
     back: "Retour à l’accueil",
   },
   exhibitor: {
+    groups: ["Votre entreprise", "Recrutement & stand", "Votre équipe", "Visibilité"],
+    asideTitle: "Ce que comprend votre stand gratuit",
+    steps: [
+      { t: "Un stand dans le hall principal", d: "Table, chaises et Wi-Fi, attribués par notre équipe." },
+      { t: "2 badges pour l’équipe", d: "Un badge QR par personne pour l’entrée." },
+      { t: "Accès direct aux talents", d: "Des centaines d’étudiants et de diplômés, sur place." },
+    ],
     label: "Exposants",
     title: "Réservez votre stand gratuit.",
     body: "Chaque entreprise et startup peut avoir un stand sans frais. Dites-nous qui vous êtes et qui vient (2 personnes par stand). Notre équipe confirme par email avec votre numéro de stand.",

@@ -16,7 +16,7 @@ export default async function Register({ params }: PageProps<"/[lang]/register">
   if (!hasLocale(lang)) notFound();
   const t = FORMS[lang].visitor;
   return (
-    <FormPage lang={lang} label={t.label} title={t.title} body={t.body}>
+    <FormPage lang={lang} label={t.label} title={t.title} body={t.body} photo="checkin" aside={{ title: t.asideTitle, steps: t.steps }}>
       <VisitorForm lang={lang} />
     </FormPage>
   );

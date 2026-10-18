@@ -24,6 +24,15 @@ function Check({ name, children }: { name: string; children: ReactNode }) {
   );
 }
 
+function Step({ n, title }: { n: string; title: string }) {
+  return (
+    <div className="flex items-baseline gap-4 border-b border-ink/10 pb-3">
+      <span className="font-mono text-[12px] tracking-[0.2em] text-blue">{n}</span>
+      <h2 className="font-display text-xl font-semibold tracking-tight text-ink">{title}</h2>
+    </div>
+  );
+}
+
 function Honeypot({ name }: { name: string }) {
   return (
     <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
@@ -49,6 +58,7 @@ export function VisitorForm({ lang }: { lang: Locale }) {
     <form action={action} className="relative space-y-6" noValidate>
       <input type="hidden" name="lang" value={lang} />
       <Honeypot name="website" />
+      <Step n="01" title={t.groups[0]} />
       <div className="grid gap-6 sm:grid-cols-2">
         <Field name="name">
           <span className={label}>{t.name}</span>
@@ -82,6 +92,7 @@ export function VisitorForm({ lang }: { lang: Locale }) {
         </Field>
       </div>
 
+      <Step n="02" title={t.groups[1]} />
       <div className="rounded-2xl border border-ink/10 bg-paper p-5">
         <Field name="cv">
           <span className={label}>{t.cvFile}</span>
@@ -109,6 +120,7 @@ export function ExhibitorForm({ lang, packs }: { lang: Locale; packs: { key: str
     <form action={action} className="relative space-y-8" noValidate>
       <input type="hidden" name="lang" value={lang} />
       <Honeypot name="url" />
+      <Step n="01" title={t.groups[0]} />
       <div className="grid gap-6 sm:grid-cols-2">
         <Field name="company">
           <span className={label}>{t.company}</span>
@@ -144,6 +156,7 @@ export function ExhibitorForm({ lang, packs }: { lang: Locale; packs: { key: str
         </Field>
       </div>
 
+      <Step n="02" title={t.groups[1]} />
       <fieldset>
         <legend className={label}>{t.hiring}</legend>
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3">
@@ -156,8 +169,9 @@ export function ExhibitorForm({ lang, packs }: { lang: Locale; packs: { key: str
         </div>
       </fieldset>
 
+      <Step n="03" title={t.groups[2]} />
       <fieldset>
-        <legend className={label}>{t.team}</legend>
+        <legend className="sr-only">{t.team}</legend>
         <div className="mt-3 grid gap-6 sm:grid-cols-2">
           {[1, 2].map((n) => (
             <div key={n} className="rounded-2xl border border-ink/10 bg-paper p-5">
@@ -177,6 +191,7 @@ export function ExhibitorForm({ lang, packs }: { lang: Locale; packs: { key: str
         </div>
       </fieldset>
 
+      <Step n="04" title={t.groups[3]} />
       <fieldset className="rounded-2xl bg-navy p-6 text-snow">
         <legend className="sr-only">{t.sponsorTitle}</legend>
         <p className="font-display text-2xl font-semibold tracking-tight">{t.sponsorTitle}</p>

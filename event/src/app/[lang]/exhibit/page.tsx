@@ -23,7 +23,7 @@ export default async function Exhibit({ params }: PageProps<"/[lang]/exhibit">) 
     { key: "platinum", name: names.platinum.name },
   ];
   return (
-    <FormPage lang={lang} label={t.label} title={t.title} body={t.body}>
+    <FormPage lang={lang} label={t.label} title={t.title} body={t.body} photo="stands" aside={{ title: t.asideTitle, steps: t.steps }}>
       <ExhibitorForm lang={lang} packs={packs} />
     </FormPage>
   );
