@@ -1,0 +1,302 @@
+import type { Dictionary } from "./en";
+
+const fr: Dictionary = {
+  meta: {
+    title: "ESENet 2026 · Data Alchimie — 25 novembre, ESEN Manouba",
+    description:
+      "La 8ᵉ édition de l’ESENet Talent Fair. Trois panels, des stands entreprises et une masterclass autour de la donnée, de l’intelligence et des métiers qu’elles créent. 25 novembre 2026, ESEN Technopôle, Manouba.",
+  },
+  skip: "Aller au contenu",
+  nav: {
+    programme: "Programme",
+    speakers: "Intervenants",
+    partners: "Partenaires",
+    venue: "Lieu",
+    faq: "FAQ",
+    menu: "Menu",
+    close: "Fermer",
+    language: "English",
+  },
+  cta: {
+    pass: "Réserver mon pass",
+    partner: "Devenir partenaire",
+    deck: "Recevoir le dossier de partenariat",
+    contact: "Contacter l’équipe",
+    follow: "Suivre sur Instagram",
+    map: "Ouvrir dans Google Maps",
+  },
+  hero: {
+    kicker: "ESENet Talent Fair · 8ᵉ édition",
+    titleA: "Data",
+    titleB: "Alchimie",
+    tagline: "Turning data into value.",
+    intro:
+      "Une journée où étudiants, entreprises et startups se rencontrent autour de la donnée — et des métiers qu’elle crée.",
+    dateLabel: "Date",
+    date: "Mer. 25 novembre 2026",
+    time: "08h00 – 16h00",
+    venueLabel: "Lieu",
+    venue: "ESEN Technopôle",
+    city: "Manouba, Tunisie",
+    countdownLabel: "Ouverture dans",
+    units: { d: "jours", h: "h", m: "min", s: "s" },
+    live: "En ce moment à l’ESEN",
+    over: "Merci — à l’année prochaine",
+    videoLabel: "Images de l’ESENet 2025",
+  },
+  ticker: [
+    "Souveraineté des données",
+    "Gouvernance",
+    "Business intelligence",
+    "Analytics",
+    "Intelligence artificielle",
+    "Santé",
+    "Agriculture",
+    "Environnement",
+    "Stages",
+    "PFE",
+    "Premier emploi",
+    "Networking",
+  ],
+  numbers: {
+    label: "Objectifs 2026",
+    items: {
+      participants: "Participants",
+      companies: "Entreprises & startups",
+      speakers: "Intervenants",
+      panels: "Panels",
+      trained: "Étudiants formés lors de la masterclass",
+    },
+  },
+  edition: {
+    label: "L’édition",
+    statementA: "Plus qu’un salon de recrutement. Une journée construite autour d’une question :",
+    statementB: "comment transformer la donnée brute en véritable",
+    statementHighlight: "valeur",
+    body: "L’alchimie transforme une matière brute en matière précieuse. La donnée suit le même chemin : seule, elle dit peu de choses ; analysée, comprise et mobilisée, elle éclaire les décisions et crée des opportunités. Pour sa 8ᵉ édition, l’ESENet fait de cette transformation le fil conducteur de la journée — et invite chaque étudiant à devenir un Data Alchemist.",
+    steps: [
+      { word: "Data", title: "Matière brute", body: "Signaux, informations, jeux de données." },
+      {
+        word: "Intelligence",
+        title: "Interprétation",
+        body: "Connexions, modèles, compréhension.",
+      },
+      { word: "Value", title: "Valeur", body: "Décisions, opportunités, talents." },
+    ],
+    caption: "ESENet 2025 — salle comble pour les panels de la 7ᵉ édition.",
+  },
+  paths: {
+    label: "Pour qui",
+    title: "Trouvez votre place.",
+    items: [
+      {
+        title: "Étudiants & jeunes diplômés",
+        body: "Rencontrez les recruteurs sur leurs stands, écoutez ceux qui font les métiers qui vous attirent, et repartez avec des pistes de stage, de PFE et de premier emploi.",
+        cta: "Réserver mon pass",
+      },
+      {
+        title: "Entreprises & startups",
+        body: "Tenez un stand, prenez la parole en panel et rencontrez les talents de l’ESEN, formés au croisement du business et du digital.",
+        cta: "Devenir partenaire",
+      },
+      {
+        title: "Presse & médias",
+        body: "Vous couvrez la data, l’IA et les jeunes talents en Tunisie ? Interviews, visuels et accréditations sur demande.",
+        cta: "Contacter l’équipe",
+      },
+    ],
+  },
+  panels: {
+    label: "La conférence",
+    title: "Trois panels. Une même question.",
+    intro:
+      "Comment faire de la donnée un véritable levier de valeur ? Trois temps forts, de la stratégie au terrain, jusqu’à celles et ceux qui feront ces métiers.",
+    panelWord: "Panel",
+    items: [
+      {
+        name: "Data Origins",
+        tagline: "Where the journey begins",
+        body: "Souveraineté, gouvernance et protection des données. Le rôle des institutions dans un écosystème capable de produire, protéger et valoriser la donnée — et les compétences qu’il exige.",
+      },
+      {
+        name: "Data Lab",
+        tagline: "Where data becomes value",
+        body: "Entreprises, startups et experts — notamment de la santé, de l’agriculture et de l’environnement — partagent leurs cas d’usage en data, BI, analytics et IA.",
+      },
+      {
+        name: "Data Minds",
+        tagline: "Where perspectives meet",
+        body: "Un échange ouvert entre étudiants et professionnels sur les métiers, les compétences et les opportunités de demain. Les étudiants ne font pas qu’écouter : ils prennent part à la conversation.",
+      },
+    ],
+  },
+  programme: {
+    label: "Programme",
+    title: "Une journée, de la donnée à la valeur.",
+    note: "Mercredi 25 novembre 2026. Les horaires peuvent encore légèrement évoluer.",
+    morning: "Matin",
+    afternoon: "Après-midi",
+    tags: {
+      welcome: "Accueil",
+      plenary: "Plénière",
+      panel: "Panel",
+      networking: "Networking",
+      companies: "Entreprises",
+      workshop: "Atelier",
+    },
+    items: {
+      welcome: { title: "Accueil et enregistrement", sub: "Retrait des badges" },
+      opening: { title: "Ouverture officielle", sub: "" },
+      origins: { title: "Panel 1 · Data Origins", sub: "Where the journey begins" },
+      lab: { title: "Panel 2 · Data Lab", sub: "Where data becomes value" },
+      break: { title: "Pause-café & networking", sub: "" },
+      minds: { title: "Panel 3 · Data Minds", sub: "Where perspectives meet" },
+      stands: { title: "Visite des stands & networking", sub: "Plus de 35 entreprises et startups" },
+      workshop: { title: "Workshop / Masterclass", sub: "Session pratique" },
+      closing: { title: "Clôture", sub: "" },
+    },
+  },
+  speakers: {
+    label: "Intervenants",
+    title: "Plus de 40 voix de l’industrie, des startups et des institutions.",
+    intro:
+      "Les intervenants sont dévoilés un à un dans les semaines qui précèdent le salon. Suivez-nous sur Instagram pour découvrir chaque annonce en premier.",
+    tba: "Bientôt annoncé",
+  },
+  partners: {
+    label: "Partenaires",
+    title: "Placez votre marque au cœur de Data Alchimie.",
+    intro:
+      "Quatre niveaux de partenariat, chacun lié à un dispositif concret le jour J — de votre logo sur tous les supports à un stand, une prise de parole en panel et la base de CV étudiants.",
+    platinum: {
+      name: "Platinum",
+      line: "Partenaire officiel et exclusif",
+      body: "Un seul partenaire. L’événement porte votre nom — « ESENet 2026 by … » — avec la plus haute visibilité de la journée.",
+      price: "Conditions sur demande",
+      placeholder: "[ votre marque ]",
+    },
+    tierNames: { bronze: "Bronze", silver: "Silver", gold: "Gold" },
+    benefitsLabel: "Ce qui est inclus",
+    benefits: {
+      post: "Publication dédiée sur les réseaux d’ESENet",
+      materials: "Logo sur les supports",
+      website: "Logo sur le site officiel",
+      aftermovie: "Logo dans le teaser et l’aftermovie",
+      stand: "Stand sur place",
+      opening: "Mention lors du discours d’ouverture",
+      panel: "Prise de parole dans un panel thématique",
+      cvs: "Accès à la base de CV étudiants",
+    },
+    included: "Inclus",
+    notIncluded: "Non inclus",
+    extrasLabel: "Partenariats thématiques",
+    extras: [
+      "Workshop partner",
+      "Networking partner",
+      "Main stage partner",
+      "Talent partner",
+      "Digital partner",
+      "Media partner",
+    ],
+    supportLabel: "Avec le soutien de",
+    organisedLabel: "Organisé par",
+    wallCaption: "Le mur des partenaires 2025 — Synapse, 7ᵉ édition.",
+    sponsorsSoon: "Les partenaires 2026 seront annoncés ici.",
+  },
+  history: {
+    label: "Depuis 2018",
+    title: "Huit éditions. Un réseau qui grandit.",
+    items: [
+      {
+        edition: "2018",
+        title: "Naissance de l’ESENet",
+        body: "Un rendez-vous professionnel pour rapprocher étudiants, entreprises et professionnels.",
+      },
+      {
+        edition: "6ᵉ édition",
+        title: "Odyssée 4.0",
+        body: "La transformation numérique et l’Industrie 4.0 — innovation et nouvelles compétences.",
+      },
+      {
+        edition: "7ᵉ édition · 2025",
+        title: "Synapse — AI for Business",
+        body: "L’impact de l’intelligence artificielle sur les entreprises, les métiers et la décision.",
+      },
+      {
+        edition: "8ᵉ édition · 2026",
+        title: "Data Alchimie",
+        body: "La donnée comme matière première stratégique, transformée en intelligence, en décisions et en opportunités.",
+      },
+    ],
+    now: "Cette année",
+    gallery: {
+      opening: "Ouverture de la 7ᵉ édition.",
+      speaker: "Sur la scène principale, ESENet 2025.",
+      group: "La photo de famille de Synapse.",
+      networking: "Entre deux sessions dans le hall, ESENet 2025.",
+      crew: "L’équipe d’organisation sur le toit, ESENet 2025.",
+    },
+  },
+  venue: {
+    label: "Lieu",
+    title: "ESEN Technopôle, Manouba.",
+    body: "L’École Supérieure de l’Économie Numérique, au cœur du Technopôle de la Manouba, à l’ouest de Tunis. Les panels dans la salle de conférences, les stands entreprises sur le campus.",
+    details: [
+      { k: "Date", v: "Mercredi 25 novembre 2026" },
+      { k: "Horaires", v: "08h00 – 16h00" },
+      { k: "Adresse", v: "ESEN, Technopôle de la Manouba, 2010 Manouba, Tunisie" },
+      { k: "Entrée", v: "Inscription obligatoire" },
+    ],
+    caption: "La cour de l’ESEN à l’heure bleue, ESENet 2025.",
+  },
+  faq: {
+    label: "FAQ",
+    title: "Bon à savoir.",
+    items: [
+      {
+        q: "Qui peut venir ?",
+        a: "Étudiants et jeunes diplômés, entreprises et startups, experts, acteurs académiques et partenaires de l’écosystème de la donnée.",
+      },
+      {
+        q: "Faut-il s’inscrire ?",
+        a: "Oui. Les inscriptions ouvrent bientôt sur ce site — suivez @esenet_talentfair sur Instagram pour être prévenu dès l’ouverture.",
+      },
+      {
+        q: "Que faut-il apporter ?",
+        a: "Des exemplaires imprimés de votre CV et une courte présentation de vous-même. Les entreprises viennent rencontrer des candidats sur leurs stands.",
+      },
+      {
+        q: "Comment mon entreprise peut-elle participer ?",
+        a: "Choisissez un niveau de partenariat — Bronze, Silver, Gold ou Platinum — ou un partenariat thématique comme le workshop ou la pause networking. Écrivez-nous et nous vous enverrons le dossier de partenariat.",
+      },
+      {
+        q: "Qui organise l’ESENet ?",
+        a: "L’ESEN — École Supérieure de l’Économie Numérique, Université de la Manouba — avec le comité ESEN Ambassadors et les clubs de l’école.",
+      },
+    ],
+  },
+  final: {
+    titleA: "Rendez-vous le",
+    titleB: "25 novembre.",
+    body: "ESEN Technopôle, Manouba. Ouverture des portes à 08h00.",
+  },
+  footer: {
+    tagline: "More than an event. A real connection.",
+    organised:
+      "Organisé par l’ESEN et le comité ESEN Ambassadors, en collaboration avec les clubs de l’école.",
+    explore: "Explorer",
+    contact: "Contact",
+    partnerships: "Partenariats",
+    platform: "Plateforme ESENet",
+    platformBody: "Étudiants et entreprises, connectés toute l’année.",
+    rights: "© 2026 ESEN — École Supérieure de l’Économie Numérique",
+  },
+  register: {
+    label: "Pass",
+    title: "Les inscriptions ouvrent bientôt.",
+    body: "Les pass pour l’ESENet 2026 — Data Alchimie seront disponibles sur cette page. Suivez-nous sur Instagram pour être les premiers informés.",
+    back: "Retour à l’accueil",
+  },
+};
+
+export default fr;

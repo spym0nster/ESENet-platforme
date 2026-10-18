@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* Data Alchimie brand kit (video editing/Data Alchimie poster design/
+   brand-kit/BRAND.md). Navy ground, one signature gradient
+   blue → cyan → green, no yellow. */
+@theme {
+  --color-night: #040a1c;
+  --color-navy: #07122e;
+  --color-ink: #0a1638;
+  --color-line: #1a2850;
+  --color-blue: #2a48d0;
+  --color-blue-light: #6e8bff;
+  --color-cyan: #12b5d8;
+  --color-cyan-bright: #1fdcc4;
+  --color-teal: #0b7f95;
+  --color-green: #5be36b;
+  --color-paper: #eef2fb;
+  --color-mist: #c6d1ea;
+  --color-snow: #eef4ff;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --animate-marquee: marquee 48s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-navy);
+    color: var(--color-snow);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-cyan-bright);
+    color: var(--color-night);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-cyan-bright);
+    outline-offset: 3px;
+  }
+
+  summary {
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+/* The one place the signature gradient appears as a fill. Used sparingly:
+   hairline rules and the odd highlighted word, never on surfaces. */
+@utility bg-signature {
+  background-image: linear-gradient(90deg, #2a48d0 0%, #12b5d8 52%, #5be36b 100%);
+}
+
+@utility text-signature {
+  background-image: linear-gradient(90deg, #6e8bff 0%, #1fdcc4 55%, #5be36b 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Scroll reveal. Elements are visible by default (no JS, crawlers,
+   reduced motion); RevealObserver only hides the ones still below the fold
+   and lets them rise in when they arrive. */
+[data-reveal] {
+  transition:
+    opacity 0.9s cubic-bezier(0.2, 0.7, 0.1, 1),
+    transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+[data-reveal].is-pending {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  [data-reveal].is-pending {
+    opacity: 1;
+    transform: none;
+  }
+  .motion-video {
+    display: none;
+  }
+  .animate-marquee {
+    animation: none;
+  }
+}
