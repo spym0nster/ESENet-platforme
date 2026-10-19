@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
+import nodemailer, { type Transporter } from "nodemailer";
 import QRCode from "qrcode";
 
 // Registrations are written with the service role key, only from server
@@ -31,11 +32,32 @@ const REPLY_TO = "esenet.talentfair@esen.tn";
 
 export type MailResult = { ok: boolean; error?: string };
 
-// Transactional mail through Resend. Never throws: callers decide what a
-// failed send means (registration ignores it, the admin tool reports it).
+// Mail goes out through the Gmail / Google Workspace mailbox itself (SMTP with
+// an app password), so no DNS setup is needed. Resend stays as a fallback
+// when RESEND_API_KEY is set and no Gmail password is.
+let transport: Transporter | null = null;
+function gmail() {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, "");
+  if (!user || !pass) return null;
+  transport ??= nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user, pass }, pool: true, maxConnections: 3 });
+  return transport;
+}
+
 export async function sendMail(to: string, subject: string, html: string): Promise<MailResult> {
+  const smtp = gmail();
+  if (smtp) {
+    try {
+      await smtp.sendMail({ from: FROM(), to, subject, html, replyTo: REPLY_TO });
+      return { ok: true };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "send failed";
+      console.error("event mail failed", msg);
+      return { ok: false, error: msg };
+    }
+  }
   const key = process.env.RESEND_API_KEY;
-  if (!key) return { ok: false, error: "RESEND_API_KEY is not set" };
+  if (!key) return { ok: false, error: "No mail account configured (GMAIL_USER / GMAIL_APP_PASSWORD)" };
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -44,37 +66,26 @@ export async function sendMail(to: string, subject: string, html: string): Promi
     });
     if (!res.ok) {
       const msg = (await res.json().catch(() => ({}))) as { message?: string };
-      console.error("event mail failed", res.status, msg.message);
       return { ok: false, error: msg.message ?? `HTTP ${res.status}` };
     }
     return { ok: true };
-  } catch (e) {
-    console.error("event mail failed", e);
+  } catch {
     return { ok: false, error: "network error" };
   }
 }
 
-// Up to 100 personalised emails per call (Resend batch API).
+// Personalised emails to many people: a few at a time, so a long list stays
+// within Gmail's pace and the request time limit.
 export async function sendBatch(emails: { to: string; subject: string; html: string }[]): Promise<{ sent: number; failed: number; error?: string }> {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return { sent: 0, failed: emails.length, error: "RESEND_API_KEY is not set" };
   let sent = 0, failed = 0, error: string | undefined;
-  for (let i = 0; i < emails.length; i += 100) {
-    const chunk = emails.slice(i, i + 100);
-    try {
-      const res = await fetch("https://api.resend.com/emails/batch", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify(chunk.map((m) => ({ from: FROM(), to: m.to, subject: m.subject, html: m.html, reply_to: REPLY_TO }))),
-      });
-      if (res.ok) sent += chunk.length;
+  for (let i = 0; i < emails.length; i += 5) {
+    const results = await Promise.all(emails.slice(i, i + 5).map((m) => sendMail(m.to, m.subject, m.html)));
+    for (const r of results) {
+      if (r.ok) sent++;
       else {
-        failed += chunk.length;
-        error = ((await res.json().catch(() => ({}))) as { message?: string }).message ?? `HTTP ${res.status}`;
+        failed++;
+        error = r.error;
       }
-    } catch {
-      failed += chunk.length;
-      error = "network error";
     }
   }
   return { sent, failed, error };

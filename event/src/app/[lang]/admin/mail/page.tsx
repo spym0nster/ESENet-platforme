@@ -6,6 +6,9 @@ import { MailForm } from "@/components/admin-ui";
 import { hasLocale } from "@/content/i18n";
 import { db } from "@/lib/server";
 
+// a long list is sent a few at a time; allow the action up to 5 minutes
+export const maxDuration = 300;
+
 export const metadata = { title: "Send email — ESENet 2026", robots: { index: false, follow: false } };
 
 export default async function Mail({ params }: PageProps<"/[lang]/admin/mail">) {
