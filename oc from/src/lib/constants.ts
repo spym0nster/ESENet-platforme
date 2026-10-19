@@ -8,6 +8,8 @@ export const EVENT = {
   org: "ESEN Ambassadors",
   orgUrl: "https://ambassadors.tn",
   domain: "esenet-oc.ambassadors.tn",
+  /// Sent to a candidate only once they're accepted, in the welcome email.
+  whatsappGroup: "https://chat.whatsapp.com/Bg962UijJow3yvwS4TDvl8",
 } as const;
 
 export const STATUS_ORDER: CandidateStatus[] = ["PENDING", "SHORTLISTED", "SELECTED", "WAITLIST", "REJECTED"];

@@ -69,12 +69,14 @@ export function decisionEmail(kind: DecisionKind, fullName: string) {
       "Please remember that your presence is required for the complete operational period: J-2, J-1 and Jour J.",
       `The ${EVENT.org} team will contact you soon with your mission, your team and the next steps.`,
       "",
+      `Join the OC WhatsApp group to stay in the loop: ${EVENT.whatsappGroup}`,
+      "",
       "Welcome aboard,",
       `— ${EVENT.org}`,
     ].join("\n");
     const html = layout(
       "Welcome to the team",
-      `Hello ${first},<br/><br/>We are happy to tell you that your application has been <strong style="color:#55E274">accepted</strong>: you are part of the ${EVENT.name} Organizing Committee!<br/><br/>Please remember that your presence is required for the complete operational period: <strong>J-2, J-1 and Jour J</strong>. The ${EVENT.org} team will contact you soon with your mission, your team and the next steps.<br/><br/>Welcome aboard,<br/>— ${EVENT.org}`,
+      `Hello ${first},<br/><br/>We are happy to tell you that your application has been <strong style="color:#55E274">accepted</strong>: you are part of the ${EVENT.name} Organizing Committee!<br/><br/>Please remember that your presence is required for the complete operational period: <strong>J-2, J-1 and Jour J</strong>. The ${EVENT.org} team will contact you soon with your mission, your team and the next steps.<br/><br/><a href="${EVENT.whatsappGroup}" style="display:inline-block;margin-top:4px;padding:10px 18px;background:#25D366;color:#00280F;text-decoration:none;font-weight:bold;border-radius:4px">Join the OC WhatsApp group</a><br/><br/>Welcome aboard,<br/>— ${EVENT.org}`,
     );
     return { subject, text, html };
   }
