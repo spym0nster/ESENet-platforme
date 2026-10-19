@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { adminLogin, checkIn, type CheckInResult } from "@/app/actions/admin";
+import { adminLogin, checkIn, sendBroadcast, type CheckInResult } from "@/app/actions/admin";
 
 export function AdminLogin() {
   const [error, action, pending] = useActionState(adminLogin, null);
@@ -108,5 +108,54 @@ export function Scanner() {
         )}
       </div>
     </main>
+  );
+}
+
+const field = "mt-2 block w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-[16px] normal-case tracking-normal text-ink";
+const lab = "block font-mono text-[11px] uppercase tracking-[0.2em] text-slate";
+
+export function MailForm({ audiences }: { audiences: { value: string; label: string }[] }) {
+  const [result, action, pending] = useActionState(sendBroadcast, null);
+  return (
+    <form
+      action={action}
+      className="mt-8 space-y-5"
+      onSubmit={(e) => {
+        // a real send (no test address) needs a second look
+        const fd = new FormData(e.currentTarget);
+        if (!String(fd.get("testTo") ?? "").trim() && !window.confirm("Send this email to the selected audience now?")) e.preventDefault();
+      }}
+    >
+      <label className={lab}>
+        Audience
+        <select name="audience" className={field} defaultValue="visitors_all">
+          {audiences.map((a) => (
+            <option key={a.value} value={a.value}>
+              {a.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={lab}>
+        Subject
+        <input name="subject" required className={field} />
+      </label>
+      <label className={lab}>
+        Message
+        <textarea name="message" required rows={9} className={field} />
+      </label>
+      <label className={lab}>
+        Test address (fill it to send ONLY a test to this address)
+        <input name="testTo" type="email" placeholder="you@example.com" className={field} />
+      </label>
+      {result && (
+        <p role="status" className="rounded-xl border border-ink/15 bg-paper px-4 py-3 text-[15px]">
+          {result}
+        </p>
+      )}
+      <button disabled={pending} className="h-12 rounded-full bg-ink px-7 text-[15px] font-semibold text-snow disabled:opacity-60">
+        {pending ? "Sending…" : "Send"}
+      </button>
+    </form>
   );
 }

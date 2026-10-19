@@ -4,7 +4,8 @@ import { createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { db, esc, sendMail } from "@/lib/server";
+import { broadcastEmail, exhibitorApprovedEmail } from "@/lib/emails";
+import { db, isEmail, sendBatch, sendMail } from "@/lib/server";
 
 // One shared organiser password (ADMIN_PASSWORD). The cookie holds a hash of
 // it, so changing the env var signs everyone out.
@@ -37,15 +38,14 @@ export async function reviewExhibitor(fd: FormData) {
     .select("company_name, contact_email, lang, code")
     .single();
   if (data && decision === "approved") {
-    const fr = data.lang === "fr";
     const people = await supabase.from("event_exhibitor_people").select("full_name, code").eq("exhibitor_id", id);
-    const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-    const badges = (people.data ?? []).map((p) => `<li>${esc(p.full_name)} — ${base}/${data.lang}/badge/${p.code}</li>`).join("");
-    await sendMail(
-      data.contact_email,
-      fr ? "ESENet 2026 — votre stand est confirmé" : "ESENet 2026 — your stand is confirmed",
-      `<p>${esc(data.company_name)},</p><p>${fr ? "Votre stand est confirmé" : "Your stand is confirmed"}${stand ? ` : <b>${esc(stand)}</b>` : ""}.</p><p>${fr ? "Badges de votre équipe (QR à présenter à l’entrée) :" : "Your team badges (show the QR at the entrance):"}</p><ul>${badges}</ul>`,
+    const m = exhibitorApprovedEmail(
+      data.lang === "fr" ? "fr" : "en",
+      data.company_name,
+      stand,
+      (people.data ?? []).map((p) => ({ name: p.full_name, code: p.code })),
     );
+    await sendMail(data.contact_email, m.subject, m.html);
   }
   revalidatePath("/en/admin");
 }
@@ -65,4 +65,50 @@ export async function checkIn(raw: string): Promise<CheckInResult> {
   if (data.checked_in_at) return { ok: true, already: true, name: data.full_name, kind };
   await supabase.from(table).update({ checked_in_at: new Date().toISOString() }).eq("id", data.id);
   return { ok: true, name: data.full_name, kind };
+}
+
+export type BroadcastAudience = "visitors_all" | "visitors_cv" | "exhibitors_all" | "exhibitors_approved" | "exhibitors_pending";
+
+// Admin "send email": a free-text message to a chosen audience, one
+// personalised email each ("Bonjour <name>"), or just one test to an address.
+export async function sendBroadcast(_prev: string | null, fd: FormData): Promise<string> {
+  if (!(await isAdmin())) return "Not signed in.";
+  const audience = String(fd.get("audience") ?? "") as BroadcastAudience;
+  const subject = String(fd.get("subject") ?? "").trim().slice(0, 200);
+  const message = String(fd.get("message") ?? "").trim().slice(0, 8000);
+  const testTo = String(fd.get("testTo") ?? "").trim();
+  if (subject.length < 3 || message.length < 5) return "Add a subject and a message.";
+  const supabase = db();
+  if (!supabase) return "Database unavailable.";
+
+  if (testTo) {
+    if (!isEmail(testTo)) return "The test address is not valid.";
+    const m = broadcastEmail("fr", "Test", subject, message);
+    const r = await sendMail(testTo, `[TEST] ${m.subject}`, m.html);
+    return r.ok ? `Test sent to ${testTo}.` : `Test failed: ${r.error}`;
+  }
+
+  type Row = { to: string; name: string; lang: "fr" | "en" };
+  let rows: Row[] = [];
+  if (audience.startsWith("visitors")) {
+    let q = supabase.from("event_visitors").select("email, full_name, lang");
+    if (audience === "visitors_cv") q = q.eq("wants_cv", true).eq("consent_cv", true);
+    const { data } = await q;
+    rows = (data ?? []).map((r) => ({ to: r.email, name: r.full_name, lang: r.lang === "en" ? "en" : "fr" }));
+  } else if (audience.startsWith("exhibitors")) {
+    let q = supabase.from("event_exhibitors").select("contact_email, company_name, lang");
+    if (audience === "exhibitors_approved") q = q.eq("status", "approved");
+    if (audience === "exhibitors_pending") q = q.eq("status", "pending");
+    const { data } = await q;
+    rows = (data ?? []).map((r) => ({ to: r.contact_email, name: r.company_name, lang: r.lang === "en" ? "en" : "fr" }));
+  } else return "Choose an audience.";
+  if (rows.length === 0) return "Nobody in this audience yet.";
+
+  const res = await sendBatch(
+    rows.map((r) => {
+      const m = broadcastEmail(r.lang, r.name, subject, message);
+      return { to: r.to, subject: m.subject, html: m.html };
+    }),
+  );
+  return res.failed === 0 ? `Sent to ${res.sent} people.` : `Sent ${res.sent}, failed ${res.failed}${res.error ? `: ${res.error}` : ""}.`;
 }

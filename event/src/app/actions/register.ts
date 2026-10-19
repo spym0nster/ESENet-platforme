@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { FORMS, type FormState } from "@/content/forms";
 import { hasLocale, type Locale } from "@/content/i18n";
-import { db, esc, isEmail, mirrorToSheet, newCode, sendMail, siteUrl } from "@/lib/server";
+import { exhibitorPendingEmail, visitorEmail } from "@/lib/emails";
+import { db, isEmail, mirrorToSheet, newCode, sendMail } from "@/lib/server";
 
 const text = (fd: FormData, k: string, max = 300) => String(fd.get(k) ?? "").trim().slice(0, max);
 const fileOf = (fd: FormData, k: string) => {
@@ -41,13 +42,10 @@ export async function registerVisitor(_prev: FormState, fd: FormData): Promise<F
   const supabase = db();
   if (!supabase) return fail(t.errUnavailable);
 
-  const ticketUrl = (code: string) => `${siteUrl()}/${lang}/ticket/${code}`;
-  const mail = (nm: string, code: string) =>
-    sendMail(
-      email,
-      t.mailSubject,
-      `<p>${esc(nm)},</p><p>${t.mailBody}</p><p><a href="${ticketUrl(code)}">${ticketUrl(code)}</a></p><p>ESENet — 25.11.2026, ESEN Technopôle</p>`,
-    );
+  const mail = (nm: string, code: string) => {
+    const m = visitorEmail(lang, nm, code);
+    return sendMail(email, m.subject, m.html);
+  };
 
   const code = newCode("ESN");
   let cvPath: string | null = null;
@@ -169,7 +167,10 @@ export async function applyExhibitor(_prev: FormState, fd: FormData): Promise<Fo
   }
 
   await Promise.all([
-    sendMail(email, t.mailSubject, `<p>${esc(company)},</p><p>${t.mailBody}</p><p>ESENet — 25.11.2026, ESEN Technopôle</p>`),
+    (() => {
+      const m = exhibitorPendingEmail(lang, company);
+      return sendMail(email, m.subject, m.html);
+    })(),
     mirrorToSheet("exhibitors", {
       code, company, sector: text(fd, "sector", 120), website, description, logo: logoUrl,
       hiring: fd.getAll("hiring").join(", "), needs: text(fd, "needs", 400), email, phone: text(fd, "phone", 40),

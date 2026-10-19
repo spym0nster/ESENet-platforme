@@ -72,6 +72,15 @@ applications with a stand number (approval emails the team badges at
 Live: https://esenet-talent-fair.vercel.app (Vercel project `esenet-talent-fair`,
 deployed with `vercel deploy --prod` from `event/`).
 
+Admin also has: visitor CV download (signed link, only with CV consent), CSV
+export (`/{lang}/admin/export/visitors.csv`, `exhibitors.csv`), and
+`/{lang}/admin/mail` (personalised bulk email, with a test-address mode).
+Emails (`src/lib/emails.ts`): visitor ticket + QR + poster + programme, stand
+"awaiting approval", stand approved + team badges. Sender
+`EVENT_EMAIL_FROM` = esenet.talentfair@esen.tn; **the sending domain must be
+verified in Resend** (esen.tn needs SPF/DKIM DNS records) or sends return 403.
+QR images for emails come from `/qr/[code].png`.
+
 ## Not built yet
 
 - Turnstile anti-spam, custom domain (esenet-tn.com), the Google Sheet webhook and Resend keys.

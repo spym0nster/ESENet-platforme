@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { isAdmin, reviewExhibitor } from "@/app/actions/admin";
@@ -20,7 +19,7 @@ export default async function Admin({ params }: PageProps<"/[lang]/admin">) {
   const supabase = db();
   const [v, e, p] = supabase
     ? await Promise.all([
-        supabase.from("event_visitors").select("full_name, email, status, school, wants_cv, consent_cv, checked_in_at, created_at").order("created_at", { ascending: false }),
+        supabase.from("event_visitors").select("code, full_name, email, phone, status, school, field, wants_cv, consent_cv, checked_in_at, created_at").order("created_at", { ascending: false }),
         supabase.from("event_exhibitors").select("*").order("created_at", { ascending: false }),
         supabase.from("event_exhibitor_people").select("exhibitor_id, full_name, job_title, checked_in_at"),
       ])
@@ -41,9 +40,18 @@ export default async function Admin({ params }: PageProps<"/[lang]/admin">) {
     <main className="mx-auto max-w-6xl px-4 py-10 text-ink sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-display text-4xl font-semibold tracking-tight">Organisers</h1>
-        <Link href={`/${lang}/admin/scan`} className="rounded-full bg-ink px-5 py-2.5 text-[14px] font-semibold text-snow">
-          Open check-in scanner
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {[
+            [`/${lang}/admin/mail`, "Send email"],
+            [`/${lang}/admin/scan`, "Check-in scanner"],
+            [`/${lang}/admin/export/visitors.csv`, "Export visitors CSV"],
+            [`/${lang}/admin/export/exhibitors.csv`, "Export exhibitors CSV"],
+          ].map(([href, label], i) => (
+            <a key={href} href={href} className={`rounded-full px-5 py-2.5 text-[14px] font-semibold ${i < 2 ? "bg-ink text-snow" : "border border-ink/25 text-ink"}`}>
+              {label}
+            </a>
+          ))}
+        </div>
       </div>
       <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-6">
         {stats.map(([k, n]) => (
@@ -112,25 +120,35 @@ export default async function Admin({ params }: PageProps<"/[lang]/admin">) {
 
       <h2 className="mt-12 font-display text-2xl font-semibold">Visitors</h2>
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left">
+        <table className="w-full min-w-[760px] text-left">
           <thead className="font-mono text-[11px] uppercase tracking-[0.16em] text-slate">
             <tr>
               <th className={cell}>Name</th>
               <th className={cell}>Email</th>
               <th className={cell}>Status</th>
-              <th className={cell}>School</th>
-              <th className={cell}>CV shared</th>
+              <th className={cell}>Phone</th>
+              <th className={cell}>School · field</th>
+              <th className={cell}>CV</th>
               <th className={cell}>Checked in</th>
             </tr>
           </thead>
           <tbody>
             {visitors.slice(0, 300).map((x) => (
-              <tr key={x.email}>
+              <tr key={x.code}>
                 <td className={cell}>{x.full_name}</td>
                 <td className={cell}>{x.email}</td>
                 <td className={cell}>{x.status}</td>
-                <td className={cell}>{x.school ?? "—"}</td>
-                <td className={cell}>{x.wants_cv && x.consent_cv ? "yes" : "—"}</td>
+                <td className={cell}>{x.phone ?? "—"}</td>
+                <td className={cell}>{[x.school, x.field].filter(Boolean).join(" · ") || "—"}</td>
+                <td className={cell}>
+                  {x.wants_cv && x.consent_cv ? (
+                    <a href={`/${lang}/admin/cv/${x.code}`} className="font-semibold text-blue underline">
+                      Download
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </td>
                 <td className={cell}>{x.checked_in_at ? "yes" : "—"}</td>
               </tr>
             ))}

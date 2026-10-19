@@ -26,19 +26,58 @@ export function siteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3100";
 }
 
-// Best-effort transactional mail through Resend; never throws.
-export async function sendMail(to: string, subject: string, html: string) {
+const FROM = () => process.env.EVENT_EMAIL_FROM ?? "ESENet Talent Fair <esenet.talentfair@esen.tn>";
+const REPLY_TO = "esenet.talentfair@esen.tn";
+
+export type MailResult = { ok: boolean; error?: string };
+
+// Transactional mail through Resend. Never throws: callers decide what a
+// failed send means (registration ignores it, the admin tool reports it).
+export async function sendMail(to: string, subject: string, html: string): Promise<MailResult> {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return;
+  if (!key) return { ok: false, error: "RESEND_API_KEY is not set" };
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: process.env.EVENT_EMAIL_FROM ?? "ESENet <onboarding@resend.dev>", to, subject, html }),
+      body: JSON.stringify({ from: FROM(), to, subject, html, reply_to: REPLY_TO }),
     });
+    if (!res.ok) {
+      const msg = (await res.json().catch(() => ({}))) as { message?: string };
+      console.error("event mail failed", res.status, msg.message);
+      return { ok: false, error: msg.message ?? `HTTP ${res.status}` };
+    }
+    return { ok: true };
   } catch (e) {
     console.error("event mail failed", e);
+    return { ok: false, error: "network error" };
   }
+}
+
+// Up to 100 personalised emails per call (Resend batch API).
+export async function sendBatch(emails: { to: string; subject: string; html: string }[]): Promise<{ sent: number; failed: number; error?: string }> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return { sent: 0, failed: emails.length, error: "RESEND_API_KEY is not set" };
+  let sent = 0, failed = 0, error: string | undefined;
+  for (let i = 0; i < emails.length; i += 100) {
+    const chunk = emails.slice(i, i + 100);
+    try {
+      const res = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify(chunk.map((m) => ({ from: FROM(), to: m.to, subject: m.subject, html: m.html, reply_to: REPLY_TO }))),
+      });
+      if (res.ok) sent += chunk.length;
+      else {
+        failed += chunk.length;
+        error = ((await res.json().catch(() => ({}))) as { message?: string }).message ?? `HTTP ${res.status}`;
+      }
+    } catch {
+      failed += chunk.length;
+      error = "network error";
+    }
+  }
+  return { sent, failed, error };
 }
 
 const ENTITIES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
