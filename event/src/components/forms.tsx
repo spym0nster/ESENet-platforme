@@ -20,7 +20,7 @@ function Field({ children }: { name?: string; children: ReactNode }) {
 function Check({ name, children }: { name: string; children: ReactNode }) {
   return (
     <label className="flex items-start gap-3 text-[14px] leading-snug text-slate">
-      <input type="checkbox" name={name} className="mt-0.5 size-4 shrink-0 accent-blue" />
+      <input type="checkbox" name={name} className="check mt-0.5" />
       <span>{children}</span>
     </label>
   );
@@ -168,7 +168,7 @@ export function ExhibitorForm({ lang, packs }: { lang: Locale; packs: { key: str
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3">
           {Object.entries(t.hiringTypes).map(([k, name]) => (
             <label key={k} className="flex items-center gap-2 text-[15px] text-ink">
-              <input type="checkbox" name="hiring" value={k} className="size-4 accent-blue" />
+              <input type="checkbox" name="hiring" value={k} className="check" />
               {name}
             </label>
           ))}

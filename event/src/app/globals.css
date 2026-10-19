@@ -251,3 +251,26 @@ html[data-theme="dark"] .bg-ink {
   background-color: var(--color-green);
   color: var(--color-night);
 }
+
+/* Brand checkbox: white box, blue fill and a white tick when checked. */
+.check {
+  appearance: none;
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid color-mix(in srgb, var(--color-ink) 35%, transparent);
+  border-radius: 0.375rem;
+  background: var(--color-white) center / 80% no-repeat;
+  transition: background-color 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.check:checked {
+  border-color: var(--color-blue);
+  background-color: var(--color-blue);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+}
+html[data-theme="dark"] .check:checked {
+  border-color: var(--color-green);
+  background-color: var(--color-green);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23040a1c' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+}
