@@ -7,9 +7,9 @@ import { getStaffUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Staff sign in", robots: { index: false, follow: false } };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; reset?: string }> }) {
   if (await getStaffUser()) redirect("/admin");
-  const { next } = await searchParams;
+  const { next, reset } = await searchParams;
 
   return (
     <main className="relative grid min-h-dvh place-items-center px-4 py-12">
@@ -23,6 +23,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p className="eyebrow">ESEN Ambassadors · Staff only</p>
           <h1 className="mt-2 font-display text-2xl font-extrabold uppercase [font-stretch:112%]">OC Operations</h1>
           <p className="mt-1 text-sm text-muted">Sign in to review applications and manage assignments.</p>
+          {reset === "1" && (
+            <p className="mt-4 border border-azure/40 bg-azure/10 px-3 py-2 text-sm text-azure">
+              Password set. Sign in with your new password.
+            </p>
+          )}
           <div className="mt-6">
             <LoginForm next={next} />
           </div>

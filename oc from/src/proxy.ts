@@ -6,9 +6,12 @@ import { NextResponse, type NextRequest } from "next/server";
  * valid signed JWT, user still active, correct role — runs server-side on every page, action
  * and route handler via requireStaff() / requireAdmin() / actor().
  */
+/** Staff auth pages reachable while signed out — never gated behind a session cookie. */
+const PUBLIC_ADMIN_PATHS = new Set(["/admin/login", "/admin/forgot-password", "/admin/reset-password"]);
+
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  if (pathname === "/admin/login") return NextResponse.next();
+  if (PUBLIC_ADMIN_PATHS.has(pathname)) return NextResponse.next();
 
   const hasSession = request.cookies.getAll().some((c) => /^(__Secure-)?authjs\.session-token(\.\d+)?$/.test(c.name));
   if (hasSession) return NextResponse.next();

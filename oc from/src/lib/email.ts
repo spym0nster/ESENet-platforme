@@ -115,3 +115,24 @@ export function applicationReceivedEmail(name: string) {
   );
   return { subject, text, html };
 }
+
+/** Staff "forgot password" link. `link` already carries the raw token — never logged, never stored. */
+export function passwordResetEmail(name: string, link: string) {
+  const first = name.trim().split(/\s+/)[0] || name;
+  const subject = `${EVENT.name} OC — reset your password`;
+  const text = [
+    `Hello ${first},`,
+    "",
+    "We received a request to reset your OC Operations password.",
+    `If this was you, open this link within the next hour: ${link}`,
+    "",
+    "If you didn't request this, you can safely ignore this email — your password won't change.",
+    "",
+    `— ${EVENT.org}`,
+  ].join("\n");
+  const html = layout(
+    "Reset your password",
+    `Hello ${escapeHtml(first)},<br/><br/>We received a request to reset your OC Operations password.<br/><br/>If this was you, click below within the next hour:<br/><br/><a href="${link}" style="display:inline-block;margin-top:4px;padding:10px 18px;background:#7B53FD;color:#FAFAFC;text-decoration:none;font-weight:bold;border-radius:4px">Reset password</a><br/><br/>If you didn't request this, you can safely ignore this email — your password won't change.<br/><br/>— ${EVENT.org}`,
+  );
+  return { subject, text, html };
+}

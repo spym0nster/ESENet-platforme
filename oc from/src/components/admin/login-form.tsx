@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, LogIn } from "lucide-react";
+import Link from "next/link";
 import { useActionState } from "react";
 import { login, type LoginState } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,10 @@ export function LoginForm({ next }: { next?: string }) {
         <Input id="email" name="email" type="email" autoComplete="username" required className="h-11 bg-bg" autoFocus />
       </div>
       <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-semibold">Password</label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="password" className="text-sm font-semibold">Password</label>
+          <Link href="/admin/forgot-password" className="text-xs text-azure hover:underline">Forgot password?</Link>
+        </div>
         <Input id="password" name="password" type="password" autoComplete="current-password" required className="h-11 bg-bg" />
       </div>
       {state?.error && (
