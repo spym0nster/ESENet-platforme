@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* `dark:` follows the header toggle (data-theme on <html>), not the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* Data Alchimie brand kit (video editing/Data Alchimie poster design/
    brand-kit/BRAND.md). Navy ground, one signature gradient
    blue → cyan → green, no yellow. */
@@ -54,7 +57,7 @@
   }
 
   body {
-    background: #ffffff;
+    background: var(--color-white);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -228,4 +231,23 @@
   .animate-marquee-reverse {
     animation: none;
   }
+}
+
+/* Dark theme: the same Data Alchimie palette on a navy ground. Surfaces and
+   text tokens flip; deep accents become their bright poster siblings. The
+   always-dark bands (hero, flask, footer) keep using night/navy. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-white: #0a1431;
+  --color-paper: #0e1c43;
+  --color-ink: #eef4ff;
+  --color-slate: #a9b6d6;
+  --color-blue: #7c97ff;
+  --color-teal: #2cc9e0;
+  --color-green-deep: #5be36b;
+}
+/* solid "ink" buttons would turn light-on-light */
+html[data-theme="dark"] .bg-ink {
+  background-color: var(--color-green);
+  color: var(--color-night);
 }

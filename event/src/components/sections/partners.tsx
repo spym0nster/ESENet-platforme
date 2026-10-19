@@ -6,7 +6,6 @@ import s2t from "@/assets/brand/s2t.png";
 import tunisie from "@/assets/brand/tunisie.png";
 import manouba from "@/assets/brand/universite-manouba.png";
 import photoWall from "@/assets/media/photo-wall.jpg";
-import { BENEFITS, EVENT, TIERS } from "@/content/event";
 import type { Dictionary } from "@/content/i18n";
 import { DataLine } from "../alchemy";
 import { ButtonLink, Container, SectionLabel } from "../ui";
@@ -36,7 +35,7 @@ function LogoRow({ label, logos }: { label: string; logos: Logo[] }) {
               src={logo.src}
               alt={logo.alt}
               sizes="200px"
-              className={`${logo.h} w-auto object-contain opacity-70 brightness-0 transition-opacity hover:opacity-100`}
+              className={`${logo.h} w-auto object-contain opacity-70 brightness-0 transition-opacity hover:opacity-100 dark:invert`}
             />
           </li>
         ))}
@@ -47,9 +46,6 @@ function LogoRow({ label, logos }: { label: string; logos: Logo[] }) {
 
 export function Partners({ t }: { t: Dictionary }) {
   const p = t.partners;
-  const deckHref = `mailto:${EVENT.partnershipEmail}?subject=${encodeURIComponent(
-    "ESENet 2026 — Dossier de partenariat / Partnership deck",
-  )}`;
 
   return (
     <section id="partners" className="bg-white pb-24 lg:pb-32">
@@ -64,77 +60,15 @@ export function Partners({ t }: { t: Dictionary }) {
               {p.title}
             </h2>
           </div>
-          <p className="text-[17px] leading-relaxed text-slate lg:col-span-4">{p.intro}</p>
-        </div>
-
-        <div className="mt-14 grid gap-4 lg:mt-20 lg:grid-cols-12">
-          {/* Platinum is a different kind of deal (naming rights), so it gets
-              its own block rather than a column in the table. */}
-          <article data-reveal className="relative flex flex-col overflow-hidden rounded-2xl bg-navy p-7 text-snow sm:p-10 lg:col-span-5">
-            <span aria-hidden className="bg-signature absolute inset-x-0 top-0 h-[3px]" />
-            <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-cyan-bright">{p.platinum.line}</p>
-            <h3 className="mt-6 font-display text-6xl font-semibold tracking-[-0.03em] sm:text-7xl">{p.platinum.name}</h3>
-            <p className="mt-6 max-w-md text-[17px] leading-relaxed text-mist">{p.platinum.body}</p>
-            <p className="mt-8 border-t border-white/10 pt-5 font-display text-2xl font-semibold tracking-tight text-snow/90">
-              ESENet 2026 <span className="text-mist/60">by</span> <span className="text-signature whitespace-nowrap">{p.platinum.placeholder}</span>
-            </p>
-            <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-10">
-              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-mist/70">{p.platinum.price}</span>
-              <ButtonLink href={deckHref}>{t.cta.deck}</ButtonLink>
-            </div>
-          </article>
-
-          <div data-reveal className="overflow-hidden rounded-2xl border border-ink/10 bg-white lg:col-span-7">
-            <table className="w-full border-collapse text-left">
-              <caption className="sr-only">{p.benefitsLabel}</caption>
-              <thead>
-                <tr className="border-b border-ink/10 bg-paper">
-                  <th scope="col" className="px-4 py-5 font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-slate sm:p-6 sm:text-[11px] sm:tracking-[0.24em]">
-                    {p.benefitsLabel}
-                  </th>
-                  {TIERS.map((tier) => (
-                    <th
-                      key={tier}
-                      scope="col"
-                      className="w-14 px-1 py-5 text-center font-display text-[13px] font-semibold tracking-tight text-ink sm:w-28 sm:p-6 sm:text-lg"
-                    >
-                      {p.tierNames[tier]}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {BENEFITS.map((b) => (
-                  <tr key={b.key} className="border-b border-ink/[0.07] last:border-b-0">
-                    <th scope="row" className="px-4 py-4 text-[14px] font-normal leading-snug text-slate sm:px-6 sm:text-[15px]">
-                      {p.benefits[b.key as keyof typeof p.benefits]}
-                    </th>
-                    {TIERS.map((tier) => (
-                      <td key={tier} className="px-1 py-4 text-center sm:px-6">
-                        {b.tiers.includes(tier) ? (
-                          <span className="inline-block size-2.5 bg-green-deep" role="img" aria-label={p.included} />
-                        ) : (
-                          <span className="inline-block h-px w-3 bg-ink/20 align-middle" role="img" aria-label={p.notIncluded} />
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="lg:col-span-4">
+            <p className="text-[17px] leading-relaxed text-slate">{p.intro}</p>
+            <ButtonLink href="/esenet-2026-dossier-sponsoring.pdf" target="_blank" rel="noopener" className="mt-7">
+              {t.cta.dossier}
+            </ButtonLink>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-b border-ink/10 pb-14 sm:flex-row sm:items-baseline sm:gap-8 lg:pb-20">
-          <p className="shrink-0 font-mono text-[11px] uppercase tracking-[0.26em] text-slate">{p.extrasLabel}</p>
-          <ul className="flex flex-wrap gap-2">
-            {p.extras.map((x) => (
-              <li key={x} className="rounded-full border border-ink/15 bg-paper px-3.5 py-1.5 text-[14px] text-ink/80">
-                {x}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <div className="mt-14 border-t border-ink/10 lg:mt-20" />
 
         <div className="grid gap-14 pt-14 lg:grid-cols-12 lg:gap-10 lg:pt-20">
           <div className="space-y-12 lg:col-span-5">

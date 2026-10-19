@@ -33,7 +33,7 @@ export function generateStaticParams() {
 
 export const viewport: Viewport = {
   themeColor: "#07122e",
-  colorScheme: "light",
+  colorScheme: "light dark",
 };
 
 export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Promise<Metadata> {
@@ -63,7 +63,11 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   if (!hasLocale(lang)) notFound();
 
   return (
-    <html lang={lang} data-scroll-behavior="smooth" className={`${jakarta.variable} ${outfit.variable} ${plexMono.variable}`}>
+    <html lang={lang} data-scroll-behavior="smooth" suppressHydrationWarning className={`${jakarta.variable} ${outfit.variable} ${plexMono.variable}`}>
+      <head>
+        {/* applies the saved theme before first paint: light unless the visitor chose dark */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("esn-theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}` }} />
+      </head>
       <body className="min-h-dvh bg-white font-sans text-ink">
         {children}
         <RevealObserver />

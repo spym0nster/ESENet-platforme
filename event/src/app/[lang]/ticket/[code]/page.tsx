@@ -31,7 +31,7 @@ export default async function Ticket({ params }: PageProps<"/[lang]/ticket/[code
           <div
             role="img"
             aria-label={code}
-            className="mx-auto w-56 rounded-2xl bg-white p-4 [&>svg]:h-auto [&>svg]:w-full"
+            className="mx-auto w-56 rounded-2xl bg-[#fff] p-4 [&>svg]:h-auto [&>svg]:w-full"
             dangerouslySetInnerHTML={{ __html: svg }}
           />
           <p className="mt-5 font-display text-2xl font-semibold tracking-tight text-ink">{data.full_name}</p>

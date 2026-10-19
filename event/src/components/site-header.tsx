@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import logo from "@/assets/brand/esenet-logo.png";
 import type { Dictionary, Locale } from "@/content/i18n";
+import { ThemeToggle } from "./theme-toggle";
 import { ButtonLink } from "./ui";
 
 function subscribeScroll(onChange: () => void) {
@@ -84,6 +85,7 @@ export function SiteHeader({
         </nav>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <ThemeToggle label={nav.theme} />
           <Link
             href={switchHref}
             hrefLang={other}

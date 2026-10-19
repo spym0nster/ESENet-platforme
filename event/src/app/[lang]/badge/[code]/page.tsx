@@ -23,7 +23,7 @@ export default async function Badge({ params }: PageProps<"/[lang]/badge/[code]"
       <div className="mx-auto max-w-sm overflow-hidden rounded-3xl border border-ink/10 bg-paper">
         <div className="bg-navy px-6 py-4 font-mono text-[11px] uppercase tracking-[0.26em] text-cyan-bright">ESENet 2026 · {co?.company_name}</div>
         <div className="p-6 text-center">
-          <div role="img" aria-label={code} className="mx-auto w-56 rounded-2xl bg-white p-4 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+          <div role="img" aria-label={code} className="mx-auto w-56 rounded-2xl bg-[#fff] p-4 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
           <p className="mt-5 font-display text-xl font-semibold text-ink">{data.job_title}</p>
           {co?.stand_number && <p className="mt-1 text-[14px] text-slate">Stand {co.stand_number}</p>}
           <p className="mt-3 font-mono text-[12px] tracking-[0.2em] text-slate">{code}</p>

@@ -9,7 +9,6 @@ export const EVENT = {
   endsAt: "2026-11-25T16:00:00+01:00",
   instagramUrl: "https://www.instagram.com/esenet_talentfair/",
   instagramHandle: "@esenet_talentfair",
-  platformUrl: "https://esenet-platforme.vercel.app",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=ESEN+%C3%89cole+Sup%C3%A9rieure+de+l%27%C3%89conomie+Num%C3%A9rique+Manouba",
   // Generic club address (as on esenet-tn.com) rather than a personal one.
   contactEmail: "ambassadors@esen.tn",

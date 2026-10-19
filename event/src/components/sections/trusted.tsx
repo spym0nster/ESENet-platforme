@@ -13,7 +13,7 @@ function LogoRow({ logos, reverse }: { logos: Exhibitor[]; reverse?: boolean }) 
         <li
           key={x.name}
           className={`flex h-20 w-40 shrink-0 items-center justify-center rounded-xl border sm:h-24 sm:w-48 ${
-            x.dark ? "border-navy bg-navy" : "border-ink/10 bg-white"
+            x.dark ? "border-navy bg-navy" : "border-ink/10 bg-[#fff]"
           }`}
         >
           <Image

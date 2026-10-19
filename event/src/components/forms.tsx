@@ -205,7 +205,7 @@ export function ExhibitorForm({ lang, packs }: { lang: Locale; packs: { key: str
         <div className="mt-5 flex flex-wrap gap-3">
           {[{ key: "", name: t.sponsorNone }, ...packs].map((p) => (
             <label key={p.key} className="cursor-pointer">
-              <input type="radio" name="sponsor" value={p.key} defaultChecked={(v.sponsor ?? "") === p.key} className="peer sr-only" />
+              <input type="radio" name="sponsor" value={p.key} defaultChecked={(v.sponsor ?? "silver") === p.key} className="peer sr-only" />
               <span className="inline-flex rounded-full border border-white/25 px-4 py-2 text-[14px] font-medium transition-colors peer-checked:border-green peer-checked:bg-green peer-checked:text-night peer-focus-visible:ring-2 peer-focus-visible:ring-cyan">
                 {p.name}
               </span>

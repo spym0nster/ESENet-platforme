@@ -112,18 +112,6 @@ export function SiteFooter({ t, lang }: { t: Dictionary; lang: Locale }) {
             </li>
           </ul>
         </div>
-        <div className="sm:col-span-2 lg:col-span-3">
-          <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-mist/50">{f.platform}</p>
-          <p className="mt-5 text-[15px] leading-relaxed text-mist">{f.platformBody}</p>
-          <a
-            href={EVENT.platformUrl}
-            target="_blank"
-            rel="noopener"
-            className="mt-3 inline-block border-b border-white/30 pb-0.5 text-[15px] font-semibold transition-colors hover:border-green hover:text-green"
-          >
-            esenet-platforme.vercel.app
-          </a>
-        </div>
       </Container>
       <Container className="flex flex-col gap-3 border-t border-white/10 py-6 font-mono text-[11px] uppercase tracking-[0.18em] text-mist/50 sm:flex-row sm:justify-between">
         <p>{f.rights}</p>
